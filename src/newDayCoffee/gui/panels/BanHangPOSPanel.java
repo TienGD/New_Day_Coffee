@@ -1,4 +1,4 @@
-package com.coffeeshop.gui.panels;
+package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -273,17 +273,6 @@ public class BanHangPOSPanel extends JPanel {
 			btnCong.setBorderPainted(false);
 			btnCong.setPreferredSize(new Dimension(40, 24));
 			btnCong.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-			btnTru.addActionListener(e -> {
-				int val = Integer.parseInt(lbSoLuong.getText());
-				if (val > 0) {
-					lbSoLuong.setText(String.valueOf(val - 1));
-				}
-			});
-			btnCong.addActionListener(e -> {
-				int val = Integer.parseInt(lbSoLuong.getText());
-				lbSoLuong.setText(String.valueOf(val + 1));
-			});
 
 			pnSpinner.add(btnTru, BorderLayout.WEST);
 			pnSpinner.add(lbSoLuong, BorderLayout.CENTER);

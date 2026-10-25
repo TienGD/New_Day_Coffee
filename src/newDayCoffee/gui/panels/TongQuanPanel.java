@@ -1,4 +1,4 @@
-package com.coffeeshop.gui.panels;
+package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

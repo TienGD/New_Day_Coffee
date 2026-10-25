@@ -1,4 +1,4 @@
-package com.coffeeshop.gui.components;
+package newDayCoffee.gui.components;
 
 import java.awt.Color;
 import java.awt.Graphics;
