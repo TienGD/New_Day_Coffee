@@ -1,9 +1,10 @@
-package com.coffeeshop.dao;
+package newDayCoffee.dao;
 
-import com.coffeeshop.dto.DoUongDTO;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import newDayCoffee.dto.DoUongDTO;
 
 public class DoUongDAO {
     

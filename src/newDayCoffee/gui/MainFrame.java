@@ -1,4 +1,4 @@
-package com.coffeeshop.gui;
+package newDayCoffee.gui;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -24,10 +24,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import com.coffeeshop.gui.panels.BanHangPOSPanel;
-import com.coffeeshop.gui.panels.QuanLyNhanVienPanel;
-import com.coffeeshop.gui.panels.QuanLyThucDonPanel;
-import com.coffeeshop.gui.panels.TongQuanPanel;
+import newDayCoffee.gui.panels.BanHangPOSPanel;
+import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
+import newDayCoffee.gui.panels.QuanLyThucDonPanel;
+import newDayCoffee.gui.panels.TongQuanPanel;
 
 public class MainFrame extends JFrame {
 	private JLabel lbSysName;
@@ -92,8 +92,7 @@ public class MainFrame extends JFrame {
 		pnMenu.setBorder(new EmptyBorder(40, 5, 0, 0));
 
 		String[] dsMenu = {
-			"Tổng quan", "Bán hàng", "Thực đơn", "Kho hàng",
-			"Ca trực", "Báo cáo", "Nhật ký", "Nhân viên"
+			"Tổng quan", "Bán hàng", "Thực đơn", "Nhân viên"
 		};
 
 		for (int i = 0; i < dsMenu.length; i++) {
@@ -117,12 +116,6 @@ public class MainFrame extends JFrame {
 			pnMenu.add(Box.createVerticalStrut(22));
 		}
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
-
-		// CA LÀM VIỆC DƯỚI CÙNG
-		lbShift = new JLabel("Ca sáng", JLabel.CENTER);
-		lbShift.setFont(fontThuong);
-		lbShift.setForeground(Color.BLACK);
-		pnSidebar.add(lbShift, BorderLayout.SOUTH);
 
 		add(pnSidebar, BorderLayout.WEST);
 

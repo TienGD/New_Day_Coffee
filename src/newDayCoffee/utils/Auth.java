@@ -1,6 +1,6 @@
-package com.coffeeshop.utils;
+package newDayCoffee.utils;
 
-import com.coffeeshop.dto.NhanVienDTO;
+import newDayCoffee.dto.NhanVienDTO;
 
 public class Auth {
     // Lưu thông tin phiên đăng nhập hiện tại

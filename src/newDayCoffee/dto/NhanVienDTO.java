@@ -1,4 +1,4 @@
-package com.coffeeshop.dto;
+package newDayCoffee.dto;
 
 public class NhanVienDTO {
     private String maNV;
