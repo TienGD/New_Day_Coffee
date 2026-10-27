@@ -92,6 +92,10 @@ public class NhanVienDTO {
         this.matKhau = matKhau;
     }
 
+    public String layVaiTro() {
+        return chucVu;
+    }
+
     @Override
     public String toString() {
         return tenNV + " [" + chucVu + "]";
