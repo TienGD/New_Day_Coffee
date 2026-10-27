@@ -61,4 +61,8 @@ public class ChiTietHoaDonDTO {
     public double getThanhTien() {
         return soLuong * donGia;
     }
+
+    public double tinhThanhTien() {
+        return getThanhTien();
+    }
 }

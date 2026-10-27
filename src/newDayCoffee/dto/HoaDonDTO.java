@@ -99,4 +99,18 @@ public class HoaDonDTO {
     public void setDsChiTiet(List<ChiTietHoaDonDTO> dsChiTiet) {
         this.dsChiTiet = dsChiTiet;
     }
+
+    public double tinhTongTien() {
+        double tong = 0;
+        if (dsChiTiet != null) {
+            for (ChiTietHoaDonDTO ct : dsChiTiet) {
+                tong += ct.tinhThanhTien();
+            }
+        }
+        return tong;
+    }
+
+    public double tinhTienThua() {
+        return Math.max(0, tienKhachDua - tinhTongTien());
+    }
 }
