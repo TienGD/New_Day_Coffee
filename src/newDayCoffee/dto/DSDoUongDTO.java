@@ -1,11 +1,14 @@
 package newDayCoffee.dto;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class DSDoUongDTO {
     private List<DoUongDTO> dsDoUong = new ArrayList<>();
+    private Set<String> maDaXoa = new HashSet<>(); // lưu mã viết thường
 
     public DSDoUongDTO() {
     }
@@ -29,7 +32,7 @@ public class DSDoUongDTO {
         if (du == null) {
             return false;
         }
-        du.setDaXoa(true);
+        maDaXoa.add(du.getMaMon().toLowerCase());
         return true;
     }
 
@@ -43,12 +46,16 @@ public class DSDoUongDTO {
         }
         cu.setTenMon(du.getTenMon());
         cu.setDonGia(du.getDonGia());
+        cu.setMoTa(du.getMoTa());
         return true;
     }
 
     public DoUongDTO timTheoMa(String maDoUong) {
+        if (maDoUong == null) {
+            return null;
+        }
         for (DoUongDTO du : dsDoUong) {
-            if (!du.isDaXoa() && du.getMaMon().equalsIgnoreCase(maDoUong)) {
+            if (!daXoa(du) && du.getMaMon().equalsIgnoreCase(maDoUong)) {
                 return du;
             }
         }
@@ -62,7 +69,7 @@ public class DSDoUongDTO {
         }
         String t = tienTo.trim().toLowerCase();
         for (DoUongDTO du : dsDoUong) {
-            if (!du.isDaXoa() && du.getMaMon().toLowerCase().startsWith(t)) {
+            if (!daXoa(du) && du.getMaMon().toLowerCase().startsWith(t)) {
                 kq.add(du);
             }
         }
@@ -81,7 +88,7 @@ public class DSDoUongDTO {
     public List<DoUongDTO> getDsHienThi() {
         List<DoUongDTO> kq = new ArrayList<>();
         for (DoUongDTO du : dsDoUong) {
-            if (!du.isDaXoa()) {
+            if (!daXoa(du)) {
                 kq.add(du);
             }
         }
@@ -92,8 +99,12 @@ public class DSDoUongDTO {
         return dsDoUong;
     }
 
+    /** TODO: nối với DoUongDAO khi nhóm viết xong DAO. Hiện chỉ trả về true. */
     public boolean luuVaoCSDL() {
-    	// TODO: goi DAO de luu khi DAO viet xong
         return true;
+    }
+
+    private boolean daXoa(DoUongDTO du) {
+        return maDaXoa.contains(du.getMaMon().toLowerCase());
     }
 }
