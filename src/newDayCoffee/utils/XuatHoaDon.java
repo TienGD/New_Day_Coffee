@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
@@ -12,12 +14,15 @@ import newDayCoffee.dto.HoaDonDTO;
 
 
 public class XuatHoaDon {
-    private static final int RONG = 45; 
+    private static final int RONG = 45; // số ký tự mỗi dòng
     private static final int TEN_MON_RONG = 18;
 
-    public static String taoNoiDung(HoaDonDTO hd, String tenNV) {
+    public static String taoNoiDung(HoaDonDTO hd, List<ChiTietHoaDonDTO> dsChiTiet, String tenNV) {
         if (hd == null) {
             return "";
+        }
+        if (dsChiTiet == null) {
+            dsChiTiet = new ArrayList<>();
         }
         String xuongDong = System.lineSeparator();
         String gach = "-".repeat(RONG);
@@ -34,15 +39,17 @@ public class XuatHoaDon {
             sb.append("Ghi chú    : ").append(hd.getGhiChu().trim()).append(xuongDong);
         }
         sb.append(gach).append(xuongDong);
-        sb.append(String.format("%-" + TEN_MON_RONG + "s %3s %10s %11s", "Tên món", "SL", "Đơn giá", "Thành tiền")).append(xuongDong);
+        sb.append(String.format("%-" + TEN_MON_RONG + "s %3s %10s %11s", "Tên món", "SL", "Đơn giá", "Thành tiền"))
+                .append(xuongDong);
 
-        for (ChiTietHoaDonDTO ct : hd.getDsChiTiet()) {
+        for (ChiTietHoaDonDTO ct : dsChiTiet) {
             String ten = ct.getTenMon();
             if (ten.length() > TEN_MON_RONG) {
                 ten = ten.substring(0, TEN_MON_RONG);
             }
             sb.append(String.format("%-" + TEN_MON_RONG + "s %3d %10s %11s",
-            		ten, ct.getSoLuong(), tien(ct.getDonGia()), tien(ct.getThanhTien()))).append(xuongDong);
+                    ten, ct.getSoLuong(), tien(ct.getDonGia()), tien(ct.getThanhTien())))
+                    .append(xuongDong);
         }
 
         sb.append(gach).append(xuongDong);
@@ -54,8 +61,7 @@ public class XuatHoaDon {
         return sb.toString();
     }
 
-
-    public static boolean xuatFile(HoaDonDTO hd, String tenNV, String duongDanFile) {
+    public static boolean xuatFile(HoaDonDTO hd, List<ChiTietHoaDonDTO> dsChiTiet, String tenNV, String duongDanFile) {
         if (hd == null || duongDanFile == null) {
             return false;
         }
@@ -64,7 +70,7 @@ public class XuatHoaDon {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
-            Files.writeString(path, taoNoiDung(hd, tenNV), StandardCharsets.UTF_8);
+            Files.writeString(path, taoNoiDung(hd, dsChiTiet, tenNV), StandardCharsets.UTF_8);
             return true;
         } catch (IOException | InvalidPathException e) {
             return false;

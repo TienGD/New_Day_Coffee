@@ -24,6 +24,7 @@ public class DSNhanVienDTO {
         return true;
     }
 
+    /** Xóa nhân viên theo mã. Trả về false nếu không tìm thấy. */
     public boolean xoa(String maNV) {
         NhanVienDTO nv = timTheoMa(maNV);
         if (nv == null) {
@@ -92,8 +93,8 @@ public class DSNhanVienDTO {
         return dsNhanVien;
     }
 
+    /** TODO: nối với NhanVienDAO khi nhóm viết xong DAO. Hiện chỉ trả về true. */
     public boolean luuVaoCSDL() {
-    	// TODO: goi DAO de luu khi DAO viet xong
         return true;
     }
 }

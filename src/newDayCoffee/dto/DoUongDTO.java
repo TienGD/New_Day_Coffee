@@ -1,31 +1,32 @@
 package newDayCoffee.dto;
 
 public class DoUongDTO {
-    public static final String DM_CA_PHE = "Cà phê";
-    public static final String DM_TRA = "Trà";
-    public static final String DM_TRA_SUA = "Trà sữa";
-    public static final String DM_KHAC = "Khác";
-
     private String maMon;
     private String tenMon;
     private double donGia;
-    private boolean daXoa;  // cờ đánh dấu xóa mềm
-    private String moTa = ""; // mô tả món, mặc định rỗng
+    private String moTa;
+
     public DoUongDTO() {
+        this.maMon = "";
+        this.tenMon = "";
+        this.donGia = 0;
+        this.moTa = "";
+    }
+
+    public DoUongDTO(String maMon) {
+        this();
+        this.maMon = maMon;
     }
 
     public DoUongDTO(String maMon, String tenMon, double donGia) {
-        this.maMon = maMon;
-        this.tenMon = tenMon;
-        this.donGia = donGia;
-        this.daXoa = false;
+        this(maMon, tenMon, donGia, "");
     }
 
-    public DoUongDTO(String maMon, String tenMon, double donGia, boolean daXoa) {
+    public DoUongDTO(String maMon, String tenMon, double donGia, String moTa) {
         this.maMon = maMon;
         this.tenMon = tenMon;
         this.donGia = donGia;
-        this.daXoa = daXoa;
+        this.moTa = moTa;
     }
 
     public String getMaMon() {
@@ -52,57 +53,16 @@ public class DoUongDTO {
         this.donGia = donGia;
     }
 
-    public boolean isDaXoa() {
-        return daXoa;
-    }
-
-    public void setDaXoa(boolean daXoa) {
-        this.daXoa = daXoa;
-    }
-
     public String getMoTa() {
         return moTa;
     }
 
     public void setMoTa(String moTa) {
-        this.moTa = (moTa == null) ? "" : moTa;
-    }
-
-   
-    public String layDanhMuc() {
-        if (maMon == null) {
-            return DM_KHAC;
-        }
-        String m = maMon.trim().toLowerCase();
-        if (m.startsWith("cof")) {
-            return DM_CA_PHE;
-        }
-        if (m.startsWith("tea")) {
-            return DM_TRA;
-        }
-        if (m.startsWith("mil")) {
-            return DM_TRA_SUA;
-        }
-        return DM_KHAC;
-    }
-
-    public boolean kiemTraTienTo() {
-        return !DM_KHAC.equals(layDanhMuc());
-    }
-
-    public boolean kiemTraTienTo(String tienTo) {
-        if (maMon == null || tienTo == null || tienTo.trim().isEmpty()) {
-            return false;
-        }
-        return maMon.trim().toLowerCase().startsWith(tienTo.trim().toLowerCase());
-    }
-
-    public String getGiaFormatted() {
-        return String.format("%,.0fĐ", donGia).replace(',', '.');
+        this.moTa = moTa;
     }
 
     @Override
     public String toString() {
-        return tenMon + " (" + getGiaFormatted() + ")";
+        return "DoUongDTO [maMon=" + maMon + ", tenMon=" + tenMon + ", donGia=" + donGia + ", moTa=" + moTa + "]";
     }
 }
