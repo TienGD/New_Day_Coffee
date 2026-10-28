@@ -10,27 +10,56 @@ import java.util.Map;
 
 public class DSHoaDonDTO {
     private List<HoaDonDTO> dsHoaDon = new ArrayList<>();
+    private List<ChiTietHoaDonDTO> dsChiTiet = new ArrayList<>();
 
     public DSHoaDonDTO() {
     }
 
-    public DSHoaDonDTO(List<HoaDonDTO> dsHoaDon) {
+    public DSHoaDonDTO(List<HoaDonDTO> dsHoaDon, List<ChiTietHoaDonDTO> dsChiTiet) {
         if (dsHoaDon != null) {
             this.dsHoaDon = dsHoaDon;
+        }
+        if (dsChiTiet != null) {
+            this.dsChiTiet = dsChiTiet;
         }
     }
 
     public boolean themHoaDon(HoaDonDTO hd) {
-        if (hd == null || hd.getMaHD() == null) {
+        if (hd == null || hd.getMaHD() == null || timHoaDon(hd.getMaHD()) != null) {
             return false;
-        }
-        for (HoaDonDTO h : dsHoaDon) {
-            if (h.getMaHD().equalsIgnoreCase(hd.getMaHD())) {
-                return false;
-            }
         }
         dsHoaDon.add(hd);
         return true;
+    }
+
+    public boolean themChiTiet(ChiTietHoaDonDTO ct) {
+        if (ct == null || ct.getMaHD() == null || timHoaDon(ct.getMaHD()) == null) {
+            return false;
+        }
+        dsChiTiet.add(ct);
+        return true;
+    }
+
+    public List<ChiTietHoaDonDTO> layChiTiet(String maHD) {
+        List<ChiTietHoaDonDTO> kq = new ArrayList<>();
+        for (ChiTietHoaDonDTO ct : dsChiTiet) {
+            if (ct.getMaHD().equalsIgnoreCase(maHD)) {
+                kq.add(ct);
+            }
+        }
+        return kq;
+    }
+
+    public HoaDonDTO timHoaDon(String maHD) {
+        if (maHD == null) {
+            return null;
+        }
+        for (HoaDonDTO h : dsHoaDon) {
+            if (h.getMaHD().equalsIgnoreCase(maHD)) {
+                return h;
+            }
+        }
+        return null;
     }
 
     public double tinhDoanhThuHomNay() {
@@ -54,7 +83,10 @@ public class DSHoaDonDTO {
         return dem;
     }
 
-
+    /**
+     * Món bán chạy nhất: cộng soLuong theo maMon trong chi tiết của các hóa đơn hoàn tất (mọi ngày),
+     * trả về món có tổng cao nhất (đồng hạng thì trả về tất cả). Chưa có dữ liệu thì trả về list rỗng.
+     */
     public List<DoUongDTO> timMonBanChayNhat() {
         Map<String, Integer> tongSoLuong = new LinkedHashMap<>();
         Map<String, DoUongDTO> thongTinMon = new LinkedHashMap<>();
@@ -63,7 +95,7 @@ public class DSHoaDonDTO {
             if (!laHoanTat(hd)) {
                 continue;
             }
-            for (ChiTietHoaDonDTO ct : hd.getDsChiTiet()) {
+            for (ChiTietHoaDonDTO ct : layChiTiet(hd.getMaHD())) {
                 String ma = ct.getMaMon();
                 tongSoLuong.merge(ma, ct.getSoLuong(), Integer::sum);
                 thongTinMon.putIfAbsent(ma, new DoUongDTO(ma, ct.getTenMon(), ct.getDonGia()));
@@ -93,17 +125,18 @@ public class DSHoaDonDTO {
         return dsHoaDon;
     }
 
+    public List<ChiTietHoaDonDTO> getDsChiTiet() {
+        return dsChiTiet;
+    }
+
     public boolean luuVaoCSDL() {
         return true;
     }
 
 
     private boolean laHoanTat(HoaDonDTO hd) {
-        return hd.getDsChiTiet() != null
-                && !hd.getDsChiTiet().isEmpty()
-                && hd.getTienKhachDua() >= hd.getTongTien();
+        return !layChiTiet(hd.getMaHD()).isEmpty() && hd.getTienKhachDua() >= hd.getTongTien();
     }
-
 
     private LocalDate docNgay(String s) {
         if (s == null) {
