@@ -8,6 +8,17 @@ public class ChiTietHoaDonDTO {
     private double donGia;
 
     public ChiTietHoaDonDTO() {
+        this.maHD = "";
+        this.maMon = "";
+        this.tenMon = "";
+        this.soLuong = 0;
+        this.donGia = 0;
+    }
+
+    public ChiTietHoaDonDTO(String maHD, String maMon) {
+        this();
+        this.maHD = maHD;
+        this.maMon = maMon;
     }
 
     public ChiTietHoaDonDTO(String maHD, String maMon, String tenMon, int soLuong, double donGia) {
@@ -60,5 +71,11 @@ public class ChiTietHoaDonDTO {
 
     public double getThanhTien() {
         return soLuong * donGia;
+    }
+
+    @Override
+    public String toString() {
+        return "ChiTietHoaDonDTO [maHD=" + maHD + ", maMon=" + maMon + ", tenMon=" + tenMon + ", soLuong=" + soLuong
+                + ", donGia=" + donGia + "]";
     }
 }

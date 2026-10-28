@@ -1,8 +1,5 @@
 package newDayCoffee.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class HoaDonDTO {
     private String maHD;
     private String ngayLap;
@@ -12,9 +9,21 @@ public class HoaDonDTO {
     private double tienThoi;
     private String phuongThucTT;
     private String ghiChu;
-    private List<ChiTietHoaDonDTO> dsChiTiet = new ArrayList<>();
 
     public HoaDonDTO() {
+        this.maHD = "";
+        this.ngayLap = "";
+        this.maNV = "";
+        this.tongTien = 0;
+        this.tienKhachDua = 0;
+        this.tienThoi = 0;
+        this.phuongThucTT = "";
+        this.ghiChu = "";
+    }
+
+    public HoaDonDTO(String maHD) {
+        this();
+        this.maHD = maHD;
     }
 
     public HoaDonDTO(String maHD, String ngayLap, String maNV, double tongTien, double tienKhachDua, double tienThoi, String phuongThucTT, String ghiChu) {
@@ -92,11 +101,10 @@ public class HoaDonDTO {
         this.ghiChu = ghiChu;
     }
 
-    public List<ChiTietHoaDonDTO> getDsChiTiet() {
-        return dsChiTiet;
-    }
-
-    public void setDsChiTiet(List<ChiTietHoaDonDTO> dsChiTiet) {
-        this.dsChiTiet = dsChiTiet;
+    @Override
+    public String toString() {
+        return "HoaDonDTO [maHD=" + maHD + ", ngayLap=" + ngayLap + ", maNV=" + maNV + ", tongTien=" + tongTien
+                + ", tienKhachDua=" + tienKhachDua + ", tienThoi=" + tienThoi + ", phuongThucTT=" + phuongThucTT
+                + ", ghiChu=" + ghiChu + "]";
     }
 }

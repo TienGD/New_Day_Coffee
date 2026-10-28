@@ -1,9 +1,11 @@
 package newDayCoffee.dto;
 
+import java.time.LocalDate;
+
 public class NhanVienDTO {
     private String maNV;
     private String tenNV;
-    private String ngaySinh;
+    private LocalDate ngaySinh;
     private String sdt;
     private String email;
     private String chucVu;
@@ -11,13 +13,31 @@ public class NhanVienDTO {
     private String matKhau;
 
     public NhanVienDTO() {
+        this.maNV = "";
+        this.tenNV = "";
+        this.ngaySinh = null;
+        this.sdt = "";
+        this.email = "";
+        this.chucVu = "";
+        this.gioiTinh = "";
+        this.matKhau = "123456";
     }
 
-    public NhanVienDTO(String maNV, String tenNV, String ngaySinh, String sdt, String email, String chucVu, String gioiTinh) {
+    /** Constructor chỉ chứa mã. */
+    public NhanVienDTO(String maNV) {
+        this();
+        this.maNV = maNV;
+    }
+
+    /**
+     * NOTE: constructor không có tham số mật khẩu, dùng khi thêm nhân viên mới.
+     * Nhân viên được gán mật khẩu mặc định "123456", sau đó tự đổi mật khẩu.
+     */
+    public NhanVienDTO(String maNV, String tenNV, LocalDate ngaySinh, String sdt, String email, String chucVu, String gioiTinh) {
         this(maNV, tenNV, ngaySinh, sdt, email, chucVu, gioiTinh, "123456");
     }
 
-    public NhanVienDTO(String maNV, String tenNV, String ngaySinh, String sdt, String email, String chucVu, String gioiTinh, String matKhau) {
+    public NhanVienDTO(String maNV, String tenNV, LocalDate ngaySinh, String sdt, String email, String chucVu, String gioiTinh, String matKhau) {
         this.maNV = maNV;
         this.tenNV = tenNV;
         this.ngaySinh = ngaySinh;
@@ -44,11 +64,11 @@ public class NhanVienDTO {
         this.tenNV = tenNV;
     }
 
-    public String getNgaySinh() {
+    public LocalDate getNgaySinh() {
         return ngaySinh;
     }
 
-    public void setNgaySinh(String ngaySinh) {
+    public void setNgaySinh(LocalDate ngaySinh) {
         this.ngaySinh = ngaySinh;
     }
 
@@ -94,6 +114,7 @@ public class NhanVienDTO {
 
     @Override
     public String toString() {
-        return tenNV + " [" + chucVu + "]";
+        return "NhanVienDTO [maNV=" + maNV + ", tenNV=" + tenNV + ", ngaySinh=" + ngaySinh + ", sdt=" + sdt + ", email="
+                + email + ", chucVu=" + chucVu + ", gioiTinh=" + gioiTinh + "]";
     }
 }

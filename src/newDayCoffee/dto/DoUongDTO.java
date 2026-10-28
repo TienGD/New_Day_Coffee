@@ -4,23 +4,29 @@ public class DoUongDTO {
     private String maMon;
     private String tenMon;
     private double donGia;
-    private boolean daXoa; // cờ đánh dấu xóa mềm
+    private String moTa;
 
     public DoUongDTO() {
+        this.maMon = "";
+        this.tenMon = "";
+        this.donGia = 0;
+        this.moTa = "";
+    }
+
+    public DoUongDTO(String maMon) {
+        this();
+        this.maMon = maMon;
     }
 
     public DoUongDTO(String maMon, String tenMon, double donGia) {
-        this.maMon = maMon;
-        this.tenMon = tenMon;
-        this.donGia = donGia;
-        this.daXoa = false;
+        this(maMon, tenMon, donGia, "");
     }
 
-    public DoUongDTO(String maMon, String tenMon, double donGia, boolean daXoa) {
+    public DoUongDTO(String maMon, String tenMon, double donGia, String moTa) {
         this.maMon = maMon;
         this.tenMon = tenMon;
         this.donGia = donGia;
-        this.daXoa = daXoa;
+        this.moTa = moTa;
     }
 
     public String getMaMon() {
@@ -47,20 +53,16 @@ public class DoUongDTO {
         this.donGia = donGia;
     }
 
-    public boolean isDaXoa() {
-        return daXoa;
+    public String getMoTa() {
+        return moTa;
     }
 
-    public void setDaXoa(boolean daXoa) {
-        this.daXoa = daXoa;
-    }
-
-    public String getGiaFormatted() {
-        return String.format("%,.0fĐ", donGia).replace(',', '.');
+    public void setMoTa(String moTa) {
+        this.moTa = moTa;
     }
 
     @Override
     public String toString() {
-        return tenMon + " (" + getGiaFormatted() + ")";
+        return "DoUongDTO [maMon=" + maMon + ", tenMon=" + tenMon + ", donGia=" + donGia + ", moTa=" + moTa + "]";
     }
 }
