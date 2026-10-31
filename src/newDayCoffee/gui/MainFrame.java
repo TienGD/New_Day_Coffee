@@ -11,12 +11,14 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -24,17 +26,24 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.gui.components.CustomButton;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
 import newDayCoffee.gui.panels.TongQuanPanel;
+import newDayCoffee.utils.Auth;
 
 public class MainFrame extends JFrame {
 	private JLabel lbSysName;
 	private JLabel lbShift;
+	private JLabel lbNguoiDung;
+	private JButton btnDangXuat;
 	private JPanel pnContainerCard;
 	private CardLayout cardLayout;
 	private List<JLabel> listMenuLabels = new ArrayList<>();
+	private final NhanVienBUS nhanVienBUS = NhanVienBUS.getInstance();
 
 	// 4 Panel chức năng độc lập
 	private TongQuanPanel tongQuanPanel;
@@ -43,9 +52,17 @@ public class MainFrame extends JFrame {
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
 
 	public MainFrame() {
-		setTitle("New Day Coffee");
-		setSize(1280, 720);
+		NhanVienDTO nguoiDangNhap = Auth.getCurrentUser();
+		String tenNguoiDung = nguoiDangNhap == null ? "Khách" : nguoiDangNhap.getTenNV();
+		setTitle("New Day Coffee - " + tenNguoiDung);
+		// Giới hạn kích thước theo màn hình để không bị tràn khi Windows dùng tỉ lệ hiển thị > 100%
+		java.awt.Dimension kichThuocManHinh = Toolkit.getDefaultToolkit().getScreenSize();
+		int chieuRong = Math.min(1200, (int) (kichThuocManHinh.width * 0.9));
+		int chieuCao = Math.min(650, (int) (kichThuocManHinh.height * 0.85));
+		setSize(chieuRong, chieuCao);
 		setLocationRelativeTo(null);
+		// Mở rộng tối đa để tránh bị cắt khi Windows dùng tỉ lệ hiển thị > 100%
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setBackground(new Color(245, 235, 224));
 
@@ -117,6 +134,27 @@ public class MainFrame extends JFrame {
 		}
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
 
+		// KHU VỰC NGƯỜI DÙNG ĐANG ĐĂNG NHẬP + NÚT ĐĂNG XUẤT
+		JPanel pnNguoiDung = new JPanel();
+		pnNguoiDung.setLayout(new javax.swing.BoxLayout(pnNguoiDung, javax.swing.BoxLayout.Y_AXIS));
+		pnNguoiDung.setOpaque(false);
+		pnNguoiDung.setBorder(new EmptyBorder(10, 0, 0, 0));
+
+		String chucVu = nguoiDangNhap == null ? "" : nguoiDangNhap.getChucVu();
+		lbNguoiDung = new JLabel("<html>Xin chào,<br><b>" + tenNguoiDung + "</b><br>" + chucVu + "</html>");
+		lbNguoiDung.setFont(new Font("Arial", Font.PLAIN, 12));
+		lbNguoiDung.setForeground(Color.WHITE);
+		lbNguoiDung.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		btnDangXuat = new CustomButton("Đăng xuất", new Color(120, 60, 20), 160, 34);
+		btnDangXuat.setFont(new Font("Arial", Font.BOLD, 13));
+		btnDangXuat.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		pnNguoiDung.add(lbNguoiDung);
+		pnNguoiDung.add(Box.createVerticalStrut(10));
+		pnNguoiDung.add(btnDangXuat);
+		pnSidebar.add(pnNguoiDung, BorderLayout.SOUTH);
+
 		add(pnSidebar, BorderLayout.WEST);
 
 		// 2. KHU VỰC CONTAINER CHUYỂN ĐỔI BẰNG CARDLAYOUT
@@ -135,9 +173,46 @@ public class MainFrame extends JFrame {
 		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
 
 		add(pnContainerCard, BorderLayout.CENTER);
+
+		// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+		btnDangXuat.addActionListener(e -> xuLyDangXuat());
+
+		// Nạp dữ liệu ban đầu cho tất cả panel
+		capNhatTatCaPanel();
+	}
+
+	/** Làm mới dữ liệu của toàn bộ panel chức năng. */
+	private void capNhatTatCaPanel() {
+		tongQuanPanel.capNhatDuLieu();
+		banHangPOSPanel.capNhatDuLieu();
+		quanLyThucDonPanel.capNhatDuLieu();
+		quanLyNhanVienPanel.capNhatDuLieu();
+	}
+
+	/** Xử lý đăng xuất: xóa phiên đăng nhập và quay lại màn hình đăng nhập. */
+	private void xuLyDangXuat() {
+		int luaChon = JOptionPane.showConfirmDialog(this,
+				"Bạn có chắc muốn đăng xuất khỏi hệ thống?",
+				"Xác nhận đăng xuất", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		if (luaChon != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		nhanVienBUS.dangXuat();
+		LoginFrame loginFrame = new LoginFrame();
+		loginFrame.setVisible(true);
+		this.dispose();
 	}
 
 	private void switchCard(String item) {
+		// Phân quyền: chỉ quản lí mới được vào chức năng quản lý nhân viên
+		if (item.equals("Nhân viên") && !Auth.isManager()) {
+			JOptionPane.showMessageDialog(this,
+					"Chức năng quản lý nhân viên chỉ dành cho Quản lí.",
+					"Không đủ quyền", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
 		if (item.equals("Tổng quan") || item.equals("Bán hàng") || item.equals("Thực đơn") || item.equals("Nhân viên")) {
 			for (JLabel lb : listMenuLabels) {
 				if (lb.getText().equals(item)) {
@@ -147,12 +222,27 @@ public class MainFrame extends JFrame {
 				}
 			}
 			cardLayout.show(pnContainerCard, item);
+
+			// Làm mới panel vừa mở để dữ liệu luôn đồng bộ giữa các chức năng
+			if (item.equals("Tổng quan")) {
+				tongQuanPanel.capNhatDuLieu();
+			} else if (item.equals("Bán hàng")) {
+				banHangPOSPanel.capNhatDuLieu();
+			} else if (item.equals("Thực đơn")) {
+				quanLyThucDonPanel.capNhatDuLieu();
+			} else if (item.equals("Nhân viên")) {
+				quanLyNhanVienPanel.capNhatDuLieu();
+			}
 		} else {
 			JOptionPane.showMessageDialog(this, "Chức năng \"" + item + "\" đang trong quá trình phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
+	/**
+	 * Điểm khởi chạy của ứng dụng.
+	 * Luôn mở màn hình đăng nhập trước, MainFrame chỉ được mở sau khi đăng nhập thành công.
+	 */
 	public static void main(String[] args) {
-		new MainFrame().setVisible(true);
+		SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
 	}
 }

@@ -14,18 +14,25 @@ import java.awt.RenderingHints;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+
+import newDayCoffee.bus.NhanVienBUS;
 
 public class LoginFrame extends JFrame {
 	private JLabel lbHeader;
 	private JTextField txtMa;
 	private JPasswordField passMatKhau;
 	private JButton btnDangNhap;
+	private JLabel lbGoiY;
 	private String TaiKhoanNhap = "Mã Nhân Viên (vd:nv00)";
 	private String MatKhauNhap = "Mật khẩu";
+
+	// BUS xử lý đăng nhập (kiểm tra dữ liệu + lưu phiên vào Auth)
+	private final NhanVienBUS nhanVienBUS = NhanVienBUS.getInstance();
 
 	public LoginFrame() {
 		setTitle("Đăng nhập");
@@ -108,7 +115,46 @@ public class LoginFrame extends JFrame {
 		gbc.gridy = 3;
 		pnMain.add(btnDangNhap, gbc);
 
+		// 4. Gợi ý tài khoản mẫu (dùng khi chưa có CSDL)
+		lbGoiY = new JLabel("Tài khoản mẫu: NV01 / 123456", JLabel.CENTER);
+		lbGoiY.setFont(new Font("Arial", Font.ITALIC, 12));
+		lbGoiY.setForeground(new Color(120, 90, 70));
+		gbc.gridx = 0;
+		gbc.gridy = 4;
+		pnMain.add(lbGoiY, gbc);
+
 		this.add(pnMain, BorderLayout.CENTER);
+
+		// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+		btnDangNhap.addActionListener(e -> xuLyDangNhap());
+		passMatKhau.addActionListener(e -> xuLyDangNhap());
+		txtMa.addActionListener(e -> passMatKhau.requestFocusInWindow());
+		getRootPane().setDefaultButton(btnDangNhap);
+	}
+
+	/**
+	 * Xử lý sự kiện đăng nhập:
+	 * 1. Lấy dữ liệu người dùng nhập.
+	 * 2. Giao cho NhanVienBUS kiểm tra và đăng nhập.
+	 * 3. Nếu thành công thì mở MainFrame, ngược lại hiển thị lỗi.
+	 */
+	private void xuLyDangNhap() {
+		String maNV = txtMa.getText();
+		String matKhau = new String(passMatKhau.getPassword());
+
+		String loi = nhanVienBUS.dangNhap(maNV, matKhau);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Đăng nhập thất bại",
+					JOptionPane.WARNING_MESSAGE);
+			passMatKhau.requestFocusInWindow();
+			passMatKhau.selectAll();
+			return;
+		}
+
+		// Đăng nhập thành công: mở màn hình chính và đóng màn hình đăng nhập
+		MainFrame mainFrame = new MainFrame();
+		mainFrame.setVisible(true);
+		this.dispose();
 	}
 
 	public static void main(String[] args) {
