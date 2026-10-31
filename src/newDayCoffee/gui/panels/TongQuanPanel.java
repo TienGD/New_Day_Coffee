@@ -14,6 +14,9 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -21,15 +24,35 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.utils.Auth;
 
 public class TongQuanPanel extends JPanel {
 	private JLabel lbBranch;
 	private JLabel lbTitle;
+	private JLabel lbQuanLy;
+
+	// Các nhãn giá trị trong 4 thẻ thống kê
+	private final JLabel[] dsGiaTriThe = new JLabel[4];
+
+	// Bảng món bán chạy/chậm và ghi chú
+	private DefaultTableModel modelMonBanChay;
+	private DefaultListModel<String> modelChuY;
+	private List<ChiTietHoaDonDTO> dsThongKeMon = new ArrayList<>();
+
+	// BUS lấy dữ liệu thống kê
+	private final DSHoaDonBUS dsHoaDonBUS = DSHoaDonBUS.getInstance();
+	private final NhanVienBUS nhanVienBUS = NhanVienBUS.getInstance();
 
 	public TongQuanPanel() {
 		setLayout(new BorderLayout());
@@ -86,10 +109,11 @@ public class TongQuanPanel extends JPanel {
 		};
 		badgeQuanLy.setOpaque(false);
 		badgeQuanLy.setPreferredSize(new Dimension(220, 38));
-		JLabel lbQuanLy = new JLabel("Quản lý: Lâm Nguyễn Như Ý");
-		lbQuanLy.setFont(new Font("Arial", Font.PLAIN, 13));
-		lbQuanLy.setForeground(Color.WHITE);
-		badgeQuanLy.add(lbQuanLy);
+		JLabel lbQuanLyBadge = new JLabel("Quản lý: ...");
+		lbQuanLyBadge.setFont(new Font("Arial", Font.PLAIN, 13));
+		lbQuanLyBadge.setForeground(Color.WHITE);
+		badgeQuanLy.add(lbQuanLyBadge);
+		lbQuanLy = lbQuanLyBadge;
 
 		pnBadges.add(badgeCaKet);
 		pnBadges.add(badgeQuanLy);
@@ -115,10 +139,12 @@ public class TongQuanPanel extends JPanel {
 		pnCards.setOpaque(false);
 		pnCards.setPreferredSize(new Dimension(0, 115));
 
-		String[] tieuDeThe = {"Doanh thu hôm nay", "Đơn đã hoàn tất"};
-		String[] giaTriThe = {"4.000.000 Đ", "86 đơn"};
+		String[] tieuDeThe = {
+			"Doanh thu hôm nay", "Đơn đã hoàn tất", "Món bán chạy nhất", "Nhân viên"
+		};
+		String[] giaTriThe = {"0 Đ", "0 đơn", "-", "0 người"};
 
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < tieuDeThe.length; i++) {
 			JPanel card = new JPanel() {
 				@Override
 				protected void paintComponent(Graphics g) {
@@ -140,9 +166,11 @@ public class TongQuanPanel extends JPanel {
 			lbCardTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 			JLabel lbCardValue = new JLabel(giaTriThe[i]);
-			lbCardValue.setFont(new Font("Arial", Font.BOLD, 20));
+			// Thẻ "Món bán chạy nhất" có thể chứa tên món dài nên dùng cỡ chữ nhỏ hơn
+			lbCardValue.setFont(new Font("Arial", Font.BOLD, i == 2 ? 15 : 20));
 			lbCardValue.setForeground(Color.WHITE);
 			lbCardValue.setAlignmentX(Component.CENTER_ALIGNMENT);
+			dsGiaTriThe[i] = lbCardValue;
 
 			card.add(lbCardTitle);
 			card.add(Box.createVerticalStrut(18));
@@ -180,19 +208,15 @@ public class TongQuanPanel extends JPanel {
 		lbBestSellerTitle.setForeground(Color.WHITE);
 		pnBestSellers.add(lbBestSellerTitle, BorderLayout.NORTH);
 
-		Object[][] dataMonBanChay = {
-			{"Bạc sỉu", 85},
-			{"Trà đào", 80},
-			{"Cafe đen", 73},
-			{"Trà sữa thái", 71},
-			{"Trà vải", 65},
-			{"Trà trái cây", 56}
-		};
 		String[] cotMonBanChay = {"Đồ uống", "Số lượng"};
-
-		JTable tblMonBanChay = new JTable(dataMonBanChay, cotMonBanChay) {
-			@Override public boolean isCellEditable(int r, int c) { return false; }
+		modelMonBanChay = new DefaultTableModel(cotMonBanChay, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
 		};
+
+		JTable tblMonBanChay = new JTable(modelMonBanChay);
 		tblMonBanChay.setFont(new Font("Arial", Font.PLAIN, 13));
 		tblMonBanChay.setForeground(new Color(220, 200, 185));
 		tblMonBanChay.setBackground(new Color(95, 58, 30));
@@ -240,6 +264,10 @@ public class TongQuanPanel extends JPanel {
 		pnBtnSort.add(btnBanCham);
 		pnBestSellers.add(pnBtnSort, BorderLayout.SOUTH);
 
+		// Sự kiện sắp xếp danh sách món theo số lượng bán
+		btnBanChay.addActionListener(e -> sapXepMonBanChay(false));
+		btnBanCham.addActionListener(e -> sapXepMonBanChay(true));
+
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 0.68;
@@ -266,7 +294,7 @@ public class TongQuanPanel extends JPanel {
 		lbAttentionTitle.setForeground(Color.WHITE);
 		pnAttention.add(lbAttentionTitle, BorderLayout.NORTH);
 
-		DefaultListModel<String> modelChuY = new DefaultListModel<>();
+		modelChuY = new DefaultListModel<>();
 		modelChuY.addElement("(i)  Bàn 4 chờ thanh toán");
 		modelChuY.addElement("(i)  Sữa sắp hết hạn");
 
@@ -303,6 +331,9 @@ public class TongQuanPanel extends JPanel {
 		pnBtnWrapThemChuY.add(btnThemChuYNew);
 		pnAttention.add(pnBtnWrapThemChuY, BorderLayout.SOUTH);
 
+		// Sự kiện thêm ghi chú cần chú ý
+		btnThemChuYNew.addActionListener(e -> themChuY());
+
 		gbc.gridx = 1;
 		gbc.gridy = 0;
 		gbc.weightx = 0.32;
@@ -311,5 +342,78 @@ public class TongQuanPanel extends JPanel {
 
 		pnMainContent.add(pnBottom, BorderLayout.CENTER);
 		add(pnMainContent, BorderLayout.CENTER);
+
+		// Nạp số liệu thật từ BUS khi panel được tạo
+		capNhatDuLieu();
+	}
+
+	// ==================== KHU VỰC XỬ LÝ SỰ KIỆN ====================
+	private void themChuY() {
+		String noiDung = JOptionPane.showInputDialog(this,
+				"Nhập nội dung cần chú ý:", "Thêm chú ý", JOptionPane.PLAIN_MESSAGE);
+		if (noiDung == null || noiDung.trim().isEmpty()) {
+			return;
+		}
+		modelChuY.addElement("(i)  " + noiDung.trim());
+	}
+
+	/** Sắp xếp bảng món theo số lượng bán tăng dần (banCham = true) hoặc giảm dần. */
+	private void sapXepMonBanChay(boolean tangDan) {
+		List<ChiTietHoaDonDTO> dsSapXep = new ArrayList<>(dsThongKeMon);
+		dsSapXep.sort((a, b) -> tangDan
+				? Integer.compare(a.getSoLuong(), b.getSoLuong())
+				: Integer.compare(b.getSoLuong(), a.getSoLuong()));
+
+		modelMonBanChay.setRowCount(0);
+		if (dsSapXep.isEmpty()) {
+			modelMonBanChay.addRow(new Object[] {"Chưa có dữ liệu", 0});
+			return;
+		}
+		for (ChiTietHoaDonDTO ct : dsSapXep) {
+			modelMonBanChay.addRow(new Object[] {ct.getTenMon(), ct.getSoLuong()});
+		}
+	}
+
+	// ==================== KHU VỰC NẠP / HIỂN THỊ DỮ LIỆU ====================
+	/** Làm mới toàn bộ số liệu, được MainFrame gọi khi chuyển màn hình. */
+	public void capNhatDuLieu() {
+		capNhatThongTinNguoiDung();
+
+		double doanhThu = dsHoaDonBUS.doanhThuHomNay();
+		int soDon = dsHoaDonBUS.demDonHoanTat();
+		dsThongKeMon = dsHoaDonBUS.thongKeSoLuongMon();
+
+		String tenBanChay = "-";
+		if (!dsThongKeMon.isEmpty()) {
+			tenBanChay = dsThongKeMon.get(0).getTenMon();
+		}
+
+		if (dsGiaTriThe[0] != null) {
+			dsGiaTriThe[0].setText(dinhDangTien(doanhThu));
+		}
+		if (dsGiaTriThe[1] != null) {
+			dsGiaTriThe[1].setText(soDon + " đơn");
+		}
+		if (dsGiaTriThe[2] != null) {
+			dsGiaTriThe[2].setText(tenBanChay);
+		}
+		if (dsGiaTriThe[3] != null) {
+			dsGiaTriThe[3].setText(nhanVienBUS.laySoLuongNhanVien() + " người");
+		}
+
+		sapXepMonBanChay(false);
+	}
+
+	private void capNhatThongTinNguoiDung() {
+		if (Auth.getCurrentUser() == null) {
+			lbQuanLy.setText("Quản lý: -");
+			return;
+		}
+		String vaiTro = Auth.isManager() ? "Quản lý: " : "Nhân viên: ";
+		lbQuanLy.setText(vaiTro + Auth.getCurrentUser().getTenNV());
+	}
+
+	private String dinhDangTien(double soTien) {
+		return String.format(Locale.US, "%,.0f", soTien).replace(',', '.') + " Đ";
 	}
 }
