@@ -121,6 +121,25 @@ public class NhanVienBUS {
         return ketQua;
     }
 
+    // ==================== KHU VỰC CHUYỂN ĐỔI TỪ FORM ====================
+    /**
+     * Tạo DTO từ dữ liệu người dùng nhập trên form.
+     * Ngày sinh được đọc qua Validator; nếu sai định dạng thì giá trị ngày là null
+     * và Validator.kiemTraNhanVien sẽ trả về thông báo lỗi tương ứng.
+     */
+    public NhanVienDTO taoNhanVienTuForm(String maNV, String tenNV, String ngaySinhText,
+            String sdt, String email, String chucVu, String gioiTinh) {
+        LocalDate ngaySinh = Validator.docNgay(ngaySinhText);
+        return new NhanVienDTO(Validator.chuanHoa(maNV), Validator.chuanHoa(tenNV), ngaySinh,
+                Validator.chuanHoa(sdt), Validator.chuanHoa(email),
+                Validator.chuanHoa(chucVu), Validator.chuanHoa(gioiTinh));
+    }
+
+    /** Định dạng ngày sinh để hiển thị trên bảng: dd-MM-yyyy. */
+    public static String dinhDangNgay(LocalDate ngaySinh) {
+        return Validator.dinhDangNgay(ngaySinh);
+    }
+
     // ==================== KHU VỰC THÊM / SỬA / XÓA ====================
     /**
      * Thêm nhân viên mới và tạo tài khoản tương ứng.
