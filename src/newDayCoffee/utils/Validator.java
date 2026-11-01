@@ -3,6 +3,7 @@ package newDayCoffee.utils;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -238,10 +239,14 @@ public class Validator {
         if (s.isEmpty()) {
             return null;
         }
-        String[] dsDinhDang = {"d-M-yyyy", "d/M/yyyy", "yyyy-M-d"};
+        // Dùng ResolverStyle.STRICT và "uuuu" để không tự sửa ngày sai
+        // (ví dụ 31-02-2000 phải bị từ chối, không được đổi thành 29-02-2000)
+        String[] dsDinhDang = {"d-M-uuuu", "d/M/uuuu", "uuuu-M-d"};
         for (int i = 0; i < dsDinhDang.length; i++) {
             try {
-                return LocalDate.parse(s, DateTimeFormatter.ofPattern(dsDinhDang[i]));
+                DateTimeFormatter dinhDang = DateTimeFormatter.ofPattern(dsDinhDang[i])
+                        .withResolverStyle(ResolverStyle.STRICT);
+                return LocalDate.parse(s, dinhDang);
             } catch (DateTimeParseException e) {
                 // Thử định dạng tiếp theo
             }
