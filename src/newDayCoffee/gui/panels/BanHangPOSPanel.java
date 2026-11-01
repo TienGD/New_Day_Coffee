@@ -407,8 +407,8 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 				g2.setColor(Color.WHITE);
 				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
 				g2.setColor(new Color(28, 28, 28));
-				g2.fillRoundRect(0, 0, getWidth(), (int) (getHeight() * 0.40), 18, 18);
-				g2.fillRect(0, (int) (getHeight() * 0.40) - 10, getWidth(), 10);
+				g2.fillRoundRect(0, 0, getWidth(), (int) (getHeight() * 0.48), 18, 18);
+				g2.fillRect(0, (int) (getHeight() * 0.48) - 10, getWidth(), 10);
 				g2.dispose();
 			}
 		};
@@ -416,7 +416,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 		JPanel pnImgHolder = new JPanel();
 		pnImgHolder.setOpaque(false);
-		pnImgHolder.setPreferredSize(new Dimension(0, 70));
+		pnImgHolder.setPreferredSize(new Dimension(0, 105));
 		cardMon.add(pnImgHolder, BorderLayout.NORTH);
 
 		JPanel pnInfo = new JPanel();

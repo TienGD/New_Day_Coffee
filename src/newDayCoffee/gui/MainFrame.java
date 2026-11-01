@@ -81,7 +81,7 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		getContentPane().setBackground(new Color(245, 235, 224));
 
 		Font fontMenu = new Font("Arial", Font.BOLD, 19);
-		Font fontThuong = new Font("Arial", Font.PLAIN, 13);
+		Font fontThuong = new Font("Arial", Font.PLAIN, 14);
 
 		setLayout(new BorderLayout());
 
@@ -285,11 +285,6 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 	// ==================== KHU VỰC KHỞI CHẠY ====================
 	public static void main(String[] args) {
 		// Chạy thẳng MainFrame cũng phải qua đăng nhập trước
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				new LoginFrame().setVisible(true);
-			}
-		});
+		SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
 	}
 }

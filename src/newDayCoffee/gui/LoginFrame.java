@@ -38,7 +38,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private JTextField txtMa;
 	private JPasswordField passMatKhau;
 	private JButton btnDangNhap;
-	private String TaiKhoanNhap = "Mã Nhân Viên (vd:nv01)";
+	private String TaiKhoanNhap = "Mã Nhân Viên (vd:nv00)";
 	private String MatKhauNhap = "Mật khẩu";
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
@@ -179,11 +179,6 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC KHỞI CHẠY ====================
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				new LoginFrame().setVisible(true);
-			}
-		});
+		SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
 	}
 }

@@ -100,10 +100,10 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
         JPanel pnHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 16));
         pnHeaderRight.setOpaque(false);
-        JLabel lbCaKet = taoNhanHeader("Ca kết đang mở", bgHeaderBtn, fontLabel, 145);
-        JLabel lbQuanLy = taoNhanHeader(taoNhanNguoiDung(), bgHeaderBtn, fontLabel, 210);
-        pnHeaderRight.add(lbCaKet);
-        pnHeaderRight.add(lbQuanLy);
+        JButton btnCaKet = makeBtn("Ca kết đang mở", bgHeaderBtn, fontLabel, 145);
+        JButton btnQuanLy = makeBtn(taoNhanNguoiDung(), bgHeaderBtn, fontLabel, 210);
+        pnHeaderRight.add(btnCaKet);
+        pnHeaderRight.add(btnQuanLy);
         pnHeader.add(pnHeaderRight, BorderLayout.EAST);
         add(pnHeader, BorderLayout.NORTH);
 
@@ -270,17 +270,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         return b;
     }
 
-    /** Nhãn trang trí trên header (thay cho nút không có chức năng). */
-    private JLabel taoNhanHeader(String text, Color bg, Font font, int width) {
-        JLabel label = new JLabel(text, JLabel.CENTER);
-        label.setFont(font);
-        label.setForeground(Color.WHITE);
-        label.setOpaque(true);
-        label.setBackground(bg);
-        label.setPreferredSize(new Dimension(width, 36));
-        return label;
-    }
-
+    /** Nhãn người đang đăng nhập hiển thị trên header. */
     private String taoNhanNguoiDung() {
         if (Auth.laQuanLy()) {
             return "Quản lý: " + Auth.getTenHienThi();
