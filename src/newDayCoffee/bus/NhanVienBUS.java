@@ -195,6 +195,12 @@ public class NhanVienBUS {
         nv.setMatKhau(cu.getMatKhau());
         dsNhanVien.remove(cu);
         dsNhanVien.add(nv);
+
+        // Nếu sửa chính người đang đăng nhập thì cập nhật lại phiên làm việc
+        if (Auth.getNguoiDung() != null
+                && Auth.getNguoiDung().getMaNV().equalsIgnoreCase(nv.getMaNV())) {
+            Auth.dangNhap(nv);
+        }
         return null;
     }
 
