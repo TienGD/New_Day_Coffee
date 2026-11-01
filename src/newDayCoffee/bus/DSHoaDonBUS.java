@@ -285,4 +285,10 @@ public class DSHoaDonBUS {
         }
         return ketQua;
     }
+
+    // ==================== KHU VỰC ĐỊNH DẠNG ====================
+    /** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
+    public static String dinhDangTien(double soTien) {
+        return Validator.dinhDangTien(soTien);
+    }
 }

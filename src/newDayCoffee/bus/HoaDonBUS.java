@@ -313,4 +313,9 @@ public class HoaDonBUS {
     public static String dinhDangTien(double soTien) {
         return Validator.dinhDangTien(soTien);
     }
+
+    /** Định dạng tiền để đưa lên ô nhập: 15000 -> 15000. */
+    public static String dinhDangTienNhap(double soTien) {
+        return Validator.dinhDangTienNhap(soTien);
+    }
 }
