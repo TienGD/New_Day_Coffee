@@ -3,7 +3,6 @@ package newDayCoffee.gui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -11,12 +10,15 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -24,25 +26,54 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.bus.HoaDonBUS;
+import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.bus.TaiKhoanBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
 import newDayCoffee.gui.panels.TongQuanPanel;
+import newDayCoffee.utils.Auth;
 
-public class MainFrame extends JFrame {
+/**
+ * Màn hình chính của ứng dụng.
+ *
+ * MainFrame là nơi tạo các BUS dùng chung và truyền vào từng panel
+ * (không dùng singleton). Điều hướng menu dùng MouseListener, đăng xuất
+ * dùng ActionListener.
+ */
+public class MainFrame extends JFrame implements ActionListener, MouseListener {
+
+	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbSysName;
-	private JLabel lbShift;
+	private JLabel lbTenNguoiDung;
+	private JLabel lbChucVu;
+	private JButton btnDangXuat;
 	private JPanel pnContainerCard;
 	private CardLayout cardLayout;
-	private List<JLabel> listMenuLabels = new ArrayList<>();
+	private final List<JLabel> listMenuLabels = new ArrayList<>();
 
-	// 4 Panel chức năng độc lập
+	// 4 panel chức năng độc lập
 	private TongQuanPanel tongQuanPanel;
 	private BanHangPOSPanel banHangPOSPanel;
 	private QuanLyThucDonPanel quanLyThucDonPanel;
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
 
-	public MainFrame() {
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final TaiKhoanBUS taiKhoanBUS;
+	private final NhanVienBUS nhanVienBUS;
+
+	public MainFrame(TaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+		this.taiKhoanBUS = taiKhoanBUS;
+		this.nhanVienBUS = nhanVienBUS;
+
+		khoiTaoGiaoDien();
+	}
+
+	// ==================== KHU VỰC GIAO DIỆN ====================
+	private void khoiTaoGiaoDien() {
 		setTitle("New Day Coffee");
 		setSize(1280, 720);
 		setLocationRelativeTo(null);
@@ -50,7 +81,7 @@ public class MainFrame extends JFrame {
 		getContentPane().setBackground(new Color(245, 235, 224));
 
 		Font fontMenu = new Font("Arial", Font.BOLD, 19);
-		Font fontThuong = new Font("Arial", Font.PLAIN, 14);
+		Font fontThuong = new Font("Arial", Font.PLAIN, 13);
 
 		setLayout(new BorderLayout());
 
@@ -91,9 +122,13 @@ public class MainFrame extends JFrame {
 		Box pnMenu = Box.createVerticalBox();
 		pnMenu.setBorder(new EmptyBorder(40, 5, 0, 0));
 
-		String[] dsMenu = {
-			"Tổng quan", "Bán hàng", "Thực đơn", "Nhân viên"
-		};
+		String[] dsMenu;
+		if (Auth.laQuanLy()) {
+			dsMenu = new String[]{"Tổng quan", "Bán hàng", "Thực đơn", "Nhân viên"};
+		} else {
+			// Nhân viên chỉ thấy các chức năng được phép sử dụng
+			dsMenu = new String[]{"Tổng quan", "Bán hàng"};
+		}
 
 		for (int i = 0; i < dsMenu.length; i++) {
 			JLabel lbMenu = new JLabel(dsMenu[i]);
@@ -104,18 +139,44 @@ public class MainFrame extends JFrame {
 				lbMenu.setForeground(Color.WHITE);
 			}
 			lbMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
+			lbMenu.addMouseListener(this);
 			listMenuLabels.add(lbMenu);
-			final String menuItem = dsMenu[i];
-			lbMenu.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					switchCard(menuItem);
-				}
-			});
 			pnMenu.add(lbMenu);
 			pnMenu.add(Box.createVerticalStrut(22));
 		}
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
+
+		// THÔNG TIN NGƯỜI DÙNG + ĐĂNG XUẤT
+		JPanel pnNguoiDung = new JPanel();
+		pnNguoiDung.setLayout(new java.awt.GridLayout(0, 1, 0, 4));
+		pnNguoiDung.setOpaque(false);
+
+		lbTenNguoiDung = new JLabel(Auth.getTenHienThi());
+		lbTenNguoiDung.setFont(new Font("Arial", Font.BOLD, 13));
+		lbTenNguoiDung.setForeground(Color.BLACK);
+
+		String chucVu = "";
+		if (Auth.getNguoiDung() != null) {
+			chucVu = "Chức vụ: " + Auth.getNguoiDung().getChucVu();
+		}
+		lbChucVu = new JLabel(chucVu);
+		lbChucVu.setFont(fontThuong);
+		lbChucVu.setForeground(new Color(80, 40, 10));
+
+		btnDangXuat = new JButton("Đăng xuất");
+		btnDangXuat.setFont(fontThuong);
+		btnDangXuat.setBackground(new Color(140, 30, 30));
+		btnDangXuat.setForeground(Color.WHITE);
+		btnDangXuat.setFocusPainted(false);
+		btnDangXuat.setBorderPainted(false);
+		btnDangXuat.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnDangXuat.setPreferredSize(new Dimension(0, 32));
+
+		pnNguoiDung.add(lbTenNguoiDung);
+		pnNguoiDung.add(lbChucVu);
+		pnNguoiDung.add(Box.createVerticalStrut(6));
+		pnNguoiDung.add(btnDangXuat);
+		pnSidebar.add(pnNguoiDung, BorderLayout.SOUTH);
 
 		add(pnSidebar, BorderLayout.WEST);
 
@@ -124,10 +185,16 @@ public class MainFrame extends JFrame {
 		pnContainerCard = new JPanel(cardLayout);
 		pnContainerCard.setOpaque(false);
 
-		tongQuanPanel = new TongQuanPanel();
-		banHangPOSPanel = new BanHangPOSPanel();
-		quanLyThucDonPanel = new QuanLyThucDonPanel();
-		quanLyNhanVienPanel = new QuanLyNhanVienPanel();
+		// Tạo các BUS dùng chung cho mọi panel
+		DSDoUongBUS dsDoUongBUS = new DSDoUongBUS();
+		DSHoaDonBUS dsHoaDonBUS = new DSHoaDonBUS();
+		HoaDonBUS hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, nhanVienBUS);
+
+		// Tạo các panel và truyền BUS tương ứng
+		tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
+		banHangPOSPanel = new BanHangPOSPanel(dsDoUongBUS, hoaDonBUS);
+		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
+		quanLyNhanVienPanel = new QuanLyNhanVienPanel(nhanVienBUS);
 
 		pnContainerCard.add(tongQuanPanel, "Tổng quan");
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
@@ -135,24 +202,94 @@ public class MainFrame extends JFrame {
 		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
 
 		add(pnContainerCard, BorderLayout.CENTER);
+
+		// Gắn sự kiện đăng xuất
+		btnDangXuat.setActionCommand("DANG_XUAT");
+		btnDangXuat.addActionListener(this);
 	}
 
+	// ==================== KHU VỰC ĐIỀU HƯỚNG ====================
 	private void switchCard(String item) {
-		if (item.equals("Tổng quan") || item.equals("Bán hàng") || item.equals("Thực đơn") || item.equals("Nhân viên")) {
-			for (JLabel lb : listMenuLabels) {
-				if (lb.getText().equals(item)) {
-					lb.setForeground(Color.BLACK);
-				} else {
-					lb.setForeground(Color.WHITE);
-				}
+		if (item.equals("Tổng quan")) {
+			tongQuanPanel.capNhatDuLieu();
+		} else if (item.equals("Bán hàng")) {
+			banHangPOSPanel.capNhatDanhSachMon();
+			banHangPOSPanel.capNhatGioHang();
+		} else if (item.equals("Thực đơn")) {
+			quanLyThucDonPanel.capNhatBang();
+		} else if (item.equals("Nhân viên")) {
+			quanLyNhanVienPanel.capNhatBang();
+		}
+
+		for (int i = 0; i < listMenuLabels.size(); i++) {
+			JLabel lb = listMenuLabels.get(i);
+			if (lb.getText().equals(item)) {
+				lb.setForeground(Color.BLACK);
+			} else {
+				lb.setForeground(Color.WHITE);
 			}
-			cardLayout.show(pnContainerCard, item);
-		} else {
-			JOptionPane.showMessageDialog(this, "Chức năng \"" + item + "\" đang trong quá trình phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		}
+		cardLayout.show(pnContainerCard, item);
+	}
+
+	// ==================== KHU VỰC SỰ KIỆN ====================
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getActionCommand().equals("DANG_XUAT")) {
+			dangXuat();
 		}
 	}
 
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		if (e.getSource() instanceof JLabel) {
+			JLabel lbMenu = (JLabel) e.getSource();
+			switchCard(lbMenu.getText());
+		}
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// Không xử lý
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// Không xử lý
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// Không xử lý
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// Không xử lý
+	}
+
+	// ==================== KHU VỰC ĐĂNG XUẤT ====================
+	private void dangXuat() {
+		int luaChon = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?",
+				"Xác nhận đăng xuất", JOptionPane.YES_NO_OPTION);
+		if (luaChon != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		nhanVienBUS.dangXuat();
+		LoginFrame loginFrame = new LoginFrame(taiKhoanBUS, nhanVienBUS);
+		loginFrame.setVisible(true);
+		this.dispose();
+	}
+
+	// ==================== KHU VỰC KHỞI CHẠY ====================
 	public static void main(String[] args) {
-		new MainFrame().setVisible(true);
+		// Chạy thẳng MainFrame cũng phải qua đăng nhập trước
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				new LoginFrame().setVisible(true);
+			}
+		});
 	}
 }

@@ -10,24 +10,56 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-public class LoginFrame extends JFrame {
+import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.bus.TaiKhoanBUS;
+
+/**
+ * Màn hình đăng nhập - cửa ngõ đầu tiên của hệ thống.
+ *
+ * LoginFrame tạo TaiKhoanBUS và NhanVienBUS, sau đó truyền lại cho MainFrame
+ * để toàn bộ ứng dụng dùng chung một nguồn dữ liệu (không dùng singleton).
+ */
+public class LoginFrame extends JFrame implements ActionListener {
+
+	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbHeader;
 	private JTextField txtMa;
 	private JPasswordField passMatKhau;
 	private JButton btnDangNhap;
-	private String TaiKhoanNhap = "Mã Nhân Viên (vd:nv00)";
+	private String TaiKhoanNhap = "Mã Nhân Viên (vd:nv01)";
 	private String MatKhauNhap = "Mật khẩu";
 
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final TaiKhoanBUS taiKhoanBUS;
+	private final NhanVienBUS nhanVienBUS;
+
+	/** Khởi động ứng dụng: tạo dữ liệu dùng chung rồi mở màn hình đăng nhập. */
 	public LoginFrame() {
+		this(new TaiKhoanBUS(), null);
+	}
+
+	public LoginFrame(TaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+		this.taiKhoanBUS = taiKhoanBUS;
+		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
+
+		khoiTaoGiaoDien();
+		ganSuKien();
+	}
+
+	// ==================== KHU VỰC GIAO DIỆN ====================
+	private void khoiTaoGiaoDien() {
 		setTitle("Đăng nhập");
 		setSize(500, 350);
 		setLocationRelativeTo(null);
@@ -111,7 +143,47 @@ public class LoginFrame extends JFrame {
 		this.add(pnMain, BorderLayout.CENTER);
 	}
 
+	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+	private void ganSuKien() {
+		btnDangNhap.setActionCommand("DANG_NHAP");
+		btnDangNhap.addActionListener(this);
+		// Nhấn Enter ở ô mã hoặc ô mật khẩu cũng đăng nhập
+		txtMa.addActionListener(this);
+		passMatKhau.addActionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		xuLyDangNhap();
+	}
+
+	// ==================== KHU VỰC XỬ LÝ ĐĂNG NHẬP ====================
+	private void xuLyDangNhap() {
+		String maNV = txtMa.getText();
+		String matKhau = new String(passMatKhau.getPassword());
+
+		// NhanVienBUS kiểm tra qua Validator, TaiKhoanBUS và lưu phiên vào Auth
+		String loi = nhanVienBUS.dangNhap(maNV, matKhau);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Đăng nhập thất bại", JOptionPane.ERROR_MESSAGE);
+			passMatKhau.setText("");
+			passMatKhau.requestFocusInWindow();
+			return;
+		}
+
+		// Mở màn hình chính và đóng màn hình đăng nhập
+		MainFrame mainFrame = new MainFrame(taiKhoanBUS, nhanVienBUS);
+		mainFrame.setVisible(true);
+		this.dispose();
+	}
+
+	// ==================== KHU VỰC KHỞI CHẠY ====================
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				new LoginFrame().setVisible(true);
+			}
+		});
 	}
 }
