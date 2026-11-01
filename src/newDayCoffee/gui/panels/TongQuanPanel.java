@@ -101,11 +101,46 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		JPanel pnBadges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 18));
 		pnBadges.setOpaque(false);
 
-		JLabel lbCaKet = taoNhanHeader("Ca kết đang mở", new Font("Arial", Font.PLAIN, 13), 155);
-		JLabel lbQuanLy = taoNhanHeader(taoNhanNguoiDung(), new Font("Arial", Font.PLAIN, 13), 220);
+		// Nhãn thông tin Ca kết
+		JPanel badgeCaKet = new JPanel(new GridBagLayout()) {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setColor(new Color(172, 118, 78));
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+				g2.dispose();
+			}
+		};
+		badgeCaKet.setOpaque(false);
+		badgeCaKet.setPreferredSize(new Dimension(155, 38));
+		JLabel lbCaKet = new JLabel("Ca kết đang mở");
+		lbCaKet.setFont(new Font("Arial", Font.PLAIN, 13));
+		lbCaKet.setForeground(Color.WHITE);
+		badgeCaKet.add(lbCaKet);
 
-		pnBadges.add(lbCaKet);
-		pnBadges.add(lbQuanLy);
+		// Nhãn thông tin người đang đăng nhập
+		JPanel badgeQuanLy = new JPanel(new GridBagLayout()) {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setColor(new Color(172, 118, 78));
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+				g2.dispose();
+			}
+		};
+		badgeQuanLy.setOpaque(false);
+		badgeQuanLy.setPreferredSize(new Dimension(220, 38));
+		JLabel lbQuanLy = new JLabel(taoNhanNguoiDung());
+		lbQuanLy.setFont(new Font("Arial", Font.PLAIN, 13));
+		lbQuanLy.setForeground(Color.WHITE);
+		badgeQuanLy.add(lbQuanLy);
+
+		pnBadges.add(badgeCaKet);
+		pnBadges.add(badgeQuanLy);
 		pnHeader.add(pnBadges, BorderLayout.EAST);
 
 		add(pnHeader, BorderLayout.NORTH);
@@ -306,18 +341,6 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		};
 		panel.setOpaque(false);
 		return panel;
-	}
-
-	/** Tạo nhãn bo tròn trên header (thay cho nút trang trí cũ). */
-	private JLabel taoNhanHeader(String text, Font font, int width) {
-		JLabel label = new JLabel(text, JLabel.CENTER);
-		label.setFont(font);
-		label.setForeground(Color.WHITE);
-		label.setOpaque(true);
-		label.setBackground(new Color(172, 118, 78));
-		label.setBorder(new EmptyBorder(8, 14, 8, 14));
-		label.setPreferredSize(new Dimension(width, 38));
-		return label;
 	}
 
 	/** Tạo nút nền nâu dùng trong các khối tối. */

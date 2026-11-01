@@ -104,11 +104,24 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		JPanel pnHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 16));
 		pnHeaderRight.setOpaque(false);
 
-		JLabel lbCaKet = taoNhanHeader("Ca kết đang mở", bgHeaderBtn, fontLabel, 145);
-		JLabel lbQuanLy = taoNhanHeader(taoNhanNguoiDung(), bgHeaderBtn, fontLabel, 210);
+		JButton btnCaKet = new JButton("Ca kết đang mở");
+		btnCaKet.setBackground(bgHeaderBtn);
+		btnCaKet.setForeground(Color.WHITE);
+		btnCaKet.setFont(fontLabel);
+		btnCaKet.setFocusPainted(false);
+		btnCaKet.setBorderPainted(false);
+		btnCaKet.setPreferredSize(new Dimension(145, 36));
 
-		pnHeaderRight.add(lbCaKet);
-		pnHeaderRight.add(lbQuanLy);
+		JButton btnQuanLy = new JButton(taoNhanNguoiDung());
+		btnQuanLy.setBackground(bgHeaderBtn);
+		btnQuanLy.setForeground(Color.WHITE);
+		btnQuanLy.setFont(fontLabel);
+		btnQuanLy.setFocusPainted(false);
+		btnQuanLy.setBorderPainted(false);
+		btnQuanLy.setPreferredSize(new Dimension(210, 36));
+
+		pnHeaderRight.add(btnCaKet);
+		pnHeaderRight.add(btnQuanLy);
 		pnHeader.add(pnHeaderRight, BorderLayout.EAST);
 
 		add(pnHeader, BorderLayout.NORTH);
@@ -250,7 +263,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		JPanel pnBtnSearchWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
 		pnBtnSearchWrap.setOpaque(false);
 		btnTimKiem = taoNutBam("Tìm kiếm", new Color(46, 130, 184), 90, 34);
-		btnLamMoi = taoNutBam("Làm mới danh sách", new Color(230, 126, 50), 150, 34);
+		btnLamMoi = taoNutBam("Làm mới danh sách", new Color(230, 126, 50), 185, 34);
 		btnLamMoi.setBorder(BorderFactory.createLineBorder(new Color(120, 60, 20), 1));
 		btnLamMoi.setBorderPainted(true);
 		pnBtnSearchWrap.add(btnTimKiem);
@@ -342,17 +355,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		return btn;
 	}
 
-	/** Nhãn trang trí trên header (thay cho nút không có chức năng). */
-	private JLabel taoNhanHeader(String text, Color bg, Font font, int width) {
-		JLabel label = new JLabel(text, JLabel.CENTER);
-		label.setFont(font);
-		label.setForeground(Color.WHITE);
-		label.setOpaque(true);
-		label.setBackground(bg);
-		label.setPreferredSize(new Dimension(width, 36));
-		return label;
-	}
-
+	/** Nhãn người đang đăng nhập hiển thị trên header. */
 	private String taoNhanNguoiDung() {
 		if (Auth.laQuanLy()) {
 			return "Quản lý: " + Auth.getTenHienThi();
