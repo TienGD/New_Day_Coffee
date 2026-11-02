@@ -7,10 +7,8 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.util.ArrayList;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -25,13 +23,26 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.AbstractTableModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
-public class QuanLyThucDonPanel extends JPanel {
-    // ==================== FIELDS ====================
+import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.bus.DoUongBUS;
+import newDayCoffee.dto.DoUongDTO;
+import newDayCoffee.utils.Auth;
+
+/**
+ * Màn hình quản lý thực đơn.
+ *
+ * Panel nhận DSDoUongBUS để thêm / sửa / xóa món. Việc kiểm tra dữ liệu và
+ * quyền quản lí nằm trong tầng BUS, giao diện chỉ hiển thị thông báo trả về.
+ */
+public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSelectionListener {
+
+    // ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
     private JTextField txtMaMon;
     private JTextField txtTenMon;
     private JTextField txtDonGia;
@@ -46,11 +57,25 @@ public class QuanLyThucDonPanel extends JPanel {
     private JButton btnLocCaPhe;
     private JButton btnLocTra;
     private JButton btnLocTraSua;
+    private JButton btnLocBanh;
 
     private JTable tblThucDon;
     private DefaultTableModel modelThucDon;
 
-    public QuanLyThucDonPanel() {
+    // ==================== KHU VỰC TẦNG XỬ LÝ ====================
+    private final DSDoUongBUS dsDoUongBUS;
+    private String nhomDangLoc = "Tất cả";
+
+    public QuanLyThucDonPanel(DSDoUongBUS dsDoUongBUS) {
+        this.dsDoUongBUS = dsDoUongBUS;
+
+        khoiTaoGiaoDien();
+        ganSuKien();
+        capNhatBang();
+    }
+
+    // ==================== KHU VỰC GIAO DIỆN ====================
+    private void khoiTaoGiaoDien() {
         setLayout(new BorderLayout());
 
         Color bgHeader    = new Color(138,  82,  36);
@@ -76,7 +101,7 @@ public class QuanLyThucDonPanel extends JPanel {
         JPanel pnHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 16));
         pnHeaderRight.setOpaque(false);
         JButton btnCaKet = makeBtn("Ca kết đang mở", bgHeaderBtn, fontLabel, 145);
-        JButton btnQuanLy = makeBtn("Quản lý: Lâm Nguyễn Như Ý", bgHeaderBtn, fontLabel, 210);
+        JButton btnQuanLy = makeBtn(taoNhanNguoiDung(), bgHeaderBtn, fontLabel, 210);
         pnHeaderRight.add(btnCaKet);
         pnHeaderRight.add(btnQuanLy);
         pnHeader.add(pnHeaderRight, BorderLayout.EAST);
@@ -146,7 +171,7 @@ public class QuanLyThucDonPanel extends JPanel {
         txtTimKiem.setFont(fontLabel);
         txtTimKiem.setPreferredSize(new Dimension(180, 34));
         txtTimKiem.setBorder(new EmptyBorder(5, 8, 5, 8));
-        txtTimKiem.setToolTipText("Nhập mã: cofXX, teaXX, milXX...");
+        txtTimKiem.setToolTipText("Nhập mã hoặc tên món: cofXX, teaXX, milXX...");
 
         btnTimKiem = makeBtn("Tìm kiếm", btnColor, fontBold, 95);
 
@@ -158,6 +183,7 @@ public class QuanLyThucDonPanel extends JPanel {
         btnLocCaPhe  = makeBtn("Cà phê", new Color(120, 60, 20), fontBold, 90);
         btnLocTra    = makeBtn("Trà", new Color(50, 110, 60), fontBold, 80);
         btnLocTraSua = makeBtn("Trà sữa", new Color(100, 60, 120), fontBold, 90);
+        btnLocBanh   = makeBtn("Bánh", new Color(140, 100, 40), fontBold, 80);
 
         pnSearchFilter.add(lbTimKiem);
         pnSearchFilter.add(txtTimKiem);
@@ -168,6 +194,7 @@ public class QuanLyThucDonPanel extends JPanel {
         pnSearchFilter.add(btnLocCaPhe);
         pnSearchFilter.add(btnLocTra);
         pnSearchFilter.add(btnLocTraSua);
+        pnSearchFilter.add(btnLocBanh);
 
         JPanel pnTop = new JPanel();
         pnTop.setLayout(new BoxLayout(pnTop, BoxLayout.Y_AXIS));
@@ -180,7 +207,15 @@ public class QuanLyThucDonPanel extends JPanel {
 
         pnContent.add(pnTop, BorderLayout.NORTH);
 
-        // ---- JTABLE ----
+        // ---- JTABLE (chỉ khởi tạo một lần, sau khi đã có model) ----
+        String[] columnNames = {"Mã món", "Tên món", "Giá bán"};
+        modelThucDon = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
         tblThucDon = new JTable(modelThucDon);
         tblThucDon.setRowHeight(34);
         tblThucDon.setFont(fontLabel);
@@ -198,17 +233,7 @@ public class QuanLyThucDonPanel extends JPanel {
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
-        
-     // 1. Khởi tạo model và định nghĩa các cột trước
-        String[] columnNames = {"Mã món", "Tên món", "Giá bán"};
-        modelThucDon = new DefaultTableModel(columnNames, 0);
-        
-        // 2. Truyền model đã khởi tạo vào JTable
-        tblThucDon = new JTable(modelThucDon);
-        
-        tblThucDon.setRowHeight(34);
-        tblThucDon.setFont(fontLabel);
-        
+
         tblThucDon.getColumnModel().getColumn(0).setCellRenderer(center);
         tblThucDon.getColumnModel().getColumn(2).setCellRenderer(center);
         tblThucDon.getColumnModel().getColumn(0).setPreferredWidth(120);
@@ -220,8 +245,18 @@ public class QuanLyThucDonPanel extends JPanel {
         pnContent.add(scrollTable, BorderLayout.CENTER);
 
         add(pnContent, BorderLayout.CENTER);
+
+        // Nhân viên không phải quản lí chỉ được xem thực đơn
+        if (!Auth.laQuanLy()) {
+            btnThem.setEnabled(false);
+            btnSua.setEnabled(false);
+            btnXoa.setEnabled(false);
+            btnLuu.setEnabled(false);
+            txtMaMon.setEditable(false);
+            txtTenMon.setEditable(false);
+            txtDonGia.setEditable(false);
+        }
     }
-       
 
     private JButton makeBtn(String text, Color bg, Font font, int width) {
         JButton b = new JButton(text);
@@ -233,5 +268,176 @@ public class QuanLyThucDonPanel extends JPanel {
         b.setPreferredSize(new Dimension(width, 34));
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return b;
+    }
+
+    /** Nhãn người đang đăng nhập hiển thị trên header. */
+    private String taoNhanNguoiDung() {
+        if (Auth.laQuanLy()) {
+            return "Quản lý: " + Auth.getTenHienThi();
+        }
+        return "Nhân viên: " + Auth.getTenHienThi();
+    }
+
+    // ==================== KHU VỰC GẮN SỰ KIỆN ====================
+    private void ganSuKien() {
+        btnThem.setActionCommand("THEM");
+        btnSua.setActionCommand("SUA");
+        btnXoa.setActionCommand("XOA");
+        btnLuu.setActionCommand("LUU");
+        btnTimKiem.setActionCommand("TIM_KIEM");
+
+        btnThem.addActionListener(this);
+        btnSua.addActionListener(this);
+        btnXoa.addActionListener(this);
+        btnLuu.addActionListener(this);
+        btnTimKiem.addActionListener(this);
+        txtTimKiem.setActionCommand("TIM_KIEM");
+        txtTimKiem.addActionListener(this);
+
+        btnLocTatCa.setActionCommand("LOC:Tất cả");
+        btnLocCaPhe.setActionCommand("LOC:Cà phê");
+        btnLocTra.setActionCommand("LOC:Trà");
+        btnLocTraSua.setActionCommand("LOC:Trà sữa");
+        btnLocBanh.setActionCommand("LOC:Bánh");
+
+        btnLocTatCa.addActionListener(this);
+        btnLocCaPhe.addActionListener(this);
+        btnLocTra.addActionListener(this);
+        btnLocTraSua.addActionListener(this);
+        btnLocBanh.addActionListener(this);
+
+        tblThucDon.getSelectionModel().addListSelectionListener(this);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String lenh = e.getActionCommand();
+
+        if (lenh.equals("THEM")) {
+            themMon();
+        } else if (lenh.equals("SUA")) {
+            suaMon();
+        } else if (lenh.equals("XOA")) {
+            xoaMon();
+        } else if (lenh.equals("LUU")) {
+            luuDuLieu();
+        } else if (lenh.equals("TIM_KIEM")) {
+            capNhatBang();
+        } else if (lenh.startsWith("LOC:")) {
+            nhomDangLoc = lenh.substring(4);
+            capNhatBang();
+        }
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        if (e.getValueIsAdjusting()) {
+            return;
+        }
+        int dong = tblThucDon.getSelectedRow();
+        if (dong < 0) {
+            return;
+        }
+
+        String maMon = String.valueOf(modelThucDon.getValueAt(dong, 0));
+        DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+        if (doUong == null) {
+            return;
+        }
+
+        txtMaMon.setText(doUong.getMaMon());
+        txtTenMon.setText(doUong.getTenMon());
+        txtDonGia.setText(DoUongBUS.dinhDangGiaNhap(doUong.getDonGia()));
+    }
+
+    // ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+    /** Nạp lại bảng theo từ khóa và nhóm đang chọn. */
+    public void capNhatBang() {
+        List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
+        hienThiDanhSach(dsMon);
+    }
+
+    private void hienThiDanhSach(List<DoUongDTO> dsMon) {
+        modelThucDon.setRowCount(0);
+        for (int i = 0; i < dsMon.size(); i++) {
+            DoUongDTO doUong = dsMon.get(i);
+            modelThucDon.addRow(new Object[]{
+                doUong.getMaMon(),
+                doUong.getTenMon(),
+                DoUongBUS.dinhDangGia(doUong.getDonGia())
+            });
+        }
+    }
+
+    private void themMon() {
+        String loi = dsDoUongBUS.themDoUong(txtMaMon.getText(), txtTenMon.getText(), txtDonGia.getText());
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không thể thêm món", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Đã thêm món mới.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        xoaForm();
+        capNhatBang();
+    }
+
+    private void suaMon() {
+        String loi = dsDoUongBUS.suaDoUong(txtMaMon.getText(), txtTenMon.getText(), txtDonGia.getText());
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không thể sửa món", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Đã cập nhật món.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        capNhatBang();
+    }
+
+    private void xoaMon() {
+        String maMon = txtMaMon.getText().trim();
+
+        // Nếu chưa nhập mã nhưng có chọn dòng thì lấy mã ở dòng đang chọn
+        int dong = tblThucDon.getSelectedRow();
+        if (maMon.isEmpty() && dong >= 0) {
+            maMon = String.valueOf(modelThucDon.getValueAt(dong, 0));
+        }
+        if (maMon.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hoặc nhập mã món cần xóa.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+        String tenMon = (doUong == null) ? maMon : doUong.getTenMon();
+
+        int luaChon = JOptionPane.showConfirmDialog(this, "Xóa món \"" + tenMon + "\"?",
+                "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+        if (luaChon != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        String loi = dsDoUongBUS.xoaDoUong(maMon);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không thể xóa món", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Đã xóa món.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        xoaForm();
+        capNhatBang();
+    }
+
+    private void luuDuLieu() {
+        if (dsDoUongBUS.luuVaoCSDL()) {
+            JOptionPane.showMessageDialog(this, "Đã lưu danh sách món vào cơ sở dữ liệu.",
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Lưu dữ liệu thất bại.",
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void xoaForm() {
+        txtMaMon.setText("");
+        txtTenMon.setText("");
+        txtDonGia.setText("0");
+        tblThucDon.clearSelection();
+        txtMaMon.requestFocusInWindow();
     }
 }
