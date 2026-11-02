@@ -12,12 +12,12 @@ import newDayCoffee.utils.Validator;
  * Lớp này chỉ quản lý cặp mã nhân viên - mật khẩu.
  * Thông tin cá nhân của nhân viên nằm ở NhanVienBUS.
  */
-public class TaiKhoanBUS {
+public class DSTaiKhoanBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<TaiKhoanDTO> dsTaiKhoan;
 
-    public TaiKhoanBUS() {
+    public DSTaiKhoanBUS() {
         dsTaiKhoan = new ArrayList<>();
         taoDuLieuMau();
     }

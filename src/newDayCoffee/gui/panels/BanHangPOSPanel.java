@@ -45,6 +45,7 @@ import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
+import newDayCoffee.gui.MainFrame;
 import newDayCoffee.utils.Auth;
 
 /**
@@ -79,8 +80,10 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSDoUongBUS dsDoUongBUS;
 	private final HoaDonBUS hoaDonBUS;
+	private final MainFrame mainFrame;
 
-	public BanHangPOSPanel(DSDoUongBUS dsDoUongBUS, HoaDonBUS hoaDonBUS) {
+	public BanHangPOSPanel(MainFrame mainFrame,DSDoUongBUS dsDoUongBUS, HoaDonBUS hoaDonBUS) {
+		this.mainFrame = mainFrame;
 		this.dsDoUongBUS = dsDoUongBUS;
 		this.hoaDonBUS = hoaDonBUS;
 
@@ -621,67 +624,38 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 			return;
 		}
 
-		double tongTien = hoaDonBUS.tongTien();
-
-		JTextField txtTienKhachDua = new JTextField(HoaDonBUS.dinhDangTienNhap(tongTien));
-		JComboBox<String> cboPhuongThuc = new JComboBox<>(new String[]{"Tiền mặt", "Chuyển khoản"});
-		JTextField txtGhiChu = new JTextField();
-
-		JPanel pnThanhToan = new JPanel(new GridLayout(0, 2, 8, 8));
-		pnThanhToan.add(new JLabel("Tổng tiền:"));
-		pnThanhToan.add(new JLabel(HoaDonBUS.dinhDangTien(tongTien)));
-		pnThanhToan.add(new JLabel("Tiền khách đưa:"));
-		pnThanhToan.add(txtTienKhachDua);
-		pnThanhToan.add(new JLabel("Phương thức:"));
-		pnThanhToan.add(cboPhuongThuc);
-		pnThanhToan.add(new JLabel("Ghi chú:"));
-		pnThanhToan.add(txtGhiChu);
-
-		int luaChon = JOptionPane.showConfirmDialog(this, pnThanhToan, "Thanh toán",
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (luaChon != JOptionPane.OK_OPTION) {
-			return;
-		}
-
-		String phuongThuc = (String) cboPhuongThuc.getSelectedItem();
-		String loi = hoaDonBUS.thanhToan(txtTienKhachDua.getText(), phuongThuc, txtGhiChu.getText());
-		if (loi != null) {
-			JOptionPane.showMessageDialog(this, loi, "Thanh toán thất bại", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
-		HoaDonDTO hoaDon = hoaDonBUS.layHoaDonVuaTao();
-		capNhatGioHang();
-		hienThiHoaDon(hoaDon);
-	}
-
-	private void hienThiHoaDon(HoaDonDTO hoaDon) {
-		if (hoaDon == null) {
-			return;
-		}
-
-		JTextArea txtHoaDon = new JTextArea(hoaDonBUS.taoNoiDungHoaDon(hoaDon));
-		txtHoaDon.setEditable(false);
-		txtHoaDon.setFont(new Font("Monospaced", Font.PLAIN, 13));
-		txtHoaDon.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-		JScrollPane scroll = new JScrollPane(txtHoaDon);
-		scroll.setPreferredSize(new Dimension(470, 380));
-
-		JOptionPane.showMessageDialog(this, scroll, "Hóa đơn " + hoaDon.getMaHD(),
-				JOptionPane.INFORMATION_MESSAGE);
-
-		int luaChon = JOptionPane.showConfirmDialog(this, "Xuất hóa đơn ra file văn bản?",
-				"Xuất hóa đơn", JOptionPane.YES_NO_OPTION);
-		if (luaChon == JOptionPane.YES_OPTION) {
-			String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon);
-			if (duongDan == null) {
-				JOptionPane.showMessageDialog(this, "Không thể xuất hóa đơn ra file.",
-						"Lỗi", JOptionPane.ERROR_MESSAGE);
-			} else {
-				JOptionPane.showMessageDialog(this, "Đã xuất hóa đơn:\n" + duongDan,
-						"Thành công", JOptionPane.INFORMATION_MESSAGE);
-			}
+		// Điều hướng sang màn hình ThanhToanPOSPanel
+		if (mainFrame != null) {
+			mainFrame.switchCard("Thanh toán");
 		}
 	}
+//	private void hienThiHoaDon(HoaDonDTO hoaDon) {
+//		if (hoaDon == null) {
+//			return;
+//		}
+//
+//		JTextArea txtHoaDon = new JTextArea(hoaDonBUS.taoNoiDungHoaDon(hoaDon));
+//		txtHoaDon.setEditable(false);
+//		txtHoaDon.setFont(new Font("Monospaced", Font.PLAIN, 13));
+//		txtHoaDon.setBorder(new EmptyBorder(10, 10, 10, 10));
+//
+//		JScrollPane scroll = new JScrollPane(txtHoaDon);
+//		scroll.setPreferredSize(new Dimension(470, 380));
+//
+//		JOptionPane.showMessageDialog(this, scroll, "Hóa đơn " + hoaDon.getMaHD(),
+//				JOptionPane.INFORMATION_MESSAGE);
+//
+//		int luaChon = JOptionPane.showConfirmDialog(this, "Xuất hóa đơn ra file văn bản?",
+//				"Xuất hóa đơn", JOptionPane.YES_NO_OPTION);
+//		if (luaChon == JOptionPane.YES_OPTION) {
+//			String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon);
+//			if (duongDan == null) {
+//				JOptionPane.showMessageDialog(this, "Không thể xuất hóa đơn ra file.",
+//						"Lỗi", JOptionPane.ERROR_MESSAGE);
+//			} else {
+//				JOptionPane.showMessageDialog(this, "Đã xuất hóa đơn:\n" + duongDan,
+//						"Thành công", JOptionPane.INFORMATION_MESSAGE);
+//			}
+//		}
+//	}
 }

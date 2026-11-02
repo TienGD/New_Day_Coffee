@@ -1,0 +1,467 @@
+package newDayCoffee.gui.panels;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
+import newDayCoffee.gui.MainFrame;
+
+/**
+ * Màn hình thanh toán đơn hàng (POS).
+ * Chỉ bao gồm phần dựng giao diện (UI), chưa gắn sự kiện.
+ */
+public class ThanhToanPOSPanel extends JPanel {
+
+	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
+	// Cột trái: Thông tin đơn hàng & Danh sách sản phẩm
+	private JLabel lbMaHoaDonGiaTri;
+	private JLabel lbNgayLapGiaTri;
+	private JLabel lbNhanVienGiaTri;
+	private JTable tblSanPham;
+	private DefaultTableModel modelSanPham;
+	private JButton btnQuayLai;
+
+	// Cột phải - Hàng trên: Các thẻ tổng kết tiền
+	private JLabel lbTongTienHangGiaTri;
+	private JLabel lbGiamGiaGiaTri;
+	private JLabel lbThueGiaTri;
+	private JLabel lbThanhTienGiaTri;
+
+	// Cột phải - Nhập liệu & Phương thức thanh toán
+	private JTextField txtKhachDua;
+	private JTextField txtTienThua;
+	private JButton btnTienMat;
+	private JButton btnTheNganHang;
+	private JButton btnChuyenKhoan;
+	private JButton btnViMomo;
+	private JTextArea txtGhiChu;
+
+	// Cột phải - Bàn phím số & Nút tác vụ
+	private JButton[] dsNutBanPhim;
+	private JButton btnInHoaDon;
+	private JButton btnThanhToan;
+
+	public ThanhToanPOSPanel(MainFrame mainFrame) {
+		khoiTaoGiaoDien();
+	}
+
+	// ==================== KHU VỰC GIAO DIỆN ====================
+	private void khoiTaoGiaoDien() {
+		setLayout(new GridBagLayout());
+		setBackground(new Color(165, 122, 85));
+		setBorder(new EmptyBorder(15, 15, 15, 15));
+
+		Font fontTieuDe = new Font("Arial", Font.BOLD, 14);
+		Font fontDam = new Font("Arial", Font.BOLD, 13);
+		Font fontThuong = new Font("Arial", Font.PLAIN, 13);
+
+		Color mauNenChinh = new Color(165, 122, 85);
+		Color mauVienDen = new Color(45, 30, 20);
+		Color mauXamNhat = new Color(218, 218, 218);
+		Color mauDoDam = new Color(128, 28, 28);
+		Color mauDoTuoi = new Color(242, 82, 82);
+		Color mauXanhLaDam = new Color(8, 88, 52);
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.weighty = 1.0;
+
+		// ==================== CỘT TRÁI: THÔNG TIN & DANH SÁCH SẢN PHẨM ====================
+		JPanel pnLeftCol = new JPanel(new GridBagLayout());
+		pnLeftCol.setOpaque(false);
+
+		GridBagConstraints gbcLeft = new GridBagConstraints();
+		gbcLeft.gridx = 0;
+		gbcLeft.fill = GridBagConstraints.BOTH;
+		gbcLeft.weightx = 1.0;
+
+		// 1. Khung Thông tin đơn hàng
+		JPanel pnThongTin = new JPanel(new BorderLayout(0, 12));
+		pnThongTin.setBackground(mauNenChinh);
+		pnThongTin.setBorder(BorderFactory.createCompoundBorder(
+			new LineBorder(mauVienDen, 1),
+			new EmptyBorder(10, 14, 15, 14)
+		));
+
+		JLabel lbTitleThongTin = new JLabel("Thông tin đơn hàng");
+		lbTitleThongTin.setFont(fontTieuDe);
+		lbTitleThongTin.setForeground(Color.BLACK);
+		pnThongTin.add(lbTitleThongTin, BorderLayout.NORTH);
+
+		JPanel pnChiTietThongTin = new JPanel(new GridLayout(3, 2, 10, 12));
+		pnChiTietThongTin.setOpaque(false);
+		pnChiTietThongTin.setBorder(new EmptyBorder(0, 10, 0, 10));
+
+		JLabel lbMaHD = new JLabel("Mã hóa đơn:");
+		lbMaHD.setFont(fontDam);
+		lbMaHD.setForeground(Color.WHITE);
+		lbMaHoaDonGiaTri = new JLabel("DHTH20A");
+		lbMaHoaDonGiaTri.setFont(fontDam);
+		lbMaHoaDonGiaTri.setForeground(Color.WHITE);
+
+		JLabel lbNgayLap = new JLabel("Ngày lập:");
+		lbNgayLap.setFont(fontDam);
+		lbNgayLap.setForeground(Color.WHITE);
+		lbNgayLapGiaTri = new JLabel("22/09/2026");
+		lbNgayLapGiaTri.setFont(fontDam);
+		lbNgayLapGiaTri.setForeground(Color.WHITE);
+
+		JLabel lbNV = new JLabel("Nhân viên:");
+		lbNV.setFont(fontDam);
+		lbNV.setForeground(Color.WHITE);
+		lbNhanVienGiaTri = new JLabel("Lâm Nguyễn Như Ý");
+		lbNhanVienGiaTri.setFont(fontDam);
+		lbNhanVienGiaTri.setForeground(Color.WHITE);
+
+		pnChiTietThongTin.add(lbMaHD);
+		pnChiTietThongTin.add(lbMaHoaDonGiaTri);
+		pnChiTietThongTin.add(lbNgayLap);
+		pnChiTietThongTin.add(lbNgayLapGiaTri);
+		pnChiTietThongTin.add(lbNV);
+		pnChiTietThongTin.add(lbNhanVienGiaTri);
+
+		pnThongTin.add(pnChiTietThongTin, BorderLayout.CENTER);
+
+		gbcLeft.gridy = 0;
+		gbcLeft.weighty = 0.25;
+		gbcLeft.insets = new Insets(0, 0, 20, 0);
+		pnLeftCol.add(pnThongTin, gbcLeft);
+
+		// 2. Khung Danh sách sản phẩm
+		JPanel pnDanhSachSP = new JPanel(new BorderLayout());
+		pnDanhSachSP.setBackground(mauNenChinh);
+		pnDanhSachSP.setBorder(new LineBorder(mauVienDen, 1));
+
+		JPanel pnHeaderSP = new JPanel(new BorderLayout());
+		pnHeaderSP.setBackground(mauNenChinh);
+		pnHeaderSP.setBorder(new EmptyBorder(12, 12, 12, 12));
+		JLabel lbTitleSP = new JLabel("Danh sách sản phẩm");
+		lbTitleSP.setFont(fontTieuDe);
+		lbTitleSP.setForeground(Color.BLACK);
+		pnHeaderSP.add(lbTitleSP, BorderLayout.WEST);
+		pnDanhSachSP.add(pnHeaderSP, BorderLayout.NORTH);
+
+		String[] cotBang = {"STT", "Tên món", "SL", "Đơn giá", "Thành tiền"};
+		modelSanPham = new DefaultTableModel(cotBang, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		// Dữ liệu mẫu giống trong ảnh
+		modelSanPham.addRow(new Object[]{"1", "Cà phê đen", "1", "15.000Đ", "15.000Đ"});
+		modelSanPham.addRow(new Object[]{"", "", "", "", ""});
+		modelSanPham.addRow(new Object[]{"", "", "", "", ""});
+		modelSanPham.addRow(new Object[]{"", "", "", "", ""});
+
+		tblSanPham = new JTable(modelSanPham);
+		tblSanPham.setRowHeight(48);
+		tblSanPham.setBackground(mauXamNhat);
+		tblSanPham.setGridColor(new Color(110, 110, 110));
+		tblSanPham.setShowVerticalLines(false);
+		tblSanPham.setFont(new Font("Arial", Font.PLAIN, 12));
+		tblSanPham.getTableHeader().setBackground(mauXamNhat);
+		tblSanPham.getTableHeader().setForeground(new Color(60, 70, 80));
+		tblSanPham.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 11));
+		tblSanPham.getTableHeader().setPreferredSize(new Dimension(0, 32));
+		tblSanPham.getTableHeader().setBorder(new MatteBorder(0, 0, 1, 0, new Color(110, 110, 110)));
+
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+		for (int i = 0; i < tblSanPham.getColumnCount(); i++) {
+			tblSanPham.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+		}
+		tblSanPham.getColumnModel().getColumn(0).setPreferredWidth(40);
+		tblSanPham.getColumnModel().getColumn(1).setPreferredWidth(100);
+		tblSanPham.getColumnModel().getColumn(2).setPreferredWidth(35);
+
+		JScrollPane scrollBang = new JScrollPane(tblSanPham);
+		scrollBang.getViewport().setBackground(mauXamNhat);
+		scrollBang.setBorder(new MatteBorder(1, 0, 0, 0, mauVienDen));
+		pnDanhSachSP.add(scrollBang, BorderLayout.CENTER);
+
+		gbcLeft.gridy = 1;
+		gbcLeft.weighty = 0.65;
+		gbcLeft.insets = new Insets(0, 0, 20, 0);
+		pnLeftCol.add(pnDanhSachSP, gbcLeft);
+
+		// 3. Nút Quay lại đơn hàng
+		JPanel pnBottomLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		pnBottomLeft.setOpaque(false);
+
+		btnQuayLai = taoNutPhang("←  Quay lại đơn hàng", mauDoDam, Color.WHITE, fontDam, new Dimension(170, 42));
+		pnBottomLeft.add(btnQuayLai);
+
+		gbcLeft.gridy = 2;
+		gbcLeft.weighty = 0.10;
+		gbcLeft.insets = new Insets(0, 0, 0, 0);
+		pnLeftCol.add(pnBottomLeft, gbcLeft);
+
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 0.30;
+		gbc.insets = new Insets(0, 0, 0, 15);
+		add(pnLeftCol, gbc);
+
+		// ==================== CỘT PHẢI: KHU VỰC THANH TOÁN ====================
+		JPanel pnRightCol = new JPanel(new BorderLayout(0, 25));
+		pnRightCol.setBackground(mauNenChinh);
+		pnRightCol.setBorder(BorderFactory.createCompoundBorder(
+			new LineBorder(mauVienDen, 1),
+			new EmptyBorder(15, 35, 25, 35)
+		));
+
+		// 1. Hàng trên: 4 ô thông tin tổng tiền
+		JPanel pnTopSummary = new JPanel(new GridLayout(1, 4, 30, 0));
+		pnTopSummary.setOpaque(false);
+		pnTopSummary.setPreferredSize(new Dimension(0, 95));
+
+		lbTongTienHangGiaTri = new JLabel("15.000Đ", SwingConstants.CENTER);
+		lbGiamGiaGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
+		lbThueGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
+		lbThanhTienGiaTri = new JLabel("15.000Đ", SwingConstants.CENTER);
+
+		pnTopSummary.add(taoTheThongKe("Tổng tiền hàng", lbTongTienHangGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
+		pnTopSummary.add(taoTheThongKe("Giảm giá", lbGiamGiaGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
+		pnTopSummary.add(taoTheThongKe("Thuế", lbThueGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
+		pnTopSummary.add(taoTheThongKe("Thành tiền", lbThanhTienGiaTri, mauDoTuoi, Color.BLACK, Color.WHITE));
+
+		pnRightCol.add(pnTopSummary, BorderLayout.NORTH);
+
+		// 2. Phần thân: Chia 2 cột (Cột form bên trái & Cột bàn phím bên phải)
+		JPanel pnCenterPayment = new JPanel(new GridBagLayout());
+		pnCenterPayment.setOpaque(false);
+
+		GridBagConstraints gbcPay = new GridBagConstraints();
+		gbcPay.fill = GridBagConstraints.BOTH;
+		gbcPay.weighty = 1.0;
+
+		// --- Nửa trái của khung phải: Khách đưa, Tiền thừa, Phương thức, Ghi chú ---
+		JPanel pnFormLeft = new JPanel(new GridBagLayout());
+		pnFormLeft.setOpaque(false);
+
+		GridBagConstraints gbcForm = new GridBagConstraints();
+		gbcForm.gridx = 0;
+		gbcForm.fill = GridBagConstraints.HORIZONTAL;
+		gbcForm.weightx = 1.0;
+		gbcForm.anchor = GridBagConstraints.NORTHWEST;
+
+		// Khách đưa
+		JLabel lbKhachDua = new JLabel("Khách đưa:");
+		lbKhachDua.setFont(fontDam);
+		lbKhachDua.setForeground(Color.WHITE);
+		gbcForm.gridy = 0;
+		gbcForm.insets = new Insets(0, 0, 6, 0);
+		pnFormLeft.add(lbKhachDua, gbcForm);
+
+		txtKhachDua = new JTextField("0");
+		txtKhachDua.setBackground(mauXamNhat);
+		txtKhachDua.setForeground(Color.GRAY);
+		txtKhachDua.setFont(fontThuong);
+		txtKhachDua.setPreferredSize(new Dimension(0, 38));
+		txtKhachDua.setBorder(new EmptyBorder(0, 12, 0, 12));
+		gbcForm.gridy = 1;
+		gbcForm.insets = new Insets(0, 0, 20, 0);
+		pnFormLeft.add(txtKhachDua, gbcForm);
+
+		// Tiền thừa trả lại
+		JLabel lbTienThua = new JLabel("Tiền thừa trả lại:");
+		lbTienThua.setFont(fontDam);
+		lbTienThua.setForeground(Color.WHITE);
+		gbcForm.gridy = 2;
+		gbcForm.insets = new Insets(0, 0, 6, 0);
+		pnFormLeft.add(lbTienThua, gbcForm);
+
+		txtTienThua = new JTextField("Thiếu: 15.000");
+		txtTienThua.setEditable(false);
+		txtTienThua.setBackground(mauXamNhat);
+		txtTienThua.setForeground(Color.BLACK);
+		txtTienThua.setFont(fontDam);
+		txtTienThua.setPreferredSize(new Dimension(0, 38));
+		txtTienThua.setBorder(new EmptyBorder(0, 10, 0, 10));
+		gbcForm.gridy = 3;
+		gbcForm.insets = new Insets(0, 0, 20, 0);
+		pnFormLeft.add(txtTienThua, gbcForm);
+
+		// Phương thức thanh toán
+		JLabel lbPhuongThuc = new JLabel("Phương thức thanh toán:");
+		lbPhuongThuc.setFont(fontDam);
+		lbPhuongThuc.setForeground(Color.WHITE);
+		gbcForm.gridy = 4;
+		gbcForm.insets = new Insets(0, 0, 10, 0);
+		pnFormLeft.add(lbPhuongThuc, gbcForm);
+
+		JPanel pnPhuongThucGrid = new JPanel(new GridLayout(2, 2, 20, 18));
+		pnPhuongThucGrid.setOpaque(false);
+
+		btnTienMat = taoNutPhang("Tiền mặt", mauDoDam, Color.WHITE, fontDam, new Dimension(0, 42));
+		btnTheNganHang = taoNutPhang("Thẻ ngân hàng", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
+		btnChuyenKhoan = taoNutPhang("Chuyển khoản", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
+		btnViMomo = taoNutPhang("Ví momo", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
+
+		pnPhuongThucGrid.add(btnTienMat);
+		pnPhuongThucGrid.add(btnTheNganHang);
+		pnPhuongThucGrid.add(btnChuyenKhoan);
+		pnPhuongThucGrid.add(btnViMomo);
+
+		gbcForm.gridy = 5;
+		gbcForm.insets = new Insets(0, 0, 22, 0);
+		pnFormLeft.add(pnPhuongThucGrid, gbcForm);
+
+		// Ghi chú
+		JLabel lbGhiChu = new JLabel("Ghi chú:");
+		lbGhiChu.setFont(fontDam);
+		lbGhiChu.setForeground(Color.WHITE);
+		gbcForm.gridy = 6;
+		gbcForm.insets = new Insets(0, 0, 8, 0);
+		pnFormLeft.add(lbGhiChu, gbcForm);
+
+		JPanel pnGhiChuWrapper = new JPanel(new BorderLayout());
+		pnGhiChuWrapper.setOpaque(false);
+
+		txtGhiChu = new JTextArea();
+		txtGhiChu.setBackground(mauXamNhat);
+		txtGhiChu.setFont(fontThuong);
+		txtGhiChu.setLineWrap(true);
+		txtGhiChu.setWrapStyleWord(true);
+		txtGhiChu.setBorder(new EmptyBorder(8, 8, 8, 8));
+		txtGhiChu.setPreferredSize(new Dimension(210, 85));
+
+		JPanel pnGhiChuHolder = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		pnGhiChuHolder.setOpaque(false);
+		pnGhiChuHolder.add(txtGhiChu);
+
+		gbcForm.gridy = 7;
+		gbcForm.weighty = 1.0;
+		gbcForm.insets = new Insets(0, 0, 0, 0);
+		pnFormLeft.add(pnGhiChuHolder, gbcForm);
+
+		gbcPay.gridx = 0;
+		gbcPay.gridy = 0;
+		gbcPay.weightx = 0.48;
+		gbcPay.insets = new Insets(0, 0, 0, 45);
+		pnCenterPayment.add(pnFormLeft, gbcPay);
+
+		// --- Nửa phải của khung phải: Bàn phím nhập số & Nút In/Thanh toán ---
+		JPanel pnKeypadRight = new JPanel(new GridBagLayout());
+		pnKeypadRight.setOpaque(false);
+
+		GridBagConstraints gbcKey = new GridBagConstraints();
+		gbcKey.gridx = 0;
+		gbcKey.fill = GridBagConstraints.BOTH;
+		gbcKey.weightx = 1.0;
+
+		JLabel lbNhapSo = new JLabel("Nhập số tiền khách đưa:");
+		lbNhapSo.setFont(fontDam);
+		lbNhapSo.setForeground(Color.WHITE);
+		gbcKey.gridy = 0;
+		gbcKey.weighty = 0.0;
+		gbcKey.insets = new Insets(0, 0, 12, 0);
+		pnKeypadRight.add(lbNhapSo, gbcKey);
+
+		// Lưới bàn phím 4x4
+		JPanel pnGridPhim = new JPanel(new GridLayout(4, 4, 22, 20));
+		pnGridPhim.setOpaque(false);
+		pnGridPhim.setBorder(new EmptyBorder(0, 15, 0, 35));
+
+		String[] nhanPhim = {
+			"7", "8", "9", "X",
+			"4", "5", "6", "+",
+			"1", "2", "3", "-",
+			"0", "000", ".", "C"
+		};
+		dsNutBanPhim = new JButton[nhanPhim.length];
+		for (int i = 0; i < nhanPhim.length; i++) {
+			dsNutBanPhim[i] = taoNutPhang(nhanPhim[i], mauXamNhat, Color.BLACK, fontDam, new Dimension(48, 52));
+			pnGridPhim.add(dsNutBanPhim[i]);
+		}
+
+		gbcKey.gridy = 1;
+		gbcKey.weighty = 0.85;
+		gbcKey.insets = new Insets(0, 0, 25, 0);
+		pnKeypadRight.add(pnGridPhim, gbcKey);
+
+		// Hàng nút In hóa đơn & Thanh toán
+		JPanel pnActionButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
+		pnActionButtons.setOpaque(false);
+
+		btnInHoaDon = taoNutPhang("In hóa đơn", mauXamNhat, Color.BLACK, fontDam, new Dimension(145, 52));
+		btnThanhToan = taoNutPhang("Thanh toán", mauXanhLaDam, Color.WHITE, fontDam, new Dimension(160, 52));
+
+		pnActionButtons.add(btnInHoaDon);
+		pnActionButtons.add(btnThanhToan);
+
+		gbcKey.gridy = 2;
+		gbcKey.weighty = 0.15;
+		gbcKey.insets = new Insets(0, 0, 0, 0);
+		pnKeypadRight.add(pnActionButtons, gbcKey);
+
+		gbcPay.gridx = 1;
+		gbcPay.gridy = 0;
+		gbcPay.weightx = 0.52;
+		gbcPay.insets = new Insets(0, 0, 0, 0);
+		pnCenterPayment.add(pnKeypadRight, gbcPay);
+
+		pnRightCol.add(pnCenterPayment, BorderLayout.CENTER);
+
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.weightx = 0.70;
+		gbc.insets = new Insets(0, 0, 0, 0);
+		add(pnRightCol, gbc);
+	}
+
+	/** Tạo thẻ hiển thị thông tin tổng tiền ở hàng trên cùng. */
+	private JPanel taoTheThongKe(String tieuDe, JLabel lbGiaTri, Color mauNen, Color mauTieuDe, Color mauGiaTri) {
+		JPanel card = new JPanel(new GridLayout(2, 1, 0, 2));
+		card.setBackground(mauNen);
+		card.setBorder(new EmptyBorder(12, 10, 12, 10));
+
+		JLabel lbTitle = new JLabel(tieuDe, SwingConstants.CENTER);
+		lbTitle.setFont(new Font("Arial", Font.BOLD, 13));
+		lbTitle.setForeground(mauTieuDe);
+
+		lbGiaTri.setFont(new Font("Arial", Font.BOLD, 13));
+		lbGiaTri.setForeground(mauGiaTri);
+
+		card.add(lbTitle);
+		card.add(lbGiaTri);
+		return card;
+	}
+
+	/** Tạo nút bấm phẳng vuông vức theo thiết kế màn hình thanh toán. */
+	private JButton taoNutPhang(String text, Color mauNen, Color mauChu, Font font, Dimension kichThuoc) {
+		JButton btn = new JButton(text);
+		btn.setBackground(mauNen);
+		btn.setForeground(mauChu);
+		btn.setFont(font);
+		btn.setFocusPainted(false);
+		btn.setBorderPainted(false);
+		btn.setOpaque(true);
+		btn.setPreferredSize(kichThuoc);
+		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		return btn;
+	}
+}

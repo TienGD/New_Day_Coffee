@@ -23,7 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import newDayCoffee.bus.NhanVienBUS;
-import newDayCoffee.bus.TaiKhoanBUS;
+import newDayCoffee.bus.DSTaiKhoanBUS;
 
 /**
  * Màn hình đăng nhập - cửa ngõ đầu tiên của hệ thống.
@@ -42,15 +42,15 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private String MatKhauNhap = "Mật khẩu";
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final TaiKhoanBUS taiKhoanBUS;
+	private final DSTaiKhoanBUS taiKhoanBUS;
 	private final NhanVienBUS nhanVienBUS;
 
 	/** Khởi động ứng dụng: tạo dữ liệu dùng chung rồi mở màn hình đăng nhập. */
 	public LoginFrame() {
-		this(new TaiKhoanBUS(), null);
+		this(new DSTaiKhoanBUS(), null);
 	}
 
-	public LoginFrame(TaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
 		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
 

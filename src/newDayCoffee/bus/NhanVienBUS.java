@@ -20,13 +20,13 @@ public class NhanVienBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<NhanVienDTO> dsNhanVien;
-    private final TaiKhoanBUS taiKhoanBUS;
+    private final DSTaiKhoanBUS taiKhoanBUS;
 
     /**
      * Nhận TaiKhoanBUS từ nơi tạo (LoginFrame/MainFrame) để mọi màn hình
      * dùng chung một danh sách tài khoản, không cần singleton.
      */
-    public NhanVienBUS(TaiKhoanBUS taiKhoanBUS) {
+    public NhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
         taoDuLieuMau();

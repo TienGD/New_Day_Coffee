@@ -26,14 +26,15 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import newDayCoffee.bus.DSHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.bus.NhanVienBUS;
-import newDayCoffee.bus.TaiKhoanBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
+import newDayCoffee.gui.panels.ThanhToanPOSPanel;
 import newDayCoffee.gui.panels.TongQuanPanel;
 import newDayCoffee.utils.Auth;
 
@@ -55,17 +56,18 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 	private CardLayout cardLayout;
 	private final List<JLabel> listMenuLabels = new ArrayList<>();
 
-	// 4 panel chức năng độc lập
+	// 5 panel chức năng
 	private TongQuanPanel tongQuanPanel;
 	private BanHangPOSPanel banHangPOSPanel;
 	private QuanLyThucDonPanel quanLyThucDonPanel;
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
+	private ThanhToanPOSPanel thanhToanPanel;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final TaiKhoanBUS taiKhoanBUS;
+	private final DSTaiKhoanBUS taiKhoanBUS;
 	private final NhanVienBUS nhanVienBUS;
 
-	public MainFrame(TaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
 		this.nhanVienBUS = nhanVienBUS;
 
@@ -126,7 +128,6 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		if (Auth.laQuanLy()) {
 			dsMenu = new String[]{"Tổng quan", "Bán hàng", "Thực đơn", "Nhân viên"};
 		} else {
-			// Nhân viên chỉ thấy các chức năng được phép sử dụng
 			dsMenu = new String[]{"Tổng quan", "Bán hàng"};
 		}
 
@@ -190,16 +191,18 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		DSHoaDonBUS dsHoaDonBUS = new DSHoaDonBUS();
 		HoaDonBUS hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, nhanVienBUS);
 
-		// Tạo các panel và truyền BUS tương ứng
+		// Khởi tạo đủ 5 panel (Truyền MainFrame vào BanHangPOSPanel và ThanhToanPOSPanel để điều hướng)
 		tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
-		banHangPOSPanel = new BanHangPOSPanel(dsDoUongBUS, hoaDonBUS);
+		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, hoaDonBUS);
 		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
 		quanLyNhanVienPanel = new QuanLyNhanVienPanel(nhanVienBUS);
+		thanhToanPanel = new ThanhToanPOSPanel(this);
 
 		pnContainerCard.add(tongQuanPanel, "Tổng quan");
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
 		pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
 		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
+		pnContainerCard.add(thanhToanPanel, "Thanh toán");
 
 		add(pnContainerCard, BorderLayout.CENTER);
 
@@ -209,7 +212,11 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 	}
 
 	// ==================== KHU VỰC ĐIỀU HƯỚNG ====================
-	private void switchCard(String item) {
+	/**
+	 * Chuyển đổi giữa các màn hình trong CardLayout.
+	 * Để public để BanHangPOSPanel và ThanhToanPOSPanel có thể gọi trực tiếp.
+	 */
+	public void switchCard(String item) {
 		if (item.equals("Tổng quan")) {
 			tongQuanPanel.capNhatDuLieu();
 		} else if (item.equals("Bán hàng")) {
@@ -221,9 +228,11 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 			quanLyNhanVienPanel.capNhatBang();
 		}
 
+		// Nếu đang ở màn hình "Thanh toán" thì trên menu vẫn sáng ở mục "Bán hàng"
+		String menuDangChon = item.equals("Thanh toán") ? "Bán hàng" : item;
 		for (int i = 0; i < listMenuLabels.size(); i++) {
 			JLabel lb = listMenuLabels.get(i);
-			if (lb.getText().equals(item)) {
+			if (lb.getText().equals(menuDangChon)) {
 				lb.setForeground(Color.BLACK);
 			} else {
 				lb.setForeground(Color.WHITE);
@@ -249,24 +258,16 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 	}
 
 	@Override
-	public void mousePressed(MouseEvent e) {
-		// Không xử lý
-	}
+	public void mousePressed(MouseEvent e) {}
 
 	@Override
-	public void mouseReleased(MouseEvent e) {
-		// Không xử lý
-	}
+	public void mouseReleased(MouseEvent e) {}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {
-		// Không xử lý
-	}
+	public void mouseEntered(MouseEvent e) {}
 
 	@Override
-	public void mouseExited(MouseEvent e) {
-		// Không xử lý
-	}
+	public void mouseExited(MouseEvent e) {}
 
 	// ==================== KHU VỰC ĐĂNG XUẤT ====================
 	private void dangXuat() {
@@ -284,7 +285,6 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 
 	// ==================== KHU VỰC KHỞI CHẠY ====================
 	public static void main(String[] args) {
-		// Chạy thẳng MainFrame cũng phải qua đăng nhập trước
 		SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
 	}
 }
