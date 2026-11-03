@@ -55,7 +55,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
 
 		// XÓA DỮ LIỆU MẪU: xóa dòng dưới đây và phương thức taoDuLieuMau() trong NhanVienBUS.
-		nhanVienBUS.taoDuLieuMau();
+		this.nhanVienBUS.taoDuLieuMau();
 
 		khoiTaoGiaoDien();
 		ganSuKien();
