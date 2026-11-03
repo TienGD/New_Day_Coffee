@@ -37,12 +37,13 @@ public class Auth {
         return nguoiDungHienTai != null;
     }
 
-    /** Chỉ tài khoản có chức vụ "Quản lí" mới được quản lý nhân viên/thực đơn. */
+    /** Chỉ tài khoản có mã qlXX và chức vụ "Quản lí" mới được quản lý nhân viên/thực đơn. */
     public static boolean laQuanLy() {
         if (nguoiDungHienTai == null) {
             return false;
         }
-        return "Quản lí".equals(nguoiDungHienTai.getChucVu());
+        return Validator.laMaQuanLy(nguoiDungHienTai.getMaNV())
+                && "Quản lí".equals(nguoiDungHienTai.getChucVu());
     }
 
     public static String getTenHienThi() {
