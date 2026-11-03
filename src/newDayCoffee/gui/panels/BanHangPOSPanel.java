@@ -161,7 +161,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		lbDanhSachMon.setForeground(new Color(139, 69, 19));
 		pnTopFilter.add(lbDanhSachMon, BorderLayout.NORTH);
 
-		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
 		pnFilterBar.setOpaque(false);
 
 		// Ô tìm kiếm món bo góc
@@ -192,17 +192,17 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		};
 		txtTimKiem.setOpaque(false);
 		txtTimKiem.setForeground(Color.WHITE);
-		txtTimKiem.setPreferredSize(new Dimension(180, 34));
+		txtTimKiem.setPreferredSize(new Dimension(148, 34));
 		txtTimKiem.setBorder(new EmptyBorder(5, 12, 5, 12));
 		pnFilterBar.add(txtTimKiem);
 
-		btnTimKiem = taoNutLoc("Tìm", 60, fontThuong);
+		btnTimKiem = taoNutLoc("Tìm", 50, fontThuong);
 		pnFilterBar.add(btnTimKiem);
 
 		// Các nút lọc loại món
 		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa", "Bánh"};
 		for (int i = 0; i < dsLoai.length; i++) {
-			JButton btnLoai = taoNutLoc(dsLoai[i], 78, fontThuong);
+			JButton btnLoai = taoNutLoc(dsLoai[i], 70, fontThuong);
 			nhomCuaNutLoc.put(btnLoai, dsLoai[i]);
 			btnLoai.addActionListener(this);
 			pnFilterBar.add(btnLoai);
@@ -398,6 +398,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		btn.setFocusPainted(false);
 		btn.setForeground(Color.WHITE);
 		btn.setFont(font);
+		btn.setMargin(new Insets(0, 2, 0, 2));
 		btn.setPreferredSize(new Dimension(width, 34));
 		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		return btn;
@@ -405,27 +406,6 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 	/** Tạo thẻ hiển thị một món trong thực đơn. */
 	private JPanel taoTheMon(DoUongDTO doUong) {
-		JPanel cardMon = new JPanel(new BorderLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(Color.WHITE);
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-				g2.setColor(new Color(28, 28, 28));
-				g2.fillRoundRect(0, 0, getWidth(), (int) (getHeight() * 0.48), 18, 18);
-				g2.fillRect(0, (int) (getHeight() * 0.48) - 10, getWidth(), 10);
-				g2.dispose();
-			}
-		};
-		cardMon.setOpaque(false);
-
-		JPanel pnImgHolder = new JPanel();
-		pnImgHolder.setOpaque(false);
-		pnImgHolder.setPreferredSize(new Dimension(0, 105));
-		cardMon.add(pnImgHolder, BorderLayout.NORTH);
-
 		JPanel pnInfo = new JPanel();
 		pnInfo.setLayout(new BoxLayout(pnInfo, BoxLayout.Y_AXIS));
 		pnInfo.setOpaque(false);
@@ -487,7 +467,40 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		pnInfo.add(Box.createVerticalStrut(6));
 		pnInfo.add(pnSpinner);
 
-		cardMon.add(pnInfo, BorderLayout.CENTER);
+		/*
+		 * Thẻ món: vùng ảnh đen phía trên chiếm 47% chiều cao, phần thông tin
+		 * bắt đầu đúng ngay dưới vùng ảnh nên nội dung trắng không bị đẩy xuống.
+		 */
+		JPanel cardMon = new JPanel(null) {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setColor(Color.WHITE);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+				int chieuCaoAnh = (int) Math.round(getHeight() * 0.47);
+				g2.setColor(new Color(28, 28, 28));
+				g2.fillRoundRect(0, 0, getWidth(), chieuCaoAnh, 18, 18);
+				g2.fillRect(0, chieuCaoAnh - 10, getWidth(), 10);
+				g2.dispose();
+			}
+
+			@Override
+			public void doLayout() {
+				int chieuCaoAnh = (int) Math.round(getHeight() * 0.47);
+				pnInfo.setBounds(0, chieuCaoAnh, getWidth(), getHeight() - chieuCaoAnh);
+			}
+
+			@Override
+			public Dimension getPreferredSize() {
+				int chieuCaoThongTin = pnInfo.getPreferredSize().height;
+				int chieuCao = (int) Math.round(chieuCaoThongTin / 0.53);
+				return new Dimension(0, Math.max(chieuCao, 208));
+			}
+		};
+		cardMon.setOpaque(false);
+		cardMon.add(pnInfo);
 
 		// Gắn sự kiện cho nút tăng / giảm của thẻ
 		maMonCuaNutTru.put(btnTru, doUong.getMaMon());
