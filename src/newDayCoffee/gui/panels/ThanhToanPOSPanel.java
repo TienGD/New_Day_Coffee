@@ -48,11 +48,17 @@ import newDayCoffee.utils.Validator;
  * Panel nhận MainFrame để quay lại màn hình bán hàng và HoaDonBUS để hiển thị
  * giỏ hàng, tính tiền thừa, lập hóa đơn. Mọi sự kiện đều dùng ActionListener.
  */
-public class ThanhToanPOSPanel extends JPanel {
+public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 	private static final Color MAU_XAM_NHAT = new Color(218, 218, 218);
 	private static final Color MAU_DO_DAM = new Color(128, 28, 28);
 	private static final double BUOC_TIEN = 10000;
+	private static final String[] NHAN_BAN_PHIM = {
+		"7", "8", "9", "X",
+		"4", "5", "6", "+",
+		"1", "2", "3", "-",
+		"0", "000", ".", "C"
+	};
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	// Cột trái: Thông tin đơn hàng & Danh sách sản phẩm
@@ -413,15 +419,9 @@ public class ThanhToanPOSPanel extends JPanel {
 		pnGridPhim.setOpaque(false);
 		pnGridPhim.setBorder(new EmptyBorder(0, 15, 0, 35));
 
-		String[] nhanPhim = {
-			"7", "8", "9", "X",
-			"4", "5", "6", "+",
-			"1", "2", "3", "-",
-			"0", "000", ".", "C"
-		};
-		dsNutBanPhim = new JButton[nhanPhim.length];
-		for (int i = 0; i < nhanPhim.length; i++) {
-			dsNutBanPhim[i] = taoNutPhang(nhanPhim[i], mauXamNhat, Color.BLACK, fontDam, new Dimension(48, 52));
+		dsNutBanPhim = new JButton[NHAN_BAN_PHIM.length];
+		for (int i = 0; i < NHAN_BAN_PHIM.length; i++) {
+			dsNutBanPhim[i] = taoNutPhang(NHAN_BAN_PHIM[i], mauXamNhat, Color.BLACK, fontDam, new Dimension(48, 52));
 			pnGridPhim.add(dsNutBanPhim[i]);
 		}
 
@@ -462,62 +462,19 @@ public class ThanhToanPOSPanel extends JPanel {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnQuayLai.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (mainFrame != null) {
-					mainFrame.switchCard("Bán hàng");
-				}
-			}
-		});
+		btnQuayLai.addActionListener(this);
 
-		btnTienMat.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				chonPhuongThuc("Tiền mặt");
-			}
-		});
-		btnTheNganHang.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				chonPhuongThuc("Thẻ ngân hàng");
-			}
-		});
-		btnChuyenKhoan.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				chonPhuongThuc("Chuyển khoản");
-			}
-		});
-		btnViMomo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				chonPhuongThuc("Ví momo");
-			}
-		});
+		btnTienMat.addActionListener(this);
+		btnTheNganHang.addActionListener(this);
+		btnChuyenKhoan.addActionListener(this);
+		btnViMomo.addActionListener(this);
 
 		for (int i = 0; i < dsNutBanPhim.length; i++) {
-			final String nhanPhim = dsNutBanPhim[i].getText();
-			dsNutBanPhim[i].addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					xuLyBanPhim(nhanPhim);
-				}
-			});
+			dsNutBanPhim[i].addActionListener(this);
 		}
 
-		btnInHoaDon.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				inHoaDon();
-			}
-		});
-		btnThanhToan.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				thanhToan();
-			}
-		});
+		btnInHoaDon.addActionListener(this);
+		btnThanhToan.addActionListener(this);
 
 		// Cập nhật tiền thiếu / thừa mỗi khi ô khách đưa thay đổi
 		txtKhachDua.getDocument().addDocumentListener(new DocumentListener() {
@@ -536,6 +493,36 @@ public class ThanhToanPOSPanel extends JPanel {
 				capNhatTienThua();
 			}
 		});
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+
+		if (nguon == btnQuayLai) {
+			if (mainFrame != null) {
+				mainFrame.switchCard("Bán hàng");
+			}
+		} else if (nguon == btnTienMat) {
+			chonPhuongThuc("Tiền mặt");
+		} else if (nguon == btnTheNganHang) {
+			chonPhuongThuc("Thẻ ngân hàng");
+		} else if (nguon == btnChuyenKhoan) {
+			chonPhuongThuc("Chuyển khoản");
+		} else if (nguon == btnViMomo) {
+			chonPhuongThuc("Ví momo");
+		} else if (nguon == btnInHoaDon) {
+			inHoaDon();
+		} else if (nguon == btnThanhToan) {
+			thanhToan();
+		} else {
+			for (int i = 0; i < dsNutBanPhim.length; i++) {
+				if (nguon == dsNutBanPhim[i]) {
+					xuLyBanPhim(NHAN_BAN_PHIM[i]);
+					return;
+				}
+			}
+		}
 	}
 
 	/** Đổi phương thức thanh toán đang chọn và tô lại màu các nút. */

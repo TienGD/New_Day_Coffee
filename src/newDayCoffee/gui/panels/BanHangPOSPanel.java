@@ -54,7 +54,7 @@ import newDayCoffee.utils.Auth;
  * Panel nhận DSDoUongBUS để hiển thị thực đơn và HoaDonBUS để quản lý giỏ hàng,
  * thanh toán, in hóa đơn. Mọi sự kiện đều dùng ActionListener, không dùng lambda.
  */
-public class BanHangPOSPanel extends JPanel {
+public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbHeaderTitle;
@@ -75,6 +75,11 @@ public class BanHangPOSPanel extends JPanel {
 	private final Map<String, JLabel> nhanSoLuong = new HashMap<>();
 	// Thứ tự mã món tương ứng với từng dòng trong bảng đơn hàng
 	private final List<String> maMonTrongBang = new ArrayList<>();
+	// Nút lọc theo nhóm món
+	private final Map<JButton, String> nhomCuaNutLoc = new HashMap<>();
+	// Nút tăng / giảm trên thẻ món
+	private final Map<JButton, String> maMonCuaNutCong = new HashMap<>();
+	private final Map<JButton, String> maMonCuaNutTru = new HashMap<>();
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSDoUongBUS dsDoUongBUS;
@@ -197,15 +202,9 @@ public class BanHangPOSPanel extends JPanel {
 		// Các nút lọc loại món
 		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa", "Bánh"};
 		for (int i = 0; i < dsLoai.length; i++) {
-			final String nhom = dsLoai[i];
-			JButton btnLoai = taoNutLoc(nhom, 78, fontThuong);
-			btnLoai.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					nhomDangLoc = nhom;
-					capNhatDanhSachMon();
-				}
-			});
+			JButton btnLoai = taoNutLoc(dsLoai[i], 78, fontThuong);
+			nhomCuaNutLoc.put(btnLoai, dsLoai[i]);
+			btnLoai.addActionListener(this);
 			pnFilterBar.add(btnLoai);
 		}
 
@@ -491,18 +490,10 @@ public class BanHangPOSPanel extends JPanel {
 		cardMon.add(pnInfo, BorderLayout.CENTER);
 
 		// Gắn sự kiện cho nút tăng / giảm của thẻ
-		btnTru.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				botMon(doUong.getMaMon());
-			}
-		});
-		btnCong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				themMon(doUong.getMaMon());
-			}
-		});
+		maMonCuaNutTru.put(btnTru, doUong.getMaMon());
+		maMonCuaNutCong.put(btnCong, doUong.getMaMon());
+		btnTru.addActionListener(this);
+		btnCong.addActionListener(this);
 
 		return cardMon;
 	}
@@ -516,31 +507,31 @@ public class BanHangPOSPanel extends JPanel {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnTimKiem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				capNhatDanhSachMon();
-			}
-		});
-		btnXoa.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				xoaMonDangChon();
-			}
-		});
-		btnThanhToan.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				thanhToan();
-			}
-		});
+		btnTimKiem.addActionListener(this);
+		btnXoa.addActionListener(this);
+		btnThanhToan.addActionListener(this);
 		// Nhấn Enter trong ô tìm kiếm cũng tìm
-		txtTimKiem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				capNhatDanhSachMon();
-			}
-		});
+		txtTimKiem.addActionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+
+		if (nguon == btnTimKiem || nguon == txtTimKiem) {
+			capNhatDanhSachMon();
+		} else if (nguon == btnXoa) {
+			xoaMonDangChon();
+		} else if (nguon == btnThanhToan) {
+			thanhToan();
+		} else if (nhomCuaNutLoc.containsKey(nguon)) {
+			nhomDangLoc = nhomCuaNutLoc.get(nguon);
+			capNhatDanhSachMon();
+		} else if (maMonCuaNutCong.containsKey(nguon)) {
+			themMon(maMonCuaNutCong.get(nguon));
+		} else if (maMonCuaNutTru.containsKey(nguon)) {
+			botMon(maMonCuaNutTru.get(nguon));
+		}
 	}
 
 	// ==================== KHU VỰC GIỎ HÀNG ====================
@@ -562,6 +553,8 @@ public class BanHangPOSPanel extends JPanel {
 	public void capNhatDanhSachMon() {
 		pnGridMon.removeAll();
 		nhanSoLuong.clear();
+		maMonCuaNutCong.clear();
+		maMonCuaNutTru.clear();
 
 		List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
 		for (int i = 0; i < dsMon.size(); i++) {
