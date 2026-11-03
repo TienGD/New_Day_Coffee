@@ -22,25 +22,6 @@ public class DSDoUongBUS {
     public DSDoUongBUS() {
         dsDoUong = new ArrayList<>();
         doUongBUS = new DoUongBUS();
-        taoDuLieuMau();
-    }
-
-    /** Dữ liệu mẫu để màn hình bán hàng và quản lí thực đơn có dữ liệu ngay. */
-    private void taoDuLieuMau() {
-        themMau("cof01", "Cà phê đen", 15000, "Đậm đà, đánh thức ngày mới");
-        themMau("cof02", "Bạc sỉu", 20000, "Cà phê sữa béo nhẹ");
-        themMau("cof03", "Cà phê sữa", 18000, "Cà phê truyền thống");
-        themMau("tea01", "Trà Đào", 25000, "Trà đào thơm mát");
-        themMau("tea02", "Trà Mãng Cầu", 30000, "Chua ngọt tự nhiên");
-        themMau("tea03", "Trà Vải", 28000, "Trà vải thanh mát");
-        themMau("mil01", "Trà Sữa Thái", 25000, "Trà sữa đậm vị Thái");
-        themMau("mil02", "Trà Sữa Trân Châu", 30000, "Trân châu dai mềm");
-        themMau("bak01", "Bánh Tiramisu", 20000, "Bánh ngọt vị cà phê");
-        themMau("bak02", "Bánh Flan", 15000, "Bánh flan mềm mịn");
-    }
-
-    private void themMau(String maMon, String tenMon, double donGia, String moTa) {
-        dsDoUong.add(new DoUongDTO(maMon, tenMon, donGia, moTa));
     }
 
     // ==================== KHU VỰC ĐỌC / TÌM KIẾM ====================
@@ -82,16 +63,7 @@ public class DSDoUongBUS {
 
     /** Tìm theo mã hoặc tên (không phân biệt hoa thường). */
     public List<DoUongDTO> timKiem(String tuKhoa) {
-        String khoa = Validator.chuanHoa(tuKhoa).toLowerCase();
-        List<DoUongDTO> ketQua = new ArrayList<>();
-        for (DoUongDTO du : dsDoUong) {
-            boolean dungMa = Validator.chuanHoa(du.getMaMon()).toLowerCase().contains(khoa);
-            boolean dungTen = Validator.chuanHoa(du.getTenMon()).toLowerCase().contains(khoa);
-            if (khoa.isEmpty() || dungMa || dungTen) {
-                ketQua.add(du);
-            }
-        }
-        return ketQua;
+        return locTheoTuKhoa(tuKhoa, "Tất cả");
     }
 
     /** Lọc theo nhóm món. Nhóm "Tất cả" trả về toàn bộ danh sách. */
@@ -106,22 +78,70 @@ public class DSDoUongBUS {
         return ketQua;
     }
 
-    /** Kết hợp tìm theo từ khóa và lọc theo nhóm trong một lần duyệt. */
+    /** Kết hợp tìm theo từ khóa và lọc theo nhóm. */
     public List<DoUongDTO> locVaTim(String tuKhoa, String nhom) {
+        return locTheoTuKhoa(tuKhoa, nhom);
+    }
+
+    /**
+     * Tìm món theo từ khóa với thứ tự ưu tiên:
+     *  1. Khớp chính xác mã món.
+     *  2. Khớp tiền tố mã món (cof, tea, mil, bak).
+     *  3. Khớp một phần mã hoặc tên món.
+     */
+    private List<DoUongDTO> locTheoTuKhoa(String tuKhoa, String nhom) {
         String khoa = Validator.chuanHoa(tuKhoa).toLowerCase();
         String nhomChuan = chuanHoaNhom(nhom);
         List<DoUongDTO> ketQua = new ArrayList<>();
+
+        if (khoa.isEmpty()) {
+            for (DoUongDTO du : dsDoUong) {
+                if (nhomChuan.equals("Tất cả") || layNhom(du).equals(nhomChuan)) {
+                    ketQua.add(du);
+                }
+            }
+            return ketQua;
+        }
+
+        DoUongDTO trungMa = timTheoMa(khoa);
+        if (trungMa != null) {
+            if (nhomChuan.equals("Tất cả") || layNhom(trungMa).equals(nhomChuan)) {
+                ketQua.add(trungMa);
+            }
+            return ketQua;
+        }
+
+        String tienTo = layTienTo(khoa);
+        if (!tienTo.isEmpty()) {
+            for (DoUongDTO du : dsDoUong) {
+                boolean dungNhom = nhomChuan.equals("Tất cả") || layNhom(du).equals(nhomChuan);
+                if (dungNhom && Validator.chuanHoa(du.getMaMon()).toLowerCase().startsWith(tienTo)) {
+                    ketQua.add(du);
+                }
+            }
+            return ketQua;
+        }
 
         for (DoUongDTO du : dsDoUong) {
             boolean dungNhom = nhomChuan.equals("Tất cả") || layNhom(du).equals(nhomChuan);
             boolean dungMa = Validator.chuanHoa(du.getMaMon()).toLowerCase().contains(khoa);
             boolean dungTen = Validator.chuanHoa(du.getTenMon()).toLowerCase().contains(khoa);
-            boolean dungTuKhoa = khoa.isEmpty() || dungMa || dungTen;
-            if (dungNhom && dungTuKhoa) {
+            if (dungNhom && (dungMa || dungTen)) {
                 ketQua.add(du);
             }
         }
         return ketQua;
+    }
+
+    /** Trả về tiền tố nhóm món nếu từ khóa bắt đầu bằng một tiền tố hợp lệ. */
+    private String layTienTo(String khoa) {
+        String[] dsTienTo = {"cof", "tea", "mil", "bak"};
+        for (int i = 0; i < dsTienTo.length; i++) {
+            if (khoa.startsWith(dsTienTo[i])) {
+                return dsTienTo[i];
+            }
+        }
+        return "";
     }
 
     private String chuanHoaNhom(String nhom) {
@@ -144,7 +164,7 @@ public class DSDoUongBUS {
      *
      * @return null nếu thành công, ngược lại là thông báo lỗi.
      */
-    public String themDoUong(String maMon, String tenMon, String donGiaText) {
+    public String themDoUong(String maMon, String tenMon, String donGiaText, String moTa) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm món.";
         }
@@ -156,7 +176,7 @@ public class DSDoUongBUS {
             return "Mã món đã tồn tại.";
         }
 
-        DoUongDTO du = doUongBUS.taoDoUong(maMon, tenMon, donGiaText);
+        DoUongDTO du = doUongBUS.taoDoUong(maMon, tenMon, donGiaText, moTa);
         if (du == null) {
             return "Không thể tạo món mới.";
         }
@@ -164,8 +184,8 @@ public class DSDoUongBUS {
         return null;
     }
 
-    /** Cập nhật tên và giá của món đã có. */
-    public String suaDoUong(String maMon, String tenMon, String donGiaText) {
+    /** Cập nhật tên, giá và mô tả của món đã có. */
+    public String suaDoUong(String maMon, String tenMon, String donGiaText, String moTa) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền sửa món.";
         }
@@ -180,6 +200,7 @@ public class DSDoUongBUS {
         }
         du.setTenMon(Validator.chuanHoa(tenMon));
         du.setDonGia(Validator.docSoTien(donGiaText));
+        du.setMoTa(Validator.chuanHoa(moTa));
         return null;
     }
 

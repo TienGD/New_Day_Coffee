@@ -3,17 +3,17 @@ package newDayCoffee.gui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
@@ -42,10 +43,10 @@ import newDayCoffee.utils.Auth;
  * Màn hình chính của ứng dụng.
  *
  * MainFrame là nơi tạo các BUS dùng chung và truyền vào từng panel
- * (không dùng singleton). Điều hướng menu dùng MouseListener, đăng xuất
- * dùng ActionListener.
+ * (không dùng singleton). Điều hướng menu và đăng xuất đều dùng
+ * ActionListener.
  */
-public class MainFrame extends JFrame implements ActionListener, MouseListener {
+public class MainFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbSysName;
@@ -54,7 +55,8 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 	private JButton btnDangXuat;
 	private JPanel pnContainerCard;
 	private CardLayout cardLayout;
-	private final List<JLabel> listMenuLabels = new ArrayList<>();
+	private final List<JButton> listMenuButtons = new ArrayList<>();
+	private final List<String> listMenuTen = new ArrayList<>();
 
 	// 5 panel chức năng
 	private TongQuanPanel tongQuanPanel;
@@ -132,17 +134,28 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		}
 
 		for (int i = 0; i < dsMenu.length; i++) {
-			JLabel lbMenu = new JLabel(dsMenu[i]);
-			lbMenu.setFont(fontMenu);
+			final String tenMenu = dsMenu[i];
+			JButton btnMenu = new JButton(tenMenu);
+			btnMenu.setFont(fontMenu);
 			if (i == 0) {
-				lbMenu.setForeground(Color.BLACK);
+				btnMenu.setForeground(Color.BLACK);
 			} else {
-				lbMenu.setForeground(Color.WHITE);
+				btnMenu.setForeground(Color.WHITE);
 			}
-			lbMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
-			lbMenu.addMouseListener(this);
-			listMenuLabels.add(lbMenu);
-			pnMenu.add(lbMenu);
+			btnMenu.setHorizontalAlignment(SwingConstants.LEFT);
+			btnMenu.setOpaque(false);
+			btnMenu.setContentAreaFilled(false);
+			btnMenu.setBorderPainted(false);
+			btnMenu.setFocusPainted(false);
+			btnMenu.setRolloverEnabled(false);
+			btnMenu.setBorder(new EmptyBorder(0, 0, 0, 0));
+			btnMenu.setMargin(new Insets(0, 0, 0, 0));
+			btnMenu.setAlignmentX(Component.LEFT_ALIGNMENT);
+			btnMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
+			btnMenu.addActionListener(this);
+			listMenuButtons.add(btnMenu);
+			listMenuTen.add(tenMenu);
+			pnMenu.add(btnMenu);
 			pnMenu.add(Box.createVerticalStrut(22));
 		}
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
@@ -196,7 +209,7 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, hoaDonBUS);
 		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
 		quanLyNhanVienPanel = new QuanLyNhanVienPanel(nhanVienBUS);
-		thanhToanPanel = new ThanhToanPOSPanel(this);
+		thanhToanPanel = new ThanhToanPOSPanel(this, hoaDonBUS, dsHoaDonBUS);
 
 		pnContainerCard.add(tongQuanPanel, "Tổng quan");
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
@@ -207,8 +220,23 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 		add(pnContainerCard, BorderLayout.CENTER);
 
 		// Gắn sự kiện đăng xuất
-		btnDangXuat.setActionCommand("DANG_XUAT");
 		btnDangXuat.addActionListener(this);
+	}
+
+	// ==================== KHU VỰC SỰ KIỆN ====================
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == btnDangXuat) {
+			dangXuat();
+			return;
+		}
+
+		for (int i = 0; i < listMenuButtons.size(); i++) {
+			if (e.getSource() == listMenuButtons.get(i)) {
+				switchCard(listMenuTen.get(i));
+				return;
+			}
+		}
 	}
 
 	// ==================== KHU VỰC ĐIỀU HƯỚNG ====================
@@ -226,48 +254,22 @@ public class MainFrame extends JFrame implements ActionListener, MouseListener {
 			quanLyThucDonPanel.capNhatBang();
 		} else if (item.equals("Nhân viên")) {
 			quanLyNhanVienPanel.capNhatBang();
+		} else if (item.equals("Thanh toán")) {
+			thanhToanPanel.capNhatDuLieu();
 		}
 
 		// Nếu đang ở màn hình "Thanh toán" thì trên menu vẫn sáng ở mục "Bán hàng"
 		String menuDangChon = item.equals("Thanh toán") ? "Bán hàng" : item;
-		for (int i = 0; i < listMenuLabels.size(); i++) {
-			JLabel lb = listMenuLabels.get(i);
-			if (lb.getText().equals(menuDangChon)) {
-				lb.setForeground(Color.BLACK);
+		for (int i = 0; i < listMenuButtons.size(); i++) {
+			JButton btn = listMenuButtons.get(i);
+			if (btn.getText().equals(menuDangChon)) {
+				btn.setForeground(Color.BLACK);
 			} else {
-				lb.setForeground(Color.WHITE);
+				btn.setForeground(Color.WHITE);
 			}
 		}
 		cardLayout.show(pnContainerCard, item);
 	}
-
-	// ==================== KHU VỰC SỰ KIỆN ====================
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (e.getActionCommand().equals("DANG_XUAT")) {
-			dangXuat();
-		}
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		if (e.getSource() instanceof JLabel) {
-			JLabel lbMenu = (JLabel) e.getSource();
-			switchCard(lbMenu.getText());
-		}
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e) {}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {}
-
-	@Override
-	public void mouseExited(MouseEvent e) {}
 
 	// ==================== KHU VỰC ĐĂNG XUẤT ====================
 	private void dangXuat() {

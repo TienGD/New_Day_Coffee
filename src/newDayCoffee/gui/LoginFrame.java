@@ -54,6 +54,9 @@ public class LoginFrame extends JFrame implements ActionListener {
 		this.taiKhoanBUS = taiKhoanBUS;
 		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
 
+		// XÓA DỮ LIỆU MẪU: xóa dòng dưới đây và phương thức taoDuLieuMau() trong NhanVienBUS.
+		this.nhanVienBUS.taoDuLieuMau();
+
 		khoiTaoGiaoDien();
 		ganSuKien();
 	}
@@ -145,7 +148,6 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnDangNhap.setActionCommand("DANG_NHAP");
 		btnDangNhap.addActionListener(this);
 		// Nhấn Enter ở ô mã hoặc ô mật khẩu cũng đăng nhập
 		txtMa.addActionListener(this);

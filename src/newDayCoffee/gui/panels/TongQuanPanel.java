@@ -40,7 +40,7 @@ import newDayCoffee.utils.Auth;
  * Màn hình tổng quan: doanh thu, số đơn, món bán chạy và danh sách cần chú ý.
  *
  * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán
- * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý trong actionPerformed.
+ * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý bằng ActionListener.
  */
 public class TongQuanPanel extends JPanel implements ActionListener {
 
@@ -254,8 +254,6 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		pnAttention.add(lbAttentionTitle, BorderLayout.NORTH);
 
 		modelChuY = new DefaultListModel<>();
-		modelChuY.addElement("(i)  Bàn 4 chờ thanh toán");
-		modelChuY.addElement("(i)  Sữa sắp hết hạn");
 
 		listChuY = new JList<>(modelChuY);
 		listChuY.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -365,10 +363,6 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnBanChay.setActionCommand("BAN_CHAY");
-		btnBanCham.setActionCommand("BAN_CHAM");
-		btnThemChuY.setActionCommand("THEM_CHU_Y");
-
 		btnBanChay.addActionListener(this);
 		btnBanCham.addActionListener(this);
 		btnThemChuY.addActionListener(this);
@@ -376,15 +370,15 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		String lenh = e.getActionCommand();
+		Object nguon = e.getSource();
 
-		if (lenh.equals("BAN_CHAY")) {
+		if (nguon == btnBanChay) {
 			sapXepGiam = true;
 			capNhatBangMonBanChay();
-		} else if (lenh.equals("BAN_CHAM")) {
+		} else if (nguon == btnBanCham) {
 			sapXepGiam = false;
 			capNhatBangMonBanChay();
-		} else if (lenh.equals("THEM_CHU_Y")) {
+		} else if (nguon == btnThemChuY) {
 			themChuY();
 		}
 	}

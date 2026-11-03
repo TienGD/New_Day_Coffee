@@ -46,10 +46,12 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
     private JTextField txtMaMon;
     private JTextField txtTenMon;
     private JTextField txtDonGia;
+    private JTextField txtMoTa;
     private JButton btnThem;
     private JButton btnSua;
     private JButton btnXoa;
     private JButton btnLuu;
+    private JButton btnMoi;
 
     private JTextField txtTimKiem;
     private JButton btnTimKiem;
@@ -147,6 +149,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         btnSua  = makeBtn("Sửa",       btnColor, fontBold, 80);
         btnXoa  = makeBtn("Xóa",       new Color(160, 40, 30), fontBold, 80);
         btnLuu  = makeBtn("Lưu CSDL",  new Color(30, 100, 40), fontBold, 100);
+        btnMoi  = makeBtn("Mới",       btnColor, fontBold, 70);
 
         pnForm.add(lbMaMon);  pnForm.add(txtMaMon);
         pnForm.add(lbTenMon); pnForm.add(txtTenMon);
@@ -157,6 +160,25 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         pnForm.add(btnXoa);
         pnForm.add(Box.createHorizontalStrut(20));
         pnForm.add(btnLuu);
+
+        // --- HÀNG MÔ TẢ MÓN ---
+        JPanel pnMoTa = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        pnMoTa.setOpaque(false);
+
+        JLabel lbMoTa = new JLabel("Mô tả");
+        lbMoTa.setFont(fontBold);
+        lbMoTa.setForeground(Color.WHITE);
+
+        txtMoTa = new JTextField();
+        txtMoTa.setBackground(bgInput);
+        txtMoTa.setFont(fontLabel);
+        txtMoTa.setPreferredSize(new Dimension(560, 34));
+        txtMoTa.setBorder(new EmptyBorder(5, 8, 5, 8));
+
+        pnMoTa.add(lbMoTa);
+        pnMoTa.add(txtMoTa);
+        pnMoTa.add(Box.createHorizontalStrut(10));
+        pnMoTa.add(btnMoi);
 
         // --- HÀNG TÌM KIẾM & BỘ LỌC DANH MỤC ---
         JPanel pnSearchFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
@@ -200,8 +222,11 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         pnTop.setLayout(new BoxLayout(pnTop, BoxLayout.Y_AXIS));
         pnTop.setOpaque(false);
         pnForm.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pnMoTa.setAlignmentX(Component.LEFT_ALIGNMENT);
         pnSearchFilter.setAlignmentX(Component.LEFT_ALIGNMENT);
         pnTop.add(pnForm);
+        pnTop.add(Box.createVerticalStrut(12));
+        pnTop.add(pnMoTa);
         pnTop.add(Box.createVerticalStrut(12));
         pnTop.add(pnSearchFilter);
 
@@ -252,9 +277,11 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
             btnSua.setEnabled(false);
             btnXoa.setEnabled(false);
             btnLuu.setEnabled(false);
+            btnMoi.setEnabled(false);
             txtMaMon.setEditable(false);
             txtTenMon.setEditable(false);
             txtDonGia.setEditable(false);
+            txtMoTa.setEditable(false);
         }
     }
 
@@ -280,25 +307,13 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
     // ==================== KHU VỰC GẮN SỰ KIỆN ====================
     private void ganSuKien() {
-        btnThem.setActionCommand("THEM");
-        btnSua.setActionCommand("SUA");
-        btnXoa.setActionCommand("XOA");
-        btnLuu.setActionCommand("LUU");
-        btnTimKiem.setActionCommand("TIM_KIEM");
-
         btnThem.addActionListener(this);
         btnSua.addActionListener(this);
         btnXoa.addActionListener(this);
         btnLuu.addActionListener(this);
+        btnMoi.addActionListener(this);
         btnTimKiem.addActionListener(this);
-        txtTimKiem.setActionCommand("TIM_KIEM");
         txtTimKiem.addActionListener(this);
-
-        btnLocTatCa.setActionCommand("LOC:Tất cả");
-        btnLocCaPhe.setActionCommand("LOC:Cà phê");
-        btnLocTra.setActionCommand("LOC:Trà");
-        btnLocTraSua.setActionCommand("LOC:Trà sữa");
-        btnLocBanh.setActionCommand("LOC:Bánh");
 
         btnLocTatCa.addActionListener(this);
         btnLocCaPhe.addActionListener(this);
@@ -311,22 +326,36 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String lenh = e.getActionCommand();
+        Object nguon = e.getSource();
 
-        if (lenh.equals("THEM")) {
+        if (nguon == btnMoi) {
+            taoMoi();
+        } else if (nguon == btnThem) {
             themMon();
-        } else if (lenh.equals("SUA")) {
+        } else if (nguon == btnSua) {
             suaMon();
-        } else if (lenh.equals("XOA")) {
+        } else if (nguon == btnXoa) {
             xoaMon();
-        } else if (lenh.equals("LUU")) {
+        } else if (nguon == btnLuu) {
             luuDuLieu();
-        } else if (lenh.equals("TIM_KIEM")) {
+        } else if (nguon == btnTimKiem || nguon == txtTimKiem) {
             capNhatBang();
-        } else if (lenh.startsWith("LOC:")) {
-            nhomDangLoc = lenh.substring(4);
-            capNhatBang();
+        } else if (nguon == btnLocTatCa) {
+            locTheoNhom("Tất cả");
+        } else if (nguon == btnLocCaPhe) {
+            locTheoNhom("Cà phê");
+        } else if (nguon == btnLocTra) {
+            locTheoNhom("Trà");
+        } else if (nguon == btnLocTraSua) {
+            locTheoNhom("Trà sữa");
+        } else if (nguon == btnLocBanh) {
+            locTheoNhom("Bánh");
         }
+    }
+
+    private void locTheoNhom(String nhom) {
+        nhomDangLoc = nhom;
+        capNhatBang();
     }
 
     @Override
@@ -346,15 +375,23 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         }
 
         txtMaMon.setText(doUong.getMaMon());
+        txtMaMon.setEditable(false);
         txtTenMon.setText(doUong.getTenMon());
         txtDonGia.setText(DoUongBUS.dinhDangGiaNhap(doUong.getDonGia()));
+        txtMoTa.setText(doUong.getMoTa());
     }
 
     // ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
     /** Nạp lại bảng theo từ khóa và nhóm đang chọn. */
     public void capNhatBang() {
-        List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
+        String tuKhoa = txtTimKiem.getText();
+        List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(tuKhoa, nhomDangLoc);
         hienThiDanhSach(dsMon);
+
+        if (dsMon.isEmpty() && !tuKhoa.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void hienThiDanhSach(List<DoUongDTO> dsMon) {
@@ -370,7 +407,8 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
     }
 
     private void themMon() {
-        String loi = dsDoUongBUS.themDoUong(txtMaMon.getText(), txtTenMon.getText(), txtDonGia.getText());
+        String loi = dsDoUongBUS.themDoUong(txtMaMon.getText(), txtTenMon.getText(),
+                txtDonGia.getText(), txtMoTa.getText());
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không thể thêm món", JOptionPane.ERROR_MESSAGE);
             return;
@@ -381,7 +419,8 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
     }
 
     private void suaMon() {
-        String loi = dsDoUongBUS.suaDoUong(txtMaMon.getText(), txtTenMon.getText(), txtDonGia.getText());
+        String loi = dsDoUongBUS.suaDoUong(txtMaMon.getText(), txtTenMon.getText(),
+                txtDonGia.getText(), txtMoTa.getText());
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không thể sửa món", JOptionPane.ERROR_MESSAGE);
             return;
@@ -433,10 +472,16 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
         }
     }
 
+    private void taoMoi() {
+        xoaForm();
+    }
+
     private void xoaForm() {
+        txtMaMon.setEditable(Auth.laQuanLy());
         txtMaMon.setText("");
         txtTenMon.setText("");
         txtDonGia.setText("0");
+        txtMoTa.setText("");
         tblThucDon.clearSelection();
         txtMaMon.requestFocusInWindow();
     }

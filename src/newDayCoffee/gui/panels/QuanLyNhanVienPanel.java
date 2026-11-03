@@ -20,6 +20,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -48,6 +49,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	private JTextField txtNgaySinh;
 	private JTextField txtSDT;
 	private JTextField txtEmail;
+	private JPasswordField txtMatKhau;
 	private JComboBox<String> cboChucVu;
 	private JRadioButton radNam;
 	private JRadioButton radNu;
@@ -57,6 +59,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	private JButton btnThem;
 	private JButton btnXoa;
 	private JButton btnSua;
+	private JButton btnLuu;
 
 	private JTextField txtTimMa;
 	private JTextField txtTimTen;
@@ -179,6 +182,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 		txtSDT = taoOChu(bgInput, 195, 34);
 		txtEmail = taoOChu(bgInput, 195, 34);
+		txtMatKhau = taoOMatKhau(bgInput, 195, 34);
 
 		String[] dsChucVu = {"Thu ngân", "Pha chế", "Quản lí"};
 		cboChucVu = new JComboBox<>(dsChucVu);
@@ -192,6 +196,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		pnCot2.add(taoDongNhap("Email:", txtEmail, fontLabel, 90));
 		pnCot2.add(Box.createVerticalStrut(16));
 		pnCot2.add(taoDongNhap("Chức vụ:", cboChucVu, fontLabel, 90));
+		pnCot2.add(Box.createVerticalStrut(16));
+		pnCot2.add(taoDongNhap("Mật khẩu:", txtMatKhau, fontLabel, 90));
 
 		pnHaiCotInput.add(pnCot1);
 		pnHaiCotInput.add(Box.createHorizontalStrut(30));
@@ -225,6 +231,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		btnThem = taoNutBam("Thêm", new Color(46, 184, 72), 68, 28);
 		btnXoa = taoNutBam("Xóa", new Color(198, 40, 40), 68, 28);
 		btnSua = taoNutBam("Sửa", new Color(158, 145, 135), 68, 28);
+		btnLuu = taoNutBam("Lưu", new Color(30, 100, 40), 68, 28);
 
 		pnHangCuoiForm.add(lbGioiTinh);
 		pnHangCuoiForm.add(radNam);
@@ -238,6 +245,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		pnHangCuoiForm.add(btnXoa);
 		pnHangCuoiForm.add(Box.createHorizontalStrut(20));
 		pnHangCuoiForm.add(btnSua);
+		pnHangCuoiForm.add(Box.createHorizontalStrut(20));
+		pnHangCuoiForm.add(btnLuu);
 
 		pnThongTinNV.add(pnHangCuoiForm);
 
@@ -313,6 +322,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			btnThem.setEnabled(false);
 			btnXoa.setEnabled(false);
 			btnSua.setEnabled(false);
+			btnLuu.setEnabled(false);
+			txtMatKhau.setEditable(false);
 		}
 	}
 
@@ -343,6 +354,16 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		return txt;
 	}
 
+	private JPasswordField taoOMatKhau(Color bg, int width, int height) {
+		JPasswordField txt = new JPasswordField();
+		txt.setBackground(bg);
+		txt.setFont(new Font("Arial", Font.PLAIN, 13));
+		txt.setBorder(new EmptyBorder(5, 10, 5, 10));
+		txt.setPreferredSize(new Dimension(width, height));
+		txt.setMaximumSize(new Dimension(width, height));
+		return txt;
+	}
+
 	private JButton taoNutBam(String text, Color bg, int width, int height) {
 		JButton btn = new JButton(text);
 		btn.setBackground(bg);
@@ -365,20 +386,12 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnThem.setActionCommand("THEM");
-		btnXoa.setActionCommand("XOA");
-		btnSua.setActionCommand("SUA");
-		btnLamMoi.setActionCommand("LAM_MOI");
-		btnTimKiem.setActionCommand("TIM_KIEM");
-
 		btnThem.addActionListener(this);
 		btnXoa.addActionListener(this);
 		btnSua.addActionListener(this);
+		btnLuu.addActionListener(this);
 		btnLamMoi.addActionListener(this);
 		btnTimKiem.addActionListener(this);
-
-		txtTimMa.setActionCommand("TIM_KIEM");
-		txtTimTen.setActionCommand("TIM_KIEM");
 		txtTimMa.addActionListener(this);
 		txtTimTen.addActionListener(this);
 
@@ -387,17 +400,19 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		String lenh = e.getActionCommand();
+		Object nguon = e.getSource();
 
-		if (lenh.equals("THEM")) {
+		if (nguon == btnThem) {
 			themNhanVien();
-		} else if (lenh.equals("SUA")) {
+		} else if (nguon == btnSua) {
 			suaNhanVien();
-		} else if (lenh.equals("XOA")) {
+		} else if (nguon == btnXoa) {
 			xoaNhanVien();
-		} else if (lenh.equals("LAM_MOI")) {
+		} else if (nguon == btnLuu) {
+			luuDuLieu();
+		} else if (nguon == btnLamMoi) {
 			lamMoi();
-		} else if (lenh.equals("TIM_KIEM")) {
+		} else if (nguon == btnTimKiem || nguon == txtTimMa || nguon == txtTimTen) {
 			capNhatBang();
 		}
 	}
@@ -423,6 +438,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		txtNgaySinh.setText(NhanVienBUS.dinhDangNgay(nhanVien.getNgaySinh()));
 		txtSDT.setText(nhanVien.getSdt());
 		txtEmail.setText(nhanVien.getEmail());
+		txtMatKhau.setText("");
 		cboChucVu.setSelectedItem(nhanVien.getChucVu());
 		chonGioiTinh(nhanVien.getGioiTinh());
 	}
@@ -430,8 +446,15 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại bảng theo điều kiện tìm kiếm hiện tại. */
 	public void capNhatBang() {
-		List<NhanVienDTO> dsNhanVien = nhanVienBUS.timKiem(txtTimMa.getText(), txtTimTen.getText());
+		String maTim = txtTimMa.getText();
+		String tenTim = txtTimTen.getText();
+		List<NhanVienDTO> dsNhanVien = nhanVienBUS.timKiem(maTim, tenTim);
 		hienThiDanhSach(dsNhanVien);
+
+		if (dsNhanVien.isEmpty() && !(maTim.trim().isEmpty() && tenTim.trim().isEmpty())) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên.",
+					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 
 	private void hienThiDanhSach(List<NhanVienDTO> dsNhanVien) {
@@ -459,7 +482,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 				txtSDT.getText(),
 				txtEmail.getText(),
 				(String) cboChucVu.getSelectedItem(),
-				layGioiTinhDangChon());
+				layGioiTinhDangChon(),
+				new String(txtMatKhau.getPassword()));
 	}
 
 	private String layGioiTinhDangChon() {
@@ -494,7 +518,11 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		JOptionPane.showMessageDialog(this, "Đã thêm nhân viên mới.\nMật khẩu mặc định: 123456",
+		String thongBao = "Đã thêm nhân viên mới.";
+		if (txtMatKhau.getPassword().length == 0) {
+			thongBao = "Đã thêm nhân viên mới.\nMật khẩu mặc định: 123456";
+		}
+		JOptionPane.showMessageDialog(this, thongBao,
 				"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		xoaForm();
 		capNhatBang();
@@ -545,6 +573,12 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		capNhatBang();
 	}
 
+	private void luuDuLieu() {
+		JOptionPane.showMessageDialog(this,
+				"Chưa có cơ sở dữ liệu để lưu. Dữ liệu hiện chỉ được lưu tạm trong bộ nhớ.",
+				"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+	}
+
 	private void lamMoi() {
 		txtTimMa.setText("");
 		txtTimTen.setText("");
@@ -558,6 +592,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		txtNgaySinh.setText("");
 		txtSDT.setText("");
 		txtEmail.setText("");
+		txtMatKhau.setText("");
 		cboChucVu.setSelectedIndex(0);
 		grpGioiTinh.clearSelection();
 		tblNhanVien.clearSelection();

@@ -29,24 +29,6 @@ public class NhanVienBUS {
     public NhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
-        taoDuLieuMau();
-    }
-
-    /** Dữ liệu mẫu để hệ thống chạy được ngay khi chưa nối CSDL. */
-    private void taoDuLieuMau() {
-        themNhanVienMau("NV01", "Lâm Nguyễn Như Ý", LocalDate.of(2000, 1, 1),
-                "0901234567", "lam@gmail.com", "Quản lí", "Nữ");
-        themNhanVienMau("NV02", "Nguyễn Quang Toàn", LocalDate.of(2002, 3, 15),
-                "0912345678", "toan@gmail.com", "Thu ngân", "Nam");
-        themNhanVienMau("NV03", "Trần Xuân Tiền", LocalDate.of(2001, 7, 20),
-                "0923456789", "tien@gmail.com", "Pha chế", "Nam");
-        themNhanVienMau("NV04", "Trần Đăng Khoa", LocalDate.of(2003, 11, 2),
-                "0934567890", "", "Pha chế", "Nam");
-    }
-
-    private void themNhanVienMau(String maNV, String tenNV, LocalDate ngaySinh,
-            String sdt, String email, String chucVu, String gioiTinh) {
-        dsNhanVien.add(new NhanVienDTO(maNV, tenNV, ngaySinh, sdt, email, chucVu, gioiTinh, "123456"));
     }
 
     // ==================== KHU VỰC ĐĂNG NHẬP / ĐĂNG XUẤT ====================
@@ -111,7 +93,7 @@ public class NhanVienBUS {
 
         for (NhanVienDTO nv : dsNhanVien) {
             boolean dungMa = maTim.isEmpty()
-                    || Validator.chuanHoa(nv.getMaNV()).toLowerCase().contains(maTim);
+                    || Validator.chuanHoa(nv.getMaNV()).toLowerCase().equals(maTim);
             boolean dungTen = tenTim.isEmpty()
                     || Validator.chuanHoa(nv.getTenNV()).toLowerCase().contains(tenTim);
             if (dungMa && dungTen) {
@@ -128,11 +110,12 @@ public class NhanVienBUS {
      * và Validator.kiemTraNhanVien sẽ trả về thông báo lỗi tương ứng.
      */
     public NhanVienDTO taoNhanVienTuForm(String maNV, String tenNV, String ngaySinhText,
-            String sdt, String email, String chucVu, String gioiTinh) {
+            String sdt, String email, String chucVu, String gioiTinh, String matKhau) {
         LocalDate ngaySinh = Validator.docNgay(ngaySinhText);
         return new NhanVienDTO(Validator.chuanHoa(maNV), Validator.chuanHoa(tenNV), ngaySinh,
                 Validator.chuanHoa(sdt), Validator.chuanHoa(email),
-                Validator.chuanHoa(chucVu), Validator.chuanHoa(gioiTinh));
+                Validator.chuanHoa(chucVu), Validator.chuanHoa(gioiTinh),
+                Validator.chuanHoa(matKhau));
     }
 
     /** Định dạng ngày sinh để hiển thị trên bảng: dd-MM-yyyy. */
@@ -159,6 +142,9 @@ public class NhanVienBUS {
         }
         if (taiKhoanBUS.timTheoMa(nv.getMaNV()) != null) {
             return "Tài khoản cho mã nhân viên này đã tồn tại.";
+        }
+        if (!Validator.rong(nv.getMatKhau()) && nv.getMatKhau().length() < 6) {
+            return "Mật khẩu phải có ít nhất 6 ký tự.";
         }
 
         if (Validator.rong(nv.getMatKhau())) {
@@ -191,8 +177,15 @@ public class NhanVienBUS {
             return "Không tìm thấy nhân viên cần sửa.";
         }
 
-        // Giữ nguyên mật khẩu cũ vì form nhân viên không có chức năng đổi mật khẩu
-        nv.setMatKhau(cu.getMatKhau());
+        // Bỏ trống ô mật khẩu thì giữ nguyên mật khẩu cũ
+        if (Validator.rong(nv.getMatKhau())) {
+            nv.setMatKhau(cu.getMatKhau());
+        } else {
+            if (nv.getMatKhau().length() < 6) {
+                return "Mật khẩu phải có ít nhất 6 ký tự.";
+            }
+            taiKhoanBUS.doiMatKhau(nv.getMaNV(), nv.getMatKhau());
+        }
         dsNhanVien.remove(cu);
         dsNhanVien.add(nv);
 
@@ -222,5 +215,32 @@ public class NhanVienBUS {
         dsNhanVien.remove(nv);
         taiKhoanBUS.xoaTaiKhoan(nv.getMaNV());
         return null;
+    }
+
+    // ==================== KHU VỰC DỮ LIỆU MẪU (TẠM THỜI) ====================
+    /**
+     * Thêm 2 tài khoản mẫu để test đăng nhập:
+     *  - ql01 / 123456: quản lí
+     *  - nv01 / 123456: thu ngân
+     *
+     * XÓA DỮ LIỆU MẪU: xóa phương thức này và lời gọi trong LoginFrame.
+     * Không ảnh hưởng đến dữ liệu thật vì chỉ thêm khi cả 2 danh sách đang rỗng.
+     */
+    public void taoDuLieuMau() {
+        if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
+            return;
+        }
+
+        NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
+                LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
+                "Quản lí", "Nam", "123456");
+        NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
+                LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
+                "Thu ngân", "Nữ", "123456");
+
+        dsNhanVien.add(quanLy);
+        dsNhanVien.add(thuNgan);
+        taiKhoanBUS.themTaiKhoan(quanLy.getMaNV(), quanLy.getMatKhau());
+        taiKhoanBUS.themTaiKhoan(thuNgan.getMaNV(), thuNgan.getMatKhau());
     }
 }
