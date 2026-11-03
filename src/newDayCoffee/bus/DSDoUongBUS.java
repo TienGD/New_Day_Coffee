@@ -22,25 +22,6 @@ public class DSDoUongBUS {
     public DSDoUongBUS() {
         dsDoUong = new ArrayList<>();
         doUongBUS = new DoUongBUS();
-        taoDuLieuMau();
-    }
-
-    /** Dữ liệu mẫu để màn hình bán hàng và quản lí thực đơn có dữ liệu ngay. */
-    private void taoDuLieuMau() {
-        themMau("cof01", "Cà phê đen", 15000, "Đậm đà, đánh thức ngày mới");
-        themMau("cof02", "Bạc sỉu", 20000, "Cà phê sữa béo nhẹ");
-        themMau("cof03", "Cà phê sữa", 18000, "Cà phê truyền thống");
-        themMau("tea01", "Trà Đào", 25000, "Trà đào thơm mát");
-        themMau("tea02", "Trà Mãng Cầu", 30000, "Chua ngọt tự nhiên");
-        themMau("tea03", "Trà Vải", 28000, "Trà vải thanh mát");
-        themMau("mil01", "Trà Sữa Thái", 25000, "Trà sữa đậm vị Thái");
-        themMau("mil02", "Trà Sữa Trân Châu", 30000, "Trân châu dai mềm");
-        themMau("bak01", "Bánh Tiramisu", 20000, "Bánh ngọt vị cà phê");
-        themMau("bak02", "Bánh Flan", 15000, "Bánh flan mềm mịn");
-    }
-
-    private void themMau(String maMon, String tenMon, double donGia, String moTa) {
-        dsDoUong.add(new DoUongDTO(maMon, tenMon, donGia, moTa));
     }
 
     // ==================== KHU VỰC ĐỌC / TÌM KIẾM ====================

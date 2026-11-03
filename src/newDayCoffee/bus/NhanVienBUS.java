@@ -29,24 +29,6 @@ public class NhanVienBUS {
     public NhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
-        taoDuLieuMau();
-    }
-
-    /** Dữ liệu mẫu để hệ thống chạy được ngay khi chưa nối CSDL. */
-    private void taoDuLieuMau() {
-        themNhanVienMau("NV01", "Lâm Nguyễn Như Ý", LocalDate.of(2000, 1, 1),
-                "0901234567", "lam@gmail.com", "Quản lí", "Nữ");
-        themNhanVienMau("NV02", "Nguyễn Quang Toàn", LocalDate.of(2002, 3, 15),
-                "0912345678", "toan@gmail.com", "Thu ngân", "Nam");
-        themNhanVienMau("NV03", "Trần Xuân Tiền", LocalDate.of(2001, 7, 20),
-                "0923456789", "tien@gmail.com", "Pha chế", "Nam");
-        themNhanVienMau("NV04", "Trần Đăng Khoa", LocalDate.of(2003, 11, 2),
-                "0934567890", "", "Pha chế", "Nam");
-    }
-
-    private void themNhanVienMau(String maNV, String tenNV, LocalDate ngaySinh,
-            String sdt, String email, String chucVu, String gioiTinh) {
-        dsNhanVien.add(new NhanVienDTO(maNV, tenNV, ngaySinh, sdt, email, chucVu, gioiTinh, "123456"));
     }
 
     // ==================== KHU VỰC ĐĂNG NHẬP / ĐĂNG XUẤT ====================

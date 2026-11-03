@@ -1,7 +1,6 @@
 package newDayCoffee.bus;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,77 +26,10 @@ public class DSHoaDonBUS {
             DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DINH_DANG_MA =
             DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final DateTimeFormatter DINH_DANG_THOI_GIAN =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
     public DSHoaDonBUS() {
         dsHoaDon = new ArrayList<>();
         dsChiTiet = new ArrayList<>();
-        taoDuLieuMau();
-    }
-
-    /** Dữ liệu mẫu để màn hình Tổng quan có số liệu ngay khi chạy. */
-    private void taoDuLieuMau() {
-        // Hóa đơn 1: 2 cà phê đen + 1 bạc sỉu
-        HoaDonDTO hd1 = new HoaDonDTO();
-        hd1.setNgayLap(LocalDateTime.now().minusHours(5).format(DINH_DANG_THOI_GIAN));
-        hd1.setMaNV("NV02");
-        hd1.setTienKhachDua(100000);
-        hd1.setPhuongThucTT("Tiền mặt");
-        hd1.setGhiChu("Khách quen");
-        themHoaDonMau(hd1, new Object[][]{
-            {"cof01", "Cà phê đen", 2, 15000},
-            {"cof02", "Bạc sỉu", 1, 20000}
-        });
-
-        // Hóa đơn 2: 3 trà đào + 2 trà sữa Thái
-        HoaDonDTO hd2 = new HoaDonDTO();
-        hd2.setNgayLap(LocalDateTime.now().minusHours(3).format(DINH_DANG_THOI_GIAN));
-        hd2.setMaNV("NV03");
-        hd2.setTienKhachDua(150000);
-        hd2.setPhuongThucTT("Tiền mặt");
-        hd2.setGhiChu("");
-        themHoaDonMau(hd2, new Object[][]{
-            {"tea01", "Trà Đào", 3, 25000},
-            {"mil01", "Trà Sữa Thái", 2, 25000}
-        });
-
-        // Hóa đơn 3: 1 bánh Tiramisu + 1 trà vải
-        HoaDonDTO hd3 = new HoaDonDTO();
-        hd3.setNgayLap(LocalDateTime.now().minusHours(1).format(DINH_DANG_THOI_GIAN));
-        hd3.setMaNV("NV02");
-        hd3.setTienKhachDua(50000);
-        hd3.setPhuongThucTT("Chuyển khoản");
-        hd3.setGhiChu("Giao tại quầy");
-        themHoaDonMau(hd3, new Object[][]{
-            {"bak01", "Bánh Tiramisu", 1, 20000},
-            {"tea03", "Trà Vải", 1, 28000}
-        });
-    }
-
-    /**
-     * Thêm một hóa đơn mẫu.
-     * Mỗi dòng trong mangChiTiet gồm: mã món, tên món, số lượng, đơn giá.
-     */
-    private void themHoaDonMau(HoaDonDTO hoaDon, Object[][] mangChiTiet) {
-        hoaDon.setMaHD(taoMaHoaDon());
-
-        double tongTien = 0;
-        for (int i = 0; i < mangChiTiet.length; i++) {
-            String maMon = (String) mangChiTiet[i][0];
-            String tenMon = (String) mangChiTiet[i][1];
-            int soLuong = ((Number) mangChiTiet[i][2]).intValue();
-            double donGia = ((Number) mangChiTiet[i][3]).doubleValue();
-
-            ChiTietHoaDonDTO chiTiet = new ChiTietHoaDonDTO(
-                    hoaDon.getMaHD(), maMon, tenMon, soLuong, donGia);
-            dsChiTiet.add(chiTiet);
-            tongTien = tongTien + chiTiet.getThanhTien();
-        }
-
-        hoaDon.setTongTien(tongTien);
-        hoaDon.setTienThoi(hoaDon.getTienKhachDua() - tongTien);
-        dsHoaDon.add(hoaDon);
     }
 
     // ==================== KHU VỰC MÃ HÓA ĐƠN ====================

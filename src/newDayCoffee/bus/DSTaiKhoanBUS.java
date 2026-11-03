@@ -19,15 +19,6 @@ public class DSTaiKhoanBUS {
 
     public DSTaiKhoanBUS() {
         dsTaiKhoan = new ArrayList<>();
-        taoDuLieuMau();
-    }
-
-    /** Tài khoản mẫu dùng khi chưa nối cơ sở dữ liệu. */
-    private void taoDuLieuMau() {
-        dsTaiKhoan.add(new TaiKhoanDTO("NV01", "123456"));
-        dsTaiKhoan.add(new TaiKhoanDTO("NV02", "123456"));
-        dsTaiKhoan.add(new TaiKhoanDTO("NV03", "123456"));
-        dsTaiKhoan.add(new TaiKhoanDTO("NV04", "123456"));
     }
 
     // ==================== KHU VỰC ĐỌC / KIỂM TRA ====================
