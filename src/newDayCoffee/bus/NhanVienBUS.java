@@ -216,4 +216,31 @@ public class NhanVienBUS {
         taiKhoanBUS.xoaTaiKhoan(nv.getMaNV());
         return null;
     }
+
+    // ==================== KHU VỰC DỮ LIỆU MẪU (TẠM THỜI) ====================
+    /**
+     * Thêm 2 tài khoản mẫu để test đăng nhập:
+     *  - ql01 / 123456: quản lí
+     *  - nv01 / 123456: thu ngân
+     *
+     * XÓA DỮ LIỆU MẪU: xóa phương thức này và lời gọi trong LoginFrame.
+     * Không ảnh hưởng đến dữ liệu thật vì chỉ thêm khi cả 2 danh sách đang rỗng.
+     */
+    public void taoDuLieuMau() {
+        if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
+            return;
+        }
+
+        NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
+                LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
+                "Quản lí", "Nam", "123456");
+        NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
+                LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
+                "Thu ngân", "Nữ", "123456");
+
+        dsNhanVien.add(quanLy);
+        dsNhanVien.add(thuNgan);
+        taiKhoanBUS.themTaiKhoan(quanLy.getMaNV(), quanLy.getMatKhau());
+        taiKhoanBUS.themTaiKhoan(thuNgan.getMaNV(), thuNgan.getMatKhau());
+    }
 }
