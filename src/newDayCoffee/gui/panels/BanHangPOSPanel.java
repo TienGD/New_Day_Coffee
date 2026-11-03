@@ -161,7 +161,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		lbDanhSachMon.setForeground(new Color(139, 69, 19));
 		pnTopFilter.add(lbDanhSachMon, BorderLayout.NORTH);
 
-		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 		pnFilterBar.setOpaque(false);
 
 		// Ô tìm kiếm món bo góc
@@ -192,17 +192,17 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		};
 		txtTimKiem.setOpaque(false);
 		txtTimKiem.setForeground(Color.WHITE);
-		txtTimKiem.setPreferredSize(new Dimension(148, 34));
-		txtTimKiem.setBorder(new EmptyBorder(5, 12, 5, 12));
+		txtTimKiem.setPreferredSize(new Dimension(128, 34));
+		txtTimKiem.setBorder(new EmptyBorder(5, 10, 5, 10));
 		pnFilterBar.add(txtTimKiem);
 
-		btnTimKiem = taoNutLoc("Tìm", 50, fontThuong);
+		btnTimKiem = taoNutLoc("Tìm", 44, fontThuong);
 		pnFilterBar.add(btnTimKiem);
 
 		// Các nút lọc loại món
 		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa", "Bánh"};
 		for (int i = 0; i < dsLoai.length; i++) {
-			JButton btnLoai = taoNutLoc(dsLoai[i], 70, fontThuong);
+			JButton btnLoai = taoNutLoc(dsLoai[i], 62, fontThuong);
 			nhomCuaNutLoc.put(btnLoai, dsLoai[i]);
 			btnLoai.addActionListener(this);
 			pnFilterBar.add(btnLoai);
@@ -216,7 +216,11 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		pnGridMon.setOpaque(false);
 		pnGridMon.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-		JScrollPane scrollMon = new JScrollPane(pnGridMon);
+		JPanel pnGridWrapper = new JPanel(new BorderLayout());
+		pnGridWrapper.setOpaque(false);
+		pnGridWrapper.add(pnGridMon, BorderLayout.NORTH);
+
+		JScrollPane scrollMon = new JScrollPane(pnGridWrapper);
 		scrollMon.setOpaque(false);
 		scrollMon.getViewport().setOpaque(false);
 		scrollMon.setBorder(null);
