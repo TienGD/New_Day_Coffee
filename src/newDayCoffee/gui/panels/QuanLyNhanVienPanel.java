@@ -40,7 +40,7 @@ import newDayCoffee.utils.Auth;
  * Panel nhận NhanVienBUS để thêm / sửa / xóa / tìm kiếm. Việc kiểm tra dữ liệu,
  * phân quyền và đồng bộ tài khoản nằm trong tầng BUS.
  */
-public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListSelectionListener {
+public class QuanLyNhanVienPanel extends JPanel implements ListSelectionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JTextField txtMaNV;
@@ -365,41 +365,51 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnThem.setActionCommand("THEM");
-		btnXoa.setActionCommand("XOA");
-		btnSua.setActionCommand("SUA");
-		btnLamMoi.setActionCommand("LAM_MOI");
-		btnTimKiem.setActionCommand("TIM_KIEM");
+		btnThem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				themNhanVien();
+			}
+		});
+		btnXoa.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				xoaNhanVien();
+			}
+		});
+		btnSua.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				suaNhanVien();
+			}
+		});
+		btnLamMoi.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				lamMoi();
+			}
+		});
+		btnTimKiem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				capNhatBang();
+			}
+		});
 
-		btnThem.addActionListener(this);
-		btnXoa.addActionListener(this);
-		btnSua.addActionListener(this);
-		btnLamMoi.addActionListener(this);
-		btnTimKiem.addActionListener(this);
-
-		txtTimMa.setActionCommand("TIM_KIEM");
-		txtTimTen.setActionCommand("TIM_KIEM");
-		txtTimMa.addActionListener(this);
-		txtTimTen.addActionListener(this);
+		txtTimMa.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				capNhatBang();
+			}
+		});
+		txtTimTen.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				capNhatBang();
+			}
+		});
 
 		tblNhanVien.getSelectionModel().addListSelectionListener(this);
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		String lenh = e.getActionCommand();
-
-		if (lenh.equals("THEM")) {
-			themNhanVien();
-		} else if (lenh.equals("SUA")) {
-			suaNhanVien();
-		} else if (lenh.equals("XOA")) {
-			xoaNhanVien();
-		} else if (lenh.equals("LAM_MOI")) {
-			lamMoi();
-		} else if (lenh.equals("TIM_KIEM")) {
-			capNhatBang();
-		}
 	}
 
 	@Override

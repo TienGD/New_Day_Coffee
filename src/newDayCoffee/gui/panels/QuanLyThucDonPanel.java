@@ -40,7 +40,7 @@ import newDayCoffee.utils.Auth;
  * Panel nhận DSDoUongBUS để thêm / sửa / xóa món. Việc kiểm tra dữ liệu và
  * quyền quản lí nằm trong tầng BUS, giao diện chỉ hiển thị thông báo trả về.
  */
-public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSelectionListener {
+public class QuanLyThucDonPanel extends JPanel implements ListSelectionListener {
 
     // ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
     private JTextField txtMaMon;
@@ -280,53 +280,80 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
     // ==================== KHU VỰC GẮN SỰ KIỆN ====================
     private void ganSuKien() {
-        btnThem.setActionCommand("THEM");
-        btnSua.setActionCommand("SUA");
-        btnXoa.setActionCommand("XOA");
-        btnLuu.setActionCommand("LUU");
-        btnTimKiem.setActionCommand("TIM_KIEM");
+        btnThem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                themMon();
+            }
+        });
+        btnSua.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                suaMon();
+            }
+        });
+        btnXoa.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                xoaMon();
+            }
+        });
+        btnLuu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                luuDuLieu();
+            }
+        });
+        btnTimKiem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                capNhatBang();
+            }
+        });
+        txtTimKiem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                capNhatBang();
+            }
+        });
 
-        btnThem.addActionListener(this);
-        btnSua.addActionListener(this);
-        btnXoa.addActionListener(this);
-        btnLuu.addActionListener(this);
-        btnTimKiem.addActionListener(this);
-        txtTimKiem.setActionCommand("TIM_KIEM");
-        txtTimKiem.addActionListener(this);
-
-        btnLocTatCa.setActionCommand("LOC:Tất cả");
-        btnLocCaPhe.setActionCommand("LOC:Cà phê");
-        btnLocTra.setActionCommand("LOC:Trà");
-        btnLocTraSua.setActionCommand("LOC:Trà sữa");
-        btnLocBanh.setActionCommand("LOC:Bánh");
-
-        btnLocTatCa.addActionListener(this);
-        btnLocCaPhe.addActionListener(this);
-        btnLocTra.addActionListener(this);
-        btnLocTraSua.addActionListener(this);
-        btnLocBanh.addActionListener(this);
+        btnLocTatCa.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                locTheoNhom("Tất cả");
+            }
+        });
+        btnLocCaPhe.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                locTheoNhom("Cà phê");
+            }
+        });
+        btnLocTra.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                locTheoNhom("Trà");
+            }
+        });
+        btnLocTraSua.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                locTheoNhom("Trà sữa");
+            }
+        });
+        btnLocBanh.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                locTheoNhom("Bánh");
+            }
+        });
 
         tblThucDon.getSelectionModel().addListSelectionListener(this);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String lenh = e.getActionCommand();
-
-        if (lenh.equals("THEM")) {
-            themMon();
-        } else if (lenh.equals("SUA")) {
-            suaMon();
-        } else if (lenh.equals("XOA")) {
-            xoaMon();
-        } else if (lenh.equals("LUU")) {
-            luuDuLieu();
-        } else if (lenh.equals("TIM_KIEM")) {
-            capNhatBang();
-        } else if (lenh.startsWith("LOC:")) {
-            nhomDangLoc = lenh.substring(4);
-            capNhatBang();
-        }
+    private void locTheoNhom(String nhom) {
+        nhomDangLoc = nhom;
+        capNhatBang();
     }
 
     @Override

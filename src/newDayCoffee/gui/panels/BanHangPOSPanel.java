@@ -52,10 +52,9 @@ import newDayCoffee.utils.Auth;
  * Màn hình bán hàng (POS).
  *
  * Panel nhận DSDoUongBUS để hiển thị thực đơn và HoaDonBUS để quản lý giỏ hàng,
- * thanh toán, in hóa đơn. Mọi sự kiện đều đi qua actionPerformed với
- * ActionCommand, không dùng lambda.
+ * thanh toán, in hóa đơn. Mọi sự kiện đều dùng ActionListener, không dùng lambda.
  */
-public class BanHangPOSPanel extends JPanel implements ActionListener {
+public class BanHangPOSPanel extends JPanel {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbHeaderTitle;
@@ -198,9 +197,15 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		// Các nút lọc loại món
 		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa", "Bánh"};
 		for (int i = 0; i < dsLoai.length; i++) {
-			JButton btnLoai = taoNutLoc(dsLoai[i], 78, fontThuong);
-			btnLoai.setActionCommand("LOC:" + dsLoai[i]);
-			btnLoai.addActionListener(this);
+			final String nhom = dsLoai[i];
+			JButton btnLoai = taoNutLoc(nhom, 78, fontThuong);
+			btnLoai.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					nhomDangLoc = nhom;
+					capNhatDanhSachMon();
+				}
+			});
 			pnFilterBar.add(btnLoai);
 		}
 
@@ -461,7 +466,6 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		btnTru.setBorderPainted(false);
 		btnTru.setPreferredSize(new Dimension(40, 24));
 		btnTru.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		btnTru.setActionCommand("BOT:" + doUong.getMaMon());
 
 		JButton btnCong = new JButton("+");
 		btnCong.setBackground(new Color(92, 32, 0));
@@ -471,7 +475,6 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		btnCong.setBorderPainted(false);
 		btnCong.setPreferredSize(new Dimension(40, 24));
 		btnCong.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		btnCong.setActionCommand("THEM:" + doUong.getMaMon());
 
 		pnSpinner.add(btnTru, BorderLayout.WEST);
 		pnSpinner.add(lbSoLuong, BorderLayout.CENTER);
@@ -488,8 +491,18 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		cardMon.add(pnInfo, BorderLayout.CENTER);
 
 		// Gắn sự kiện cho nút tăng / giảm của thẻ
-		btnTru.addActionListener(this);
-		btnCong.addActionListener(this);
+		btnTru.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				botMon(doUong.getMaMon());
+			}
+		});
+		btnCong.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				themMon(doUong.getMaMon());
+			}
+		});
 
 		return cardMon;
 	}
@@ -503,42 +516,44 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnTimKiem.setActionCommand("TIM_KIEM");
-		btnXoa.setActionCommand("XOA");
-		btnThanhToan.setActionCommand("THANH_TOAN");
-
-		btnTimKiem.addActionListener(this);
-		btnXoa.addActionListener(this);
-		btnThanhToan.addActionListener(this);
+		btnTimKiem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				capNhatDanhSachMon();
+			}
+		});
+		btnXoa.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				xoaMonDangChon();
+			}
+		});
+		btnThanhToan.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				thanhToan();
+			}
+		});
 		// Nhấn Enter trong ô tìm kiếm cũng tìm
-		txtTimKiem.setActionCommand("TIM_KIEM");
-		txtTimKiem.addActionListener(this);
+		txtTimKiem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				capNhatDanhSachMon();
+			}
+		});
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		String lenh = e.getActionCommand();
+	// ==================== KHU VỰC GIỎ HÀNG ====================
+	private void themMon(String maMon) {
+		DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+		if (hoaDonBUS.themMon(doUong)) {
+			capNhatGioHang();
+		}
+	}
 
-		if (lenh.startsWith("THEM:")) {
-			String maMon = lenh.substring(5);
-			DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
-			if (hoaDonBUS.themMon(doUong)) {
-				capNhatGioHang();
-			}
-		} else if (lenh.startsWith("BOT:")) {
-			String maMon = lenh.substring(4);
-			if (hoaDonBUS.giamMon(maMon)) {
-				capNhatGioHang();
-			}
-		} else if (lenh.startsWith("LOC:")) {
-			nhomDangLoc = lenh.substring(4);
-			capNhatDanhSachMon();
-		} else if (lenh.equals("TIM_KIEM")) {
-			capNhatDanhSachMon();
-		} else if (lenh.equals("XOA")) {
-			xoaMonDangChon();
-		} else if (lenh.equals("THANH_TOAN")) {
-			thanhToan();
+	private void botMon(String maMon) {
+		if (hoaDonBUS.giamMon(maMon)) {
+			capNhatGioHang();
 		}
 	}
 
