@@ -31,7 +31,7 @@ import newDayCoffee.bus.DSTaiKhoanBUS;
  * LoginFrame tạo TaiKhoanBUS và NhanVienBUS, sau đó truyền lại cho MainFrame
  * để toàn bộ ứng dụng dùng chung một nguồn dữ liệu (không dùng singleton).
  */
-public class LoginFrame extends JFrame {
+public class LoginFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbHeader;
@@ -145,25 +145,15 @@ public class LoginFrame extends JFrame {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnDangNhap.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				xuLyDangNhap();
-			}
-		});
+		btnDangNhap.addActionListener(this);
 		// Nhấn Enter ở ô mã hoặc ô mật khẩu cũng đăng nhập
-		txtMa.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				xuLyDangNhap();
-			}
-		});
-		passMatKhau.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				xuLyDangNhap();
-			}
-		});
+		txtMa.addActionListener(this);
+		passMatKhau.addActionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		xuLyDangNhap();
 	}
 
 	// ==================== KHU VỰC XỬ LÝ ĐĂNG NHẬP ====================

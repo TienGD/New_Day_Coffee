@@ -46,7 +46,7 @@ import newDayCoffee.utils.Auth;
  * (không dùng singleton). Điều hướng menu và đăng xuất đều dùng
  * ActionListener.
  */
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbSysName;
@@ -56,6 +56,7 @@ public class MainFrame extends JFrame {
 	private JPanel pnContainerCard;
 	private CardLayout cardLayout;
 	private final List<JButton> listMenuButtons = new ArrayList<>();
+	private final List<String> listMenuTen = new ArrayList<>();
 
 	// 5 panel chức năng
 	private TongQuanPanel tongQuanPanel;
@@ -151,13 +152,9 @@ public class MainFrame extends JFrame {
 			btnMenu.setMargin(new Insets(0, 0, 0, 0));
 			btnMenu.setAlignmentX(Component.LEFT_ALIGNMENT);
 			btnMenu.setCursor(new Cursor(Cursor.HAND_CURSOR));
-			btnMenu.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					switchCard(tenMenu);
-				}
-			});
+			btnMenu.addActionListener(this);
 			listMenuButtons.add(btnMenu);
+			listMenuTen.add(tenMenu);
 			pnMenu.add(btnMenu);
 			pnMenu.add(Box.createVerticalStrut(22));
 		}
@@ -223,12 +220,23 @@ public class MainFrame extends JFrame {
 		add(pnContainerCard, BorderLayout.CENTER);
 
 		// Gắn sự kiện đăng xuất
-		btnDangXuat.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dangXuat();
+		btnDangXuat.addActionListener(this);
+	}
+
+	// ==================== KHU VỰC SỰ KIỆN ====================
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == btnDangXuat) {
+			dangXuat();
+			return;
+		}
+
+		for (int i = 0; i < listMenuButtons.size(); i++) {
+			if (e.getSource() == listMenuButtons.get(i)) {
+				switchCard(listMenuTen.get(i));
+				return;
 			}
-		});
+		}
 	}
 
 	// ==================== KHU VỰC ĐIỀU HƯỚNG ====================

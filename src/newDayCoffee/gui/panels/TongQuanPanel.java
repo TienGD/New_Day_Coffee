@@ -42,7 +42,7 @@ import newDayCoffee.utils.Auth;
  * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán
  * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý bằng ActionListener.
  */
-public class TongQuanPanel extends JPanel {
+public class TongQuanPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbBranch;
@@ -363,26 +363,24 @@ public class TongQuanPanel extends JPanel {
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnBanChay.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sapXepGiam = true;
-				capNhatBangMonBanChay();
-			}
-		});
-		btnBanCham.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sapXepGiam = false;
-				capNhatBangMonBanChay();
-			}
-		});
-		btnThemChuY.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				themChuY();
-			}
-		});
+		btnBanChay.addActionListener(this);
+		btnBanCham.addActionListener(this);
+		btnThemChuY.addActionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+
+		if (nguon == btnBanChay) {
+			sapXepGiam = true;
+			capNhatBangMonBanChay();
+		} else if (nguon == btnBanCham) {
+			sapXepGiam = false;
+			capNhatBangMonBanChay();
+		} else if (nguon == btnThemChuY) {
+			themChuY();
+		}
 	}
 
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================

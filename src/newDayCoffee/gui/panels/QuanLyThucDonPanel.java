@@ -40,7 +40,7 @@ import newDayCoffee.utils.Auth;
  * Panel nhận DSDoUongBUS để thêm / sửa / xóa món. Việc kiểm tra dữ liệu và
  * quyền quản lí nằm trong tầng BUS, giao diện chỉ hiển thị thông báo trả về.
  */
-public class QuanLyThucDonPanel extends JPanel implements ListSelectionListener {
+public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSelectionListener {
 
     // ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
     private JTextField txtMaMon;
@@ -280,75 +280,47 @@ public class QuanLyThucDonPanel extends JPanel implements ListSelectionListener 
 
     // ==================== KHU VỰC GẮN SỰ KIỆN ====================
     private void ganSuKien() {
-        btnThem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                themMon();
-            }
-        });
-        btnSua.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                suaMon();
-            }
-        });
-        btnXoa.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                xoaMon();
-            }
-        });
-        btnLuu.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                luuDuLieu();
-            }
-        });
-        btnTimKiem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                capNhatBang();
-            }
-        });
-        txtTimKiem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                capNhatBang();
-            }
-        });
+        btnThem.addActionListener(this);
+        btnSua.addActionListener(this);
+        btnXoa.addActionListener(this);
+        btnLuu.addActionListener(this);
+        btnTimKiem.addActionListener(this);
+        txtTimKiem.addActionListener(this);
 
-        btnLocTatCa.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                locTheoNhom("Tất cả");
-            }
-        });
-        btnLocCaPhe.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                locTheoNhom("Cà phê");
-            }
-        });
-        btnLocTra.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                locTheoNhom("Trà");
-            }
-        });
-        btnLocTraSua.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                locTheoNhom("Trà sữa");
-            }
-        });
-        btnLocBanh.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                locTheoNhom("Bánh");
-            }
-        });
+        btnLocTatCa.addActionListener(this);
+        btnLocCaPhe.addActionListener(this);
+        btnLocTra.addActionListener(this);
+        btnLocTraSua.addActionListener(this);
+        btnLocBanh.addActionListener(this);
 
         tblThucDon.getSelectionModel().addListSelectionListener(this);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object nguon = e.getSource();
+
+        if (nguon == btnThem) {
+            themMon();
+        } else if (nguon == btnSua) {
+            suaMon();
+        } else if (nguon == btnXoa) {
+            xoaMon();
+        } else if (nguon == btnLuu) {
+            luuDuLieu();
+        } else if (nguon == btnTimKiem || nguon == txtTimKiem) {
+            capNhatBang();
+        } else if (nguon == btnLocTatCa) {
+            locTheoNhom("Tất cả");
+        } else if (nguon == btnLocCaPhe) {
+            locTheoNhom("Cà phê");
+        } else if (nguon == btnLocTra) {
+            locTheoNhom("Trà");
+        } else if (nguon == btnLocTraSua) {
+            locTheoNhom("Trà sữa");
+        } else if (nguon == btnLocBanh) {
+            locTheoNhom("Bánh");
+        }
     }
 
     private void locTheoNhom(String nhom) {
