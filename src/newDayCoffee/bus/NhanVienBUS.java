@@ -93,7 +93,7 @@ public class NhanVienBUS {
 
         for (NhanVienDTO nv : dsNhanVien) {
             boolean dungMa = maTim.isEmpty()
-                    || Validator.chuanHoa(nv.getMaNV()).toLowerCase().contains(maTim);
+                    || Validator.chuanHoa(nv.getMaNV()).toLowerCase().equals(maTim);
             boolean dungTen = tenTim.isEmpty()
                     || Validator.chuanHoa(nv.getTenNV()).toLowerCase().contains(tenTim);
             if (dungMa && dungTen) {
@@ -110,11 +110,12 @@ public class NhanVienBUS {
      * và Validator.kiemTraNhanVien sẽ trả về thông báo lỗi tương ứng.
      */
     public NhanVienDTO taoNhanVienTuForm(String maNV, String tenNV, String ngaySinhText,
-            String sdt, String email, String chucVu, String gioiTinh) {
+            String sdt, String email, String chucVu, String gioiTinh, String matKhau) {
         LocalDate ngaySinh = Validator.docNgay(ngaySinhText);
         return new NhanVienDTO(Validator.chuanHoa(maNV), Validator.chuanHoa(tenNV), ngaySinh,
                 Validator.chuanHoa(sdt), Validator.chuanHoa(email),
-                Validator.chuanHoa(chucVu), Validator.chuanHoa(gioiTinh));
+                Validator.chuanHoa(chucVu), Validator.chuanHoa(gioiTinh),
+                Validator.chuanHoa(matKhau));
     }
 
     /** Định dạng ngày sinh để hiển thị trên bảng: dd-MM-yyyy. */
@@ -141,6 +142,9 @@ public class NhanVienBUS {
         }
         if (taiKhoanBUS.timTheoMa(nv.getMaNV()) != null) {
             return "Tài khoản cho mã nhân viên này đã tồn tại.";
+        }
+        if (!Validator.rong(nv.getMatKhau()) && nv.getMatKhau().length() < 6) {
+            return "Mật khẩu phải có ít nhất 6 ký tự.";
         }
 
         if (Validator.rong(nv.getMatKhau())) {
@@ -173,8 +177,15 @@ public class NhanVienBUS {
             return "Không tìm thấy nhân viên cần sửa.";
         }
 
-        // Giữ nguyên mật khẩu cũ vì form nhân viên không có chức năng đổi mật khẩu
-        nv.setMatKhau(cu.getMatKhau());
+        // Bỏ trống ô mật khẩu thì giữ nguyên mật khẩu cũ
+        if (Validator.rong(nv.getMatKhau())) {
+            nv.setMatKhau(cu.getMatKhau());
+        } else {
+            if (nv.getMatKhau().length() < 6) {
+                return "Mật khẩu phải có ít nhất 6 ký tự.";
+            }
+            taiKhoanBUS.doiMatKhau(nv.getMaNV(), nv.getMatKhau());
+        }
         dsNhanVien.remove(cu);
         dsNhanVien.add(nv);
 

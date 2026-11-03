@@ -35,12 +35,13 @@ public class DoUongBUS {
      * Tạo DTO từ dữ liệu đã được kiểm tra hợp lệ.
      * Nếu dữ liệu chưa hợp lệ, trả về null.
      */
-    public DoUongDTO taoDoUong(String maMon, String tenMon, String donGiaText) {
+    public DoUongDTO taoDoUong(String maMon, String tenMon, String donGiaText, String moTa) {
         if (kiemTraThongTin(maMon, tenMon, donGiaText) != null) {
             return null;
         }
         double donGia = Validator.docSoTien(donGiaText);
-        return new DoUongDTO(Validator.chuanHoa(maMon), Validator.chuanHoa(tenMon), donGia, "");
+        return new DoUongDTO(Validator.chuanHoa(maMon), Validator.chuanHoa(tenMon), donGia,
+                Validator.chuanHoa(moTa));
     }
 
     /** Đọc giá bán từ chuỗi người dùng nhập. */
