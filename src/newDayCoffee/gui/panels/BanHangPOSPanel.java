@@ -564,6 +564,11 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		capNhatSoLuongTrenThe();
 		pnGridMon.revalidate();
 		pnGridMon.repaint();
+
+		if (dsMon.isEmpty() && !txtTimKiem.getText().trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
+					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 
 	/** Nạp lại bảng đơn hàng và tổng tiền từ HoaDonBUS. */
