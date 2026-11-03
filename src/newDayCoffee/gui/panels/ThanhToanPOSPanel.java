@@ -77,9 +77,6 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	private JTextField txtKhachDua;
 	private JTextField txtTienThua;
 	private JButton btnTienMat;
-	private JButton btnTheNganHang;
-	private JButton btnChuyenKhoan;
-	private JButton btnViMomo;
 	private JTextArea txtGhiChu;
 
 	// Cột phải - Bàn phím số & Nút tác vụ
@@ -488,12 +485,6 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 			}
 		} else if (nguon == btnTienMat) {
 			chonPhuongThuc("Tiền mặt");
-		} else if (nguon == btnTheNganHang) {
-			chonPhuongThuc("Thẻ ngân hàng");
-		} else if (nguon == btnChuyenKhoan) {
-			chonPhuongThuc("Chuyển khoản");
-		} else if (nguon == btnViMomo) {
-			chonPhuongThuc("Ví momo");
 		} else if (nguon == btnInHoaDon) {
 			inHoaDon();
 		} else if (nguon == btnThanhToan) {
@@ -512,7 +503,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	private void chonPhuongThuc(String phuongThuc) {
 		phuongThucDangChon = phuongThuc;
 
-		JButton[] dsNut = {btnTienMat, btnTheNganHang, btnChuyenKhoan, btnViMomo};
+		JButton[] dsNut = {btnTienMat};
 		for (int i = 0; i < dsNut.length; i++) {
 			if (dsNut[i].getText().equals(phuongThuc)) {
 				dsNut[i].setBackground(MAU_DO_DAM);
