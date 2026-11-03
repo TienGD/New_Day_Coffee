@@ -20,9 +20,9 @@ import newDayCoffee.dto.NhanVienDTO;
 public class Validator {
 
     // ==================== KHU VỰC HẰNG SỐ ====================
-    private static final Pattern MA_NHAN_VIEN = Pattern.compile("^[A-Za-z]{1,4}\\d{2,4}$");
-    private static final Pattern MA_MON = Pattern.compile("^[A-Za-z]{2,4}\\d{2,4}$");
-    private static final Pattern SO_DIEN_THOAI = Pattern.compile("^0\\d{8,10}$");
+    private static final Pattern MA_NHAN_VIEN = Pattern.compile("^(nv|ql)\\d{2}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MA_MON = Pattern.compile("^(cof|tea|mil|bak)\\d{2}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SO_DIEN_THOAI = Pattern.compile("^0\\d{9}$");
     private static final Pattern EMAIL = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private Validator() {
@@ -43,8 +43,9 @@ public class Validator {
     // ==================== KHU VỰC KIỂM TRA ĐĂNG NHẬP ====================
     /** Kiểm tra dữ liệu nhập ở màn hình đăng nhập. */
     public static String kiemTraDangNhap(String maNV, String matKhau) {
-        if (rong(maNV)) {
-            return "Vui lòng nhập mã nhân viên.";
+        String loi = kiemTraMaNV(maNV);
+        if (loi != null) {
+            return loi;
         }
         if (rong(matKhau)) {
             return "Vui lòng nhập mật khẩu.";
@@ -85,6 +86,10 @@ public class Validator {
         if (loi != null) {
             return loi;
         }
+        loi = kiemTraMaVaChucVu(nv.getMaNV(), nv.getChucVu());
+        if (loi != null) {
+            return loi;
+        }
         return kiemTraGioiTinh(nv.getGioiTinh());
     }
 
@@ -94,7 +99,26 @@ public class Validator {
             return "Vui lòng nhập mã nhân viên.";
         }
         if (!MA_NHAN_VIEN.matcher(ma).matches()) {
-            return "Mã nhân viên gồm 1-4 chữ cái và 2-4 chữ số (ví dụ NV01).";
+            return "Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).";
+        }
+        return null;
+    }
+
+    /** Kiểm tra mã nhân viên có phải của quản lí hay không (tiền tố ql). */
+    public static boolean laMaQuanLy(String maNV) {
+        String ma = chuanHoa(maNV).toLowerCase();
+        return ma.startsWith("ql");
+    }
+
+    /** Mã quản lí phải đi với chức vụ Quản lí và ngược lại. */
+    public static String kiemTraMaVaChucVu(String maNV, String chucVu) {
+        String ma = chuanHoa(maNV).toLowerCase();
+        String cv = chuanHoa(chucVu);
+        if (ma.startsWith("ql") && !cv.equals("Quản lí")) {
+            return "Mã nhân viên bắt đầu bằng ql phải có chức vụ Quản lí.";
+        }
+        if (ma.startsWith("nv") && cv.equals("Quản lí")) {
+            return "Mã nhân viên bắt đầu bằng nv không được có chức vụ Quản lí.";
         }
         return null;
     }
@@ -109,6 +133,12 @@ public class Validator {
         }
         if (t.matches(".*\\d.*")) {
             return "Tên nhân viên không được chứa chữ số.";
+        }
+        String[] dsTu = t.split(" ");
+        for (int i = 0; i < dsTu.length; i++) {
+            if (dsTu[i].isEmpty() || !Character.isUpperCase(dsTu[i].charAt(0))) {
+                return "Tên nhân viên phải viết hoa chữ cái đầu mỗi từ và cách nhau bằng một khoảng trắng.";
+            }
         }
         return null;
     }
@@ -132,7 +162,7 @@ public class Validator {
             return "Vui lòng nhập số điện thoại.";
         }
         if (!SO_DIEN_THOAI.matcher(so).matches()) {
-            return "Số điện thoại phải bắt đầu bằng 0 và có 9-11 chữ số.";
+            return "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng 0.";
         }
         return null;
     }
@@ -179,7 +209,7 @@ public class Validator {
             return "Vui lòng nhập mã món.";
         }
         if (!MA_MON.matcher(ma).matches()) {
-            return "Mã món gồm 2-4 chữ cái và 2-4 chữ số (ví dụ cof01, tea02).";
+            return "Mã món phải có đúng 5 ký tự, dạng cofXX, teaXX, milXX hoặc bakXX (ví dụ cof01).";
         }
         String ten = chuanHoa(tenMon);
         if (ten.isEmpty()) {
