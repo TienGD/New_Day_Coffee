@@ -71,8 +71,6 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 	// Cột phải - Hàng trên: Các thẻ tổng kết tiền
 	private JLabel lbTongTienHangGiaTri;
-	private JLabel lbGiamGiaGiaTri;
-	private JLabel lbThueGiaTri;
 	private JLabel lbThanhTienGiaTri;
 
 	// Cột phải - Nhập liệu & Phương thức thanh toán
@@ -272,13 +270,9 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		pnTopSummary.setPreferredSize(new Dimension(0, 95));
 
 		lbTongTienHangGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
-		lbGiamGiaGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
-		lbThueGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
 		lbThanhTienGiaTri = new JLabel("0Đ", SwingConstants.CENTER);
 
 		pnTopSummary.add(taoTheThongKe("Tổng tiền hàng", lbTongTienHangGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
-		pnTopSummary.add(taoTheThongKe("Giảm giá", lbGiamGiaGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
-		pnTopSummary.add(taoTheThongKe("Thuế", lbThueGiaTri, mauXamNhat, Color.BLACK, mauDoTuoi));
 		pnTopSummary.add(taoTheThongKe("Thành tiền", lbThanhTienGiaTri, mauDoTuoi, Color.BLACK, Color.WHITE));
 
 		pnRightCol.add(pnTopSummary, BorderLayout.NORTH);
@@ -350,14 +344,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		pnPhuongThucGrid.setOpaque(false);
 
 		btnTienMat = taoNutPhang("Tiền mặt", mauDoDam, Color.WHITE, fontDam, new Dimension(0, 42));
-		btnTheNganHang = taoNutPhang("Thẻ ngân hàng", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
-		btnChuyenKhoan = taoNutPhang("Chuyển khoản", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
-		btnViMomo = taoNutPhang("Ví momo", mauXamNhat, Color.BLACK, fontDam, new Dimension(0, 42));
-
 		pnPhuongThucGrid.add(btnTienMat);
-		pnPhuongThucGrid.add(btnTheNganHang);
-		pnPhuongThucGrid.add(btnChuyenKhoan);
-		pnPhuongThucGrid.add(btnViMomo);
 
 		gbcForm.gridy = 5;
 		gbcForm.insets = new Insets(0, 0, 22, 0);
@@ -465,10 +452,6 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		btnQuayLai.addActionListener(this);
 
 		btnTienMat.addActionListener(this);
-		btnTheNganHang.addActionListener(this);
-		btnChuyenKhoan.addActionListener(this);
-		btnViMomo.addActionListener(this);
-
 		for (int i = 0; i < dsNutBanPhim.length; i++) {
 			dsNutBanPhim[i].addActionListener(this);
 		}
@@ -616,8 +599,6 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 		double tongTien = hoaDonBUS.tongTien();
 		lbTongTienHangGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
-		lbGiamGiaGiaTri.setText("0Đ");
-		lbThueGiaTri.setText("0Đ");
 		lbThanhTienGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
 
 		capNhatTienThua();
