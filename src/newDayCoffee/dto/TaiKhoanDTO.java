@@ -10,6 +10,7 @@ public class TaiKhoanDTO {
     	this.maNV = new NhanVienDTO();
     	this.matKhau = "";
     }
+   
     
     public TaiKhoanDTO(String maNV) {
         this();

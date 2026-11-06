@@ -9,6 +9,7 @@ public class HoaDonDTO {
     private double tienKhachDua;
     private String ghiChu;
     private String trangThai;
+   
     
     public HoaDonDTO() {
         this.maHD = "";
