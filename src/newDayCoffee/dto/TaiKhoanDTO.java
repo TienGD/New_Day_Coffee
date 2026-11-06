@@ -22,7 +22,6 @@ public class TaiKhoanDTO {
     }
 
    
-
 	public String getMatKhau() {
 		return matKhau;
 	}

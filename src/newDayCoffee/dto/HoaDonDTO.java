@@ -33,6 +33,7 @@ public class HoaDonDTO {
         this.trangThai = trangThai;
     }
 
+    
     public String getMaHD() {
         return maHD;
     }
