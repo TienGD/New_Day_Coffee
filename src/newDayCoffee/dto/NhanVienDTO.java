@@ -12,6 +12,7 @@ public class NhanVienDTO {
     private String chucVu;
     private String gioiTinh;
     
+    
     public NhanVienDTO() {
         this.maNV = "";
         this.tenNV = "";

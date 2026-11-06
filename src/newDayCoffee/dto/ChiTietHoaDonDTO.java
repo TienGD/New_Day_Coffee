@@ -6,7 +6,6 @@ public class ChiTietHoaDonDTO {
     private int soLuong;
     private double donGia;
 
-    
     public ChiTietHoaDonDTO() {
         this.hoaDon = new HoaDonDTO();
         this.doUong = new DoUongDTO();
