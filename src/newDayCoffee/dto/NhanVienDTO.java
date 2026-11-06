@@ -1,6 +1,7 @@
 package newDayCoffee.dto;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class NhanVienDTO {
     private String maNV;
@@ -10,7 +11,6 @@ public class NhanVienDTO {
     private String email;
     private String chucVu;
     private String gioiTinh;
-    private String matKhau;
 
     public NhanVienDTO() {
         this.maNV = "";
@@ -20,21 +20,11 @@ public class NhanVienDTO {
         this.email = "";
         this.chucVu = "";
         this.gioiTinh = "";
-        this.matKhau = "123456";
     }
 
-    /** Constructor chỉ chứa mã. */
     public NhanVienDTO(String maNV) {
         this();
         this.maNV = maNV;
-    }
-
-    /**
-     * NOTE: constructor không có tham số mật khẩu, dùng khi thêm nhân viên mới.
-     * Nhân viên được gán mật khẩu mặc định "123456", sau đó tự đổi mật khẩu.
-     */
-    public NhanVienDTO(String maNV, String tenNV, LocalDate ngaySinh, String sdt, String email, String chucVu, String gioiTinh) {
-        this(maNV, tenNV, ngaySinh, sdt, email, chucVu, gioiTinh, "123456");
     }
 
     public NhanVienDTO(String maNV, String tenNV, LocalDate ngaySinh, String sdt, String email, String chucVu, String gioiTinh, String matKhau) {
@@ -45,7 +35,6 @@ public class NhanVienDTO {
         this.email = email;
         this.chucVu = chucVu;
         this.gioiTinh = gioiTinh;
-        this.matKhau = matKhau;
     }
 
     public String getMaNV() {
@@ -104,15 +93,26 @@ public class NhanVienDTO {
         this.gioiTinh = gioiTinh;
     }
 
-    public String getMatKhau() {
-        return matKhau;
-    }
-
-    public void setMatKhau(String matKhau) {
-        this.matKhau = matKhau;
-    }
+    
 
     @Override
+	public int hashCode() {
+		return Objects.hash(maNV);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		NhanVienDTO other = (NhanVienDTO) obj;
+		return Objects.equals(maNV, other.maNV);
+	}
+
+	@Override
     public String toString() {
         return "NhanVienDTO [maNV=" + maNV + ", tenNV=" + tenNV + ", ngaySinh=" + ngaySinh + ", sdt=" + sdt + ", email="
                 + email + ", chucVu=" + chucVu + ", gioiTinh=" + gioiTinh + "]";

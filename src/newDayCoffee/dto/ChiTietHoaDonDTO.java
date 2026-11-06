@@ -1,56 +1,66 @@
 package newDayCoffee.dto;
 
 public class ChiTietHoaDonDTO {
-    private String maHD;
-    private String maMon;
-    private String tenMon;
+    private HoaDonDTO hoaDon;
+    private DoUongDTO doUong;
     private int soLuong;
     private double donGia;
 
     public ChiTietHoaDonDTO() {
-        this.maHD = "";
-        this.maMon = "";
-        this.tenMon = "";
+        this.hoaDon = new HoaDonDTO();
+        this.doUong = new DoUongDTO();
         this.soLuong = 0;
         this.donGia = 0;
     }
 
     public ChiTietHoaDonDTO(String maHD, String maMon) {
         this();
-        this.maHD = maHD;
-        this.maMon = maMon;
+        this.hoaDon.setMaHD(maHD);
+        this.doUong.setMaMon(maMon);
     }
 
-    public ChiTietHoaDonDTO(String maHD, String maMon, String tenMon, int soLuong, double donGia) {
-        this.maHD = maHD;
-        this.maMon = maMon;
-        this.tenMon = tenMon;
+
+    public ChiTietHoaDonDTO(HoaDonDTO hoaDon, DoUongDTO doUong, int soLuong, double donGia) {
+        this.hoaDon = hoaDon;
+        this.doUong = doUong;
         this.soLuong = soLuong;
         this.donGia = donGia;
     }
 
+    public HoaDonDTO getHoaDon() {
+        return hoaDon;
+    }
+
+    public void setHoaDon(HoaDonDTO hoaDon) {
+        this.hoaDon = hoaDon;
+    }
+
+    public DoUongDTO getDoUong() {
+        return doUong;
+    }
+
+    public void setDoUong(DoUongDTO doUong) {
+        this.doUong = doUong;
+    }
+
     public String getMaHD() {
-        return maHD;
+        return hoaDon.getMaHD();
     }
 
     public void setMaHD(String maHD) {
-        this.maHD = maHD;
+        this.hoaDon.setMaHD(maHD);
     }
 
     public String getMaMon() {
-        return maMon;
+        return doUong.getMaMon();
     }
 
     public void setMaMon(String maMon) {
-        this.maMon = maMon;
+        this.doUong.setMaMon(maMon);
     }
 
     public String getTenMon() {
-        return tenMon;
-    }
-
-    public void setTenMon(String tenMon) {
-        this.tenMon = tenMon;
+        return doUong.getTenMon();
     }
 
     public int getSoLuong() {
@@ -75,7 +85,7 @@ public class ChiTietHoaDonDTO {
 
     @Override
     public String toString() {
-        return "ChiTietHoaDonDTO [maHD=" + maHD + ", maMon=" + maMon + ", tenMon=" + tenMon + ", soLuong=" + soLuong
+        return "ChiTietHoaDonDTO [maHD=" + getMaHD() + ", maMon=" + getMaMon() + ", soLuong=" + soLuong
                 + ", donGia=" + donGia + "]";
     }
 }

@@ -1,5 +1,7 @@
 package newDayCoffee.dto;
 
+import java.util.Objects;
+
 public class DoUongDTO {
     private String maMon;
     private String tenMon;
@@ -16,10 +18,6 @@ public class DoUongDTO {
     public DoUongDTO(String maMon) {
         this();
         this.maMon = maMon;
-    }
-
-    public DoUongDTO(String maMon, String tenMon, double donGia) {
-        this(maMon, tenMon, donGia, "");
     }
 
     public DoUongDTO(String maMon, String tenMon, double donGia, String moTa) {
@@ -59,6 +57,23 @@ public class DoUongDTO {
 
     public void setMoTa(String moTa) {
         this.moTa = moTa;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maMon);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DoUongDTO other = (DoUongDTO) obj;
+        return Objects.equals(maMon, other.maMon);
     }
 
     @Override
