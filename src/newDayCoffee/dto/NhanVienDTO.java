@@ -12,7 +12,7 @@ public class NhanVienDTO {
     private String email;
     private String chucVu;
     private String gioiTinh;
-
+    
     public NhanVienDTO() {
         this.maNV = "";
         this.tenNV = "";

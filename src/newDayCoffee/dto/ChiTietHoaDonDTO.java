@@ -7,6 +7,7 @@ public class ChiTietHoaDonDTO {
     private double donGia;
 
     
+    
     public ChiTietHoaDonDTO() {
         this.hoaDon = new HoaDonDTO();
         this.doUong = new DoUongDTO();
