@@ -48,7 +48,7 @@ import newDayCoffee.utils.Validator;
  * Panel nhận MainFrame để quay lại màn hình bán hàng và HoaDonBUS để hiển thị
  * giỏ hàng, tính tiền thừa, lập hóa đơn. Mọi sự kiện đều dùng ActionListener.
  */
-public class ThanhToanPOSPanel extends JPanel implements ActionListener {
+public class ThanhToanPOSPanel extends JPanel  {
 
 	private static final Color MAU_XAM_NHAT = new Color(218, 218, 218);
 	private static final Color MAU_DO_DAM = new Color(128, 28, 28);
@@ -84,19 +84,12 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	private JButton btnInHoaDon;
 	private JButton btnThanhToan;
 
-	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final MainFrame mainFrame;
-	private final HoaDonBUS hoaDonBUS;
-	private final DSHoaDonBUS dsHoaDonBUS;
+	// ==================== KHU VỰC TẦNG XỬ LÝ ===================
 	private String phuongThucDangChon = "Tiền mặt";
 
-	public ThanhToanPOSPanel(MainFrame mainFrame, HoaDonBUS hoaDonBUS, DSHoaDonBUS dsHoaDonBUS) {
-		this.mainFrame = mainFrame;
-		this.hoaDonBUS = hoaDonBUS;
-		this.dsHoaDonBUS = dsHoaDonBUS;
-
+	public ThanhToanPOSPanel() {
 		khoiTaoGiaoDien();
-		ganSuKien();
+		
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -444,229 +437,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		add(pnRightCol, gbc);
 	}
 
-	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
-	private void ganSuKien() {
-		btnQuayLai.addActionListener(this);
-
-		btnTienMat.addActionListener(this);
-		for (int i = 0; i < dsNutBanPhim.length; i++) {
-			dsNutBanPhim[i].addActionListener(this);
-		}
-
-		btnInHoaDon.addActionListener(this);
-		btnThanhToan.addActionListener(this);
-
-		// Cập nhật tiền thiếu / thừa mỗi khi ô khách đưa thay đổi
-		txtKhachDua.getDocument().addDocumentListener(new DocumentListener() {
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				capNhatTienThua();
-			}
-
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				capNhatTienThua();
-			}
-
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				capNhatTienThua();
-			}
-		});
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object nguon = e.getSource();
-
-		if (nguon == btnQuayLai) {
-			if (mainFrame != null) {
-				mainFrame.switchCard("Bán hàng");
-			}
-		} else if (nguon == btnTienMat) {
-			chonPhuongThuc("Tiền mặt");
-		} else if (nguon == btnInHoaDon) {
-			inHoaDon();
-		} else if (nguon == btnThanhToan) {
-			thanhToan();
-		} else {
-			for (int i = 0; i < dsNutBanPhim.length; i++) {
-				if (nguon == dsNutBanPhim[i]) {
-					xuLyBanPhim(NHAN_BAN_PHIM[i]);
-					return;
-				}
-			}
-		}
-	}
-
-	/** Đổi phương thức thanh toán đang chọn và tô lại màu các nút. */
-	private void chonPhuongThuc(String phuongThuc) {
-		phuongThucDangChon = phuongThuc;
-
-		JButton[] dsNut = {btnTienMat};
-		for (int i = 0; i < dsNut.length; i++) {
-			if (dsNut[i].getText().equals(phuongThuc)) {
-				dsNut[i].setBackground(MAU_DO_DAM);
-				dsNut[i].setForeground(Color.WHITE);
-			} else {
-				dsNut[i].setBackground(MAU_XAM_NHAT);
-				dsNut[i].setForeground(Color.BLACK);
-			}
-		}
-	}
-
-	// ==================== KHU VỰC BÀN PHÍM NHẬP TIỀN ====================
-	private void xuLyBanPhim(String nhanPhim) {
-		if (nhanPhim.equals("C")) {
-			txtKhachDua.setText("0");
-		} else if (nhanPhim.equals("X")) {
-			xoaKyTuCuoi();
-		} else if (nhanPhim.equals("+")) {
-			dieuChinhTien(BUOC_TIEN);
-		} else if (nhanPhim.equals("-")) {
-			dieuChinhTien(-BUOC_TIEN);
-		} else {
-			themVaoOTien(nhanPhim);
-		}
-	}
-
-	private void themVaoOTien(String kyTu) {
-		String hienTai = txtKhachDua.getText().trim();
-		if (hienTai.equals("0")) {
-			hienTai = "";
-		}
-		if (kyTu.equals(".")) {
-			if (hienTai.indexOf('.') >= 0) {
-				return;
-			}
-			if (hienTai.isEmpty()) {
-				hienTai = "0";
-			}
-		}
-		txtKhachDua.setText(hienTai + kyTu);
-		txtKhachDua.setCaretPosition(txtKhachDua.getText().length());
-	}
-
-	private void xoaKyTuCuoi() {
-		String hienTai = txtKhachDua.getText().trim();
-		if (hienTai.isEmpty()) {
-			return;
-		}
-		hienTai = hienTai.substring(0, hienTai.length() - 1);
-		txtKhachDua.setText(hienTai.isEmpty() ? "0" : hienTai);
-	}
-
-	private void dieuChinhTien(double buocTien) {
-		double hienTai = Validator.docSoTien(txtKhachDua.getText());
-		if (hienTai < 0) {
-			hienTai = 0;
-		}
-		double giaTriMoi = hienTai + buocTien;
-		if (giaTriMoi < 0) {
-			giaTriMoi = 0;
-		}
-		txtKhachDua.setText(HoaDonBUS.dinhDangTienNhap(giaTriMoi));
-	}
-
-	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
-	/** Nạp thông tin đơn hàng hiện tại từ HoaDonBUS lên màn hình. */
-	public void capNhatDuLieu() {
-		lbMaHoaDonGiaTri.setText(dsHoaDonBUS.taoMaHoaDon());
-		lbNgayLapGiaTri.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-		lbNhanVienGiaTri.setText(Auth.getTenHienThi());
-
-		modelSanPham.setRowCount(0);
-		List<ChiTietHoaDonDTO> gioHang = hoaDonBUS.layGioHang();
-		for (int i = 0; i < gioHang.size(); i++) {
-			ChiTietHoaDonDTO dong = gioHang.get(i);
-			modelSanPham.addRow(new Object[]{
-				String.valueOf(i + 1),
-				dong.getTenMon(),
-				String.valueOf(dong.getSoLuong()),
-				HoaDonBUS.dinhDangTien(dong.getDonGia()),
-				HoaDonBUS.dinhDangTien(dong.getThanhTien())
-			});
-		}
-
-		double tongTien = hoaDonBUS.tongTien();
-		lbTongTienHangGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
-		lbThanhTienGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
-
-		capNhatTienThua();
-	}
-
-	private void capNhatTienThua() {
-		double tongTien = hoaDonBUS.tongTien();
-		double khachDua = Validator.docSoTien(txtKhachDua.getText());
-		if (khachDua < 0) {
-			txtTienThua.setText("Tiền khách đưa không hợp lệ");
-			return;
-		}
-
-		double chenhLech = khachDua - tongTien;
-		if (chenhLech < 0) {
-			txtTienThua.setText("Thiếu: " + dinhDangTienKhongDonVi(-chenhLech));
-		} else {
-			txtTienThua.setText("Thừa: " + dinhDangTienKhongDonVi(chenhLech));
-		}
-	}
-
-	private String dinhDangTienKhongDonVi(double soTien) {
-		return HoaDonBUS.dinhDangTien(soTien).replace("Đ", "");
-	}
-
-	private void inHoaDon() {
-		HoaDonDTO hoaDon = hoaDonBUS.layHoaDonVuaTao();
-		if (hoaDon == null) {
-			JOptionPane.showMessageDialog(this,
-					"Chưa có hóa đơn để in. Vui lòng thanh toán trước.",
-					"Thông báo", JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		JTextArea noiDung = new JTextArea(hoaDonBUS.taoNoiDungHoaDon(hoaDon));
-		noiDung.setEditable(false);
-		noiDung.setFont(new Font("Monospaced", Font.PLAIN, 13));
-
-		JScrollPane scrollNoiDung = new JScrollPane(noiDung);
-		scrollNoiDung.setPreferredSize(new Dimension(460, 420));
-
-		int luaChon = JOptionPane.showConfirmDialog(this, scrollNoiDung,
-				"Hóa đơn " + hoaDon.getMaHD(), JOptionPane.OK_CANCEL_OPTION,
-				JOptionPane.PLAIN_MESSAGE);
-		if (luaChon != JOptionPane.OK_OPTION) {
-			return;
-		}
-
-		String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon);
-		if (duongDan == null) {
-			JOptionPane.showMessageDialog(this, "Không thể lưu hóa đơn ra file.",
-					"Thông báo", JOptionPane.ERROR_MESSAGE);
-		} else {
-			JOptionPane.showMessageDialog(this, "Đã lưu hóa đơn:\n" + duongDan,
-					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
-		}
-	}
-
-	private void thanhToan() {
-		String loi = hoaDonBUS.thanhToan(txtKhachDua.getText(), phuongThucDangChon,
-				txtGhiChu.getText());
-		if (loi != null) {
-			JOptionPane.showMessageDialog(this, loi, "Thông báo", JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		HoaDonDTO hoaDon = hoaDonBUS.layHoaDonVuaTao();
-		String maHoaDon = hoaDon == null ? "" : hoaDon.getMaHD();
-		JOptionPane.showMessageDialog(this,
-				"Thanh toán thành công!\nMã hóa đơn: " + maHoaDon,
-				"Thông báo", JOptionPane.INFORMATION_MESSAGE);
-
-		txtKhachDua.setText("0");
-		txtGhiChu.setText("");
-		capNhatDuLieu();
-	}
-
+	
 	/** Tạo thẻ hiển thị thông tin tổng tiền ở hàng trên cùng. */
 	private JPanel taoTheThongKe(String tieuDe, JLabel lbGiaTri, Color mauNen, Color mauTieuDe, Color mauGiaTri) {
 		JPanel card = new JPanel(new GridLayout(2, 1, 0, 2));

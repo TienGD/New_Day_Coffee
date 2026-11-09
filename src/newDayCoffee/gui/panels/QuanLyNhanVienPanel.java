@@ -1,4 +1,4 @@
-package newDayCoffee.gui.panels;
+﻿package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -7,9 +7,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
+
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -18,7 +16,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
@@ -27,21 +25,12 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+
 import javax.swing.table.DefaultTableModel;
 
-import newDayCoffee.bus.NhanVienBUS;
-import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.utils.Auth;
 
-/**
- * Màn hình quản lý nhân viên.
- *
- * Panel nhận NhanVienBUS để thêm / sửa / xóa / tìm kiếm. Việc kiểm tra dữ liệu,
- * phân quyền và đồng bộ tài khoản nằm trong tầng BUS.
- */
-public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListSelectionListener {
+public class QuanLyNhanVienPanel extends JPanel {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JTextField txtMaNV;
@@ -69,15 +58,9 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	private JTable tblNhanVien;
 	private DefaultTableModel modelNhanVien;
 
-	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final NhanVienBUS nhanVienBUS;
-
-	public QuanLyNhanVienPanel(NhanVienBUS nhanVienBUS) {
-		this.nhanVienBUS = nhanVienBUS;
-
+	public QuanLyNhanVienPanel() {
 		khoiTaoGiaoDien();
-		ganSuKien();
-		capNhatBang();
+		
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -92,42 +75,6 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 		Font fontTitle = new Font("Arial", Font.BOLD, 16);
 		Font fontLabel = new Font("Arial", Font.PLAIN, 13);
-
-		// ==================== 1. THANH HEADER PHÍA TRÊN ====================
-		JPanel pnHeader = new JPanel(new BorderLayout());
-		pnHeader.setBackground(bgHeader);
-		pnHeader.setPreferredSize(new Dimension(0, 68));
-		pnHeader.setBorder(new EmptyBorder(0, 30, 0, 25));
-
-		JLabel lbHeaderTitle = new JLabel("NHÂN VIÊN");
-		lbHeaderTitle.setFont(new Font("Arial", Font.BOLD, 22));
-		lbHeaderTitle.setForeground(Color.WHITE);
-		pnHeader.add(lbHeaderTitle, BorderLayout.WEST);
-
-		JPanel pnHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 16));
-		pnHeaderRight.setOpaque(false);
-
-		JButton btnCaKet = new JButton("Ca kết đang mở");
-		btnCaKet.setBackground(bgHeaderBtn);
-		btnCaKet.setForeground(Color.WHITE);
-		btnCaKet.setFont(fontLabel);
-		btnCaKet.setFocusPainted(false);
-		btnCaKet.setBorderPainted(false);
-		btnCaKet.setPreferredSize(new Dimension(145, 36));
-
-		JButton btnQuanLy = new JButton(taoNhanNguoiDung());
-		btnQuanLy.setBackground(bgHeaderBtn);
-		btnQuanLy.setForeground(Color.WHITE);
-		btnQuanLy.setFont(fontLabel);
-		btnQuanLy.setFocusPainted(false);
-		btnQuanLy.setBorderPainted(false);
-		btnQuanLy.setPreferredSize(new Dimension(210, 36));
-
-		pnHeaderRight.add(btnCaKet);
-		pnHeaderRight.add(btnQuanLy);
-		pnHeader.add(pnHeaderRight, BorderLayout.EAST);
-
-		add(pnHeader, BorderLayout.NORTH);
 
 		// ==================== 2. PHẦN THÂN CHÍNH (CHỨA FORM VÀ BẢNG) ====================
 		JPanel pnContent = new JPanel(new BorderLayout(0, 20));
@@ -318,13 +265,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		add(pnContent, BorderLayout.CENTER);
 
 		// Nhân viên không phải quản lí chỉ được xem danh sách
-		if (!Auth.laQuanLy()) {
-			btnThem.setEnabled(false);
-			btnXoa.setEnabled(false);
-			btnSua.setEnabled(false);
-			btnLuu.setEnabled(false);
-			txtMatKhau.setEditable(false);
-		}
+		
 	}
 
 	private JPanel taoDongNhap(String tenNhan, Component comp, Font font, int doRongNhan) {
@@ -376,226 +317,5 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		return btn;
 	}
 
-	/** Nhãn người đang đăng nhập hiển thị trên header. */
-	private String taoNhanNguoiDung() {
-		if (Auth.laQuanLy()) {
-			return "Quản lý: " + Auth.getTenHienThi();
-		}
-		return "Nhân viên: " + Auth.getTenHienThi();
-	}
-
-	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
-	private void ganSuKien() {
-		btnThem.addActionListener(this);
-		btnXoa.addActionListener(this);
-		btnSua.addActionListener(this);
-		btnLuu.addActionListener(this);
-		btnLamMoi.addActionListener(this);
-		btnTimKiem.addActionListener(this);
-		txtTimMa.addActionListener(this);
-		txtTimTen.addActionListener(this);
-
-		tblNhanVien.getSelectionModel().addListSelectionListener(this);
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object nguon = e.getSource();
-
-		if (nguon == btnThem) {
-			themNhanVien();
-		} else if (nguon == btnSua) {
-			suaNhanVien();
-		} else if (nguon == btnXoa) {
-			xoaNhanVien();
-		} else if (nguon == btnLuu) {
-			luuDuLieu();
-		} else if (nguon == btnLamMoi) {
-			lamMoi();
-		} else if (nguon == btnTimKiem || nguon == txtTimMa || nguon == txtTimTen) {
-			capNhatBang();
-		}
-	}
-
-	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		if (e.getValueIsAdjusting()) {
-			return;
-		}
-		int dong = tblNhanVien.getSelectedRow();
-		if (dong < 0) {
-			return;
-		}
-
-		String maNV = String.valueOf(modelNhanVien.getValueAt(dong, 0));
-		NhanVienDTO nhanVien = nhanVienBUS.timTheoMa(maNV);
-		if (nhanVien == null) {
-			return;
-		}
-
-		txtMaNV.setText(nhanVien.getMaNV());
-		txtTenNV.setText(nhanVien.getTenNV());
-		txtNgaySinh.setText(NhanVienBUS.dinhDangNgay(nhanVien.getNgaySinh()));
-		txtSDT.setText(nhanVien.getSdt());
-		txtEmail.setText(nhanVien.getEmail());
-		txtMatKhau.setText("");
-		cboChucVu.setSelectedItem(nhanVien.getChucVu());
-		chonGioiTinh(nhanVien.getGioiTinh());
-	}
-
-	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
-	/** Nạp lại bảng theo điều kiện tìm kiếm hiện tại. */
-	public void capNhatBang() {
-		String maTim = txtTimMa.getText();
-		String tenTim = txtTimTen.getText();
-		List<NhanVienDTO> dsNhanVien = nhanVienBUS.timKiem(maTim, tenTim);
-		hienThiDanhSach(dsNhanVien);
-
-		if (dsNhanVien.isEmpty() && !(maTim.trim().isEmpty() && tenTim.trim().isEmpty())) {
-			JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên.",
-					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
-		}
-	}
-
-	private void hienThiDanhSach(List<NhanVienDTO> dsNhanVien) {
-		modelNhanVien.setRowCount(0);
-		for (int i = 0; i < dsNhanVien.size(); i++) {
-			NhanVienDTO nhanVien = dsNhanVien.get(i);
-			modelNhanVien.addRow(new Object[]{
-				nhanVien.getMaNV(),
-				nhanVien.getTenNV(),
-				nhanVien.getGioiTinh(),
-				nhanVien.getChucVu(),
-				NhanVienBUS.dinhDangNgay(nhanVien.getNgaySinh()),
-				nhanVien.getSdt(),
-				nhanVien.getEmail()
-			});
-		}
-	}
-
-	/** Đọc dữ liệu trên form và nhờ BUS chuyển thành DTO. */
-	private NhanVienDTO layNhanVienTuForm() {
-		return nhanVienBUS.taoNhanVienTuForm(
-				txtMaNV.getText(),
-				txtTenNV.getText(),
-				txtNgaySinh.getText(),
-				txtSDT.getText(),
-				txtEmail.getText(),
-				(String) cboChucVu.getSelectedItem(),
-				layGioiTinhDangChon(),
-				new String(txtMatKhau.getPassword()));
-	}
-
-	private String layGioiTinhDangChon() {
-		if (radNam.isSelected()) {
-			return "Nam";
-		}
-		if (radNu.isSelected()) {
-			return "Nữ";
-		}
-		if (radKhac.isSelected()) {
-			return "Khác";
-		}
-		return "";
-	}
-
-	private void chonGioiTinh(String gioiTinh) {
-		if ("Nam".equals(gioiTinh)) {
-			radNam.setSelected(true);
-		} else if ("Nữ".equals(gioiTinh)) {
-			radNu.setSelected(true);
-		} else if ("Khác".equals(gioiTinh)) {
-			radKhac.setSelected(true);
-		} else {
-			grpGioiTinh.clearSelection();
-		}
-	}
-
-	private void themNhanVien() {
-		NhanVienDTO nhanVien = layNhanVienTuForm();
-		String loi = nhanVienBUS.themNhanVien(nhanVien);
-		if (loi != null) {
-			JOptionPane.showMessageDialog(this, loi, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		String thongBao = "Đã thêm nhân viên mới.";
-		if (txtMatKhau.getPassword().length == 0) {
-			thongBao = "Đã thêm nhân viên mới.\nMật khẩu mặc định: 123456";
-		}
-		JOptionPane.showMessageDialog(this, thongBao,
-				"Thành công", JOptionPane.INFORMATION_MESSAGE);
-		xoaForm();
-		capNhatBang();
-	}
-
-	private void suaNhanVien() {
-		NhanVienDTO nhanVien = layNhanVienTuForm();
-		String loi = nhanVienBUS.suaNhanVien(nhanVien);
-		if (loi != null) {
-			JOptionPane.showMessageDialog(this, loi, "Không thể sửa nhân viên", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		JOptionPane.showMessageDialog(this, "Đã cập nhật thông tin nhân viên.",
-				"Thành công", JOptionPane.INFORMATION_MESSAGE);
-		capNhatBang();
-	}
-
-	private void xoaNhanVien() {
-		String maNV = txtMaNV.getText().trim();
-
-		// Nếu chưa nhập mã nhưng có chọn dòng thì lấy mã ở dòng đang chọn
-		int dong = tblNhanVien.getSelectedRow();
-		if (maNV.isEmpty() && dong >= 0) {
-			maNV = String.valueOf(modelNhanVien.getValueAt(dong, 0));
-		}
-		if (maNV.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Vui lòng chọn hoặc nhập mã nhân viên cần xóa.",
-					"Thông báo", JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		NhanVienDTO nhanVien = nhanVienBUS.timTheoMa(maNV);
-		String tenNV = (nhanVien == null) ? maNV : nhanVien.getTenNV();
-
-		int luaChon = JOptionPane.showConfirmDialog(this, "Xóa nhân viên \"" + tenNV + "\"?",
-				"Xác nhận xóa", JOptionPane.YES_NO_OPTION);
-		if (luaChon != JOptionPane.YES_OPTION) {
-			return;
-		}
-
-		String loi = nhanVienBUS.xoaNhanVien(maNV);
-		if (loi != null) {
-			JOptionPane.showMessageDialog(this, loi, "Không thể xóa nhân viên", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		JOptionPane.showMessageDialog(this, "Đã xóa nhân viên.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-		xoaForm();
-		capNhatBang();
-	}
-
-	private void luuDuLieu() {
-		JOptionPane.showMessageDialog(this,
-				"Chưa có cơ sở dữ liệu để lưu. Dữ liệu hiện chỉ được lưu tạm trong bộ nhớ.",
-				"Thông báo", JOptionPane.INFORMATION_MESSAGE);
-	}
-
-	private void lamMoi() {
-		txtTimMa.setText("");
-		txtTimTen.setText("");
-		xoaForm();
-		capNhatBang();
-	}
-
-	private void xoaForm() {
-		txtMaNV.setText("");
-		txtTenNV.setText("");
-		txtNgaySinh.setText("");
-		txtSDT.setText("");
-		txtEmail.setText("");
-		txtMatKhau.setText("");
-		cboChucVu.setSelectedIndex(0);
-		grpGioiTinh.clearSelection();
-		tblNhanVien.clearSelection();
-		txtMaNV.requestFocusInWindow();
-	}
+	
 }

@@ -1,4 +1,4 @@
-package newDayCoffee.gui.panels;
+﻿package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,20 +32,15 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import newDayCoffee.bus.DSHoaDonBUS;
-import newDayCoffee.dto.ChiTietHoaDonDTO;
-import newDayCoffee.utils.Auth;
-
 /**
  * Màn hình tổng quan: doanh thu, số đơn, món bán chạy và danh sách cần chú ý.
  *
  * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán
  * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý bằng ActionListener.
  */
-public class TongQuanPanel extends JPanel implements ActionListener {
+public class TongQuanPanel extends JPanel {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
-	private JLabel lbBranch;
 	private JLabel lbTitle;
 
 	// 4 thẻ thống kê
@@ -67,15 +62,10 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 	private JButton btnThemChuY;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final DSHoaDonBUS dsHoaDonBUS;
-	private boolean sapXepGiam = true;
 
-	public TongQuanPanel(DSHoaDonBUS dsHoaDonBUS) {
-		this.dsHoaDonBUS = dsHoaDonBUS;
-
+	public TongQuanPanel() {
 		khoiTaoGiaoDien();
-		ganSuKien();
-		capNhatDuLieu();
+	
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -87,63 +77,6 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		Font fontDam = new Font("Arial", Font.BOLD, 15);
 		Font fontThuong = new Font("Arial", Font.PLAIN, 14);
 
-		// HEADER PHÍA TRÊN
-		JPanel pnHeader = new JPanel(new BorderLayout());
-		pnHeader.setBackground(new Color(139, 69, 19));
-		pnHeader.setPreferredSize(new Dimension(0, 75));
-		pnHeader.setBorder(new EmptyBorder(0, 30, 0, 30));
-
-		lbBranch = new JLabel("CHI NHÁNH GÒ VẤP");
-		lbBranch.setFont(fontTieuDe);
-		lbBranch.setForeground(Color.WHITE);
-		pnHeader.add(lbBranch, BorderLayout.WEST);
-
-		JPanel pnBadges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 18));
-		pnBadges.setOpaque(false);
-
-		// Nhãn thông tin Ca kết
-		JPanel badgeCaKet = new JPanel(new GridBagLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(172, 118, 78));
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-				g2.dispose();
-			}
-		};
-		badgeCaKet.setOpaque(false);
-		badgeCaKet.setPreferredSize(new Dimension(155, 38));
-		JLabel lbCaKet = new JLabel("Ca kết đang mở");
-		lbCaKet.setFont(new Font("Arial", Font.PLAIN, 13));
-		lbCaKet.setForeground(Color.WHITE);
-		badgeCaKet.add(lbCaKet);
-
-		// Nhãn thông tin người đang đăng nhập
-		JPanel badgeQuanLy = new JPanel(new GridBagLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(172, 118, 78));
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-				g2.dispose();
-			}
-		};
-		badgeQuanLy.setOpaque(false);
-		badgeQuanLy.setPreferredSize(new Dimension(220, 38));
-		JLabel lbQuanLy = new JLabel(taoNhanNguoiDung());
-		lbQuanLy.setFont(new Font("Arial", Font.PLAIN, 13));
-		lbQuanLy.setForeground(Color.WHITE);
-		badgeQuanLy.add(lbQuanLy);
-
-		pnBadges.add(badgeCaKet);
-		pnBadges.add(badgeQuanLy);
-		pnHeader.add(pnBadges, BorderLayout.EAST);
-
-		add(pnHeader, BorderLayout.NORTH);
 
 		// NỘI DUNG CHÍNH (TỔNG QUAN)
 		JPanel pnMainContent = new JPanel(new BorderLayout(0, 20));
@@ -153,12 +86,6 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		// PHẦN TRÊN: TIÊU ĐỀ TỔNG QUAN + 4 THẺ THỐNG KÊ
 		JPanel pnTop = new JPanel(new BorderLayout(0, 15));
 		pnTop.setOpaque(false);
-
-		lbTitle = new JLabel("TỔNG QUAN");
-		lbTitle.setFont(fontTieuDe);
-		lbTitle.setForeground(new Color(139, 69, 19));
-		pnTop.add(lbTitle, BorderLayout.NORTH);
-
 		JPanel pnCards = new JPanel(new GridLayout(1, 4, 22, 0));
 		pnCards.setOpaque(false);
 		pnCards.setPreferredSize(new Dimension(0, 115));
@@ -354,75 +281,5 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		return btn;
 	}
 
-	private String taoNhanNguoiDung() {
-		if (Auth.laQuanLy()) {
-			return "Quản lý: " + Auth.getTenHienThi();
-		}
-		return "Nhân viên: " + Auth.getTenHienThi();
-	}
-
-	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
-	private void ganSuKien() {
-		btnBanChay.addActionListener(this);
-		btnBanCham.addActionListener(this);
-		btnThemChuY.addActionListener(this);
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object nguon = e.getSource();
-
-		if (nguon == btnBanChay) {
-			sapXepGiam = true;
-			capNhatBangMonBanChay();
-		} else if (nguon == btnBanCham) {
-			sapXepGiam = false;
-			capNhatBangMonBanChay();
-		} else if (nguon == btnThemChuY) {
-			themChuY();
-		}
-	}
-
-	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
-	/** Nạp lại toàn bộ số liệu từ DSHoaDonBUS. */
-	public void capNhatDuLieu() {
-		lbDoanhThu.setText(DSHoaDonBUS.dinhDangTien(dsHoaDonBUS.doanhThuHomNay()));
-		lbSoDon.setText(dsHoaDonBUS.soDonHomNay() + " đơn");
-		lbSoMon.setText(dsHoaDonBUS.soLuongMonHomNay() + " món");
-
-		List<ChiTietHoaDonDTO> dsBanChay = dsHoaDonBUS.layMonBanChay(true);
-		if (dsBanChay.isEmpty()) {
-			lbMonBanChayNhat.setText("Chưa có");
-		} else {
-			lbMonBanChayNhat.setText(dsBanChay.get(0).getTenMon());
-		}
-
-		capNhatBangMonBanChay();
-	}
-
-	/** Nạp lại bảng món bán chạy theo thứ tự đang chọn. */
-	private void capNhatBangMonBanChay() {
-		List<ChiTietHoaDonDTO> dsMon = dsHoaDonBUS.layMonBanChay(sapXepGiam);
-
-		modelMonBanChay.setRowCount(0);
-		for (int i = 0; i < dsMon.size(); i++) {
-			ChiTietHoaDonDTO mon = dsMon.get(i);
-			modelMonBanChay.addRow(new Object[]{mon.getTenMon(), mon.getSoLuong()});
-		}
-	}
-
-	private void themChuY() {
-		String noiDung = JOptionPane.showInputDialog(this, "Nhập nội dung cần chú ý:", "Thêm chú ý",
-				JOptionPane.INFORMATION_MESSAGE);
-		if (noiDung == null) {
-			return;
-		}
-		noiDung = noiDung.trim();
-		if (noiDung.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Nội dung chú ý không được để trống.",
-					"Thông báo", JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-		modelChuY.addElement("(i)  " + noiDung);
-	}
+	
 }
