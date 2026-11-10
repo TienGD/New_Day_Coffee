@@ -68,11 +68,9 @@ public class QuanLyNhanVienPanel extends JPanel {
 		setLayout(new BorderLayout());
 
 		// Bảng màu chủ đạo theo hình mẫu
-		Color bgHeader = new Color(138, 82, 36);
 		Color bgMain = new Color(166, 123, 91);
 		Color bgInput = new Color(235, 232, 228);
-		Color bgHeaderBtn = new Color(179, 134, 96);
-
+		
 		Font fontTitle = new Font("Arial", Font.BOLD, 16);
 		Font fontLabel = new Font("Arial", Font.PLAIN, 13);
 

@@ -25,6 +25,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.gui.panels.BanHangPOSPanel;
+import newDayCoffee.gui.panels.CaTrucPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
 import newDayCoffee.gui.panels.ThanhToanPOSPanel;
@@ -56,6 +57,8 @@ public class MainFrame extends JFrame implements ActionListener {
 	private QuanLyThucDonPanel quanLyThucDonPanel;
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
 	private ThanhToanPOSPanel thanhToanPanel;
+	private JButton btnCaTruc;
+	private CaTrucPanel CaTrucPanel;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ===================
 	public MainFrame() {
@@ -131,6 +134,10 @@ public class MainFrame extends JFrame implements ActionListener {
 		btnNhanVien = taoNutMenu("Nhân viên", fontMenu);
 		pnMenu.add(btnNhanVien);
 		pnMenu.add(Box.createVerticalStrut(22));
+		
+		btnCaTruc = taoNutMenu("Ca trực", fontMenu);
+		pnMenu.add(btnCaTruc);
+		pnMenu.add(Box.createVerticalStrut(22));
 
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
 
@@ -170,15 +177,6 @@ public class MainFrame extends JFrame implements ActionListener {
 
 		add(pnSidebar, BorderLayout.WEST);
 
-		// =====================================================================
-		// 2. KHU VỰC BÊN PHẢI: HEADER DÙNG CHUNG + NỘI DUNG CHUYỂN ĐỔI
-		//
-		// Vì sao phải tách header ra ngoài CardLayout?
-		// - Trước đây mỗi panel có header riêng → khi CardLayout swap panel
-		//   thì cả header bị thay thế → màu nền thay đổi trông xấu.
-		// - Bây giờ header nằm trong MainFrame (không bị swap), CardLayout chỉ
-		//   swap phần nội dung phía dưới → background header luôn ổn định.
-		// =====================================================================
 		JPanel pnRightArea = new JPanel(new BorderLayout());
 		pnRightArea.setOpaque(false);
 
@@ -199,7 +197,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnBadges.setOpaque(false);
 
 		JPanel badgeCaKet = taoBadge(155);
-		JLabel lbCaKet = new JLabel("Ca kết đang mở");
+		JLabel lbCaKet = new JLabel("Ca đang mở");
 		lbCaKet.setFont(fontThuong);
 		lbCaKet.setForeground(Color.WHITE);
 		badgeCaKet.add(lbCaKet);
@@ -226,6 +224,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		banHangPOSPanel = new BanHangPOSPanel();
 		quanLyThucDonPanel = new QuanLyThucDonPanel();
 		quanLyNhanVienPanel = new QuanLyNhanVienPanel();
+		CaTrucPanel = new CaTrucPanel();
 //		thanhToanPanel = new ThanhToanPOSPanel();
 
 		// Thêm vào CardLayout kèm theo tên định danh tương ứng
@@ -233,6 +232,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
 		pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
 		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
+		pnContainerCard.add(CaTrucPanel,"Ca trực");
 //		pnContainerCard.add(thanhToanPanel, "Thanh toán");
 
 		// Hiển thị panel "Tổng quan" làm mặc định
@@ -288,6 +288,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		btnBanHang.setForeground(Color.WHITE);
 		if (btnThucDon != null) btnThucDon.setForeground(Color.WHITE);
 		if (btnNhanVien != null) btnNhanVien.setForeground(Color.WHITE);
+		btnCaTruc.setForeground(Color.white);
 	}
 
 	/** Trả về nhãn hiển thị người đang đăng nhập trên header */
@@ -328,6 +329,12 @@ public class MainFrame extends JFrame implements ActionListener {
 			resetMauMenu();
 			btnNhanVien.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("NHÂN VIÊN");
+		}
+		else if(btnCaTruc !=null && o.equals(btnCaTruc)) {
+			cardLayout.show(pnContainerCard, "Ca trực");
+			resetMauMenu();
+			btnCaTruc.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("CA TRỰC");
 		}
 //		else if (o.equals(btnDangXuat)) {
 //			int choice = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);

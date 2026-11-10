@@ -369,10 +369,11 @@ public class BanHangPOSPanel extends JPanel {
 		pnSpinner.setMaximumSize(new Dimension(200, 24));
 		pnSpinner.setPreferredSize(new Dimension(140, 24));
 
-		JLabel lbSoLuong = new JLabel("0", SwingConstants.CENTER);
-		lbSoLuong.setOpaque(true);
-		lbSoLuong.setBackground(new Color(215, 215, 215));
-		lbSoLuong.setFont(new Font("Arial", Font.BOLD, 12));
+		JTextField txtSoLuong = new JTextField("0");
+		txtSoLuong.setHorizontalAlignment(JTextField.CENTER);
+		txtSoLuong.setOpaque(true);
+		txtSoLuong.setBackground(new Color(215, 215, 215));
+		txtSoLuong.setFont(new Font("Arial", Font.BOLD, 12));
 		
 
 		JButton btnTru = new JButton("-");
@@ -394,7 +395,7 @@ public class BanHangPOSPanel extends JPanel {
 		btnCong.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
 		pnSpinner.add(btnTru, BorderLayout.WEST);
-		pnSpinner.add(lbSoLuong, BorderLayout.CENTER);
+		pnSpinner.add(txtSoLuong, BorderLayout.CENTER);
 		pnSpinner.add(btnCong, BorderLayout.EAST);
 		
 		
