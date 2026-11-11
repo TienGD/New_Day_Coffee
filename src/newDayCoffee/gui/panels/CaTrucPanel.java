@@ -4,28 +4,32 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.GridLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.utils.UIUtils;
 
 public class CaTrucPanel extends JPanel {
+
+	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private DefaultTableModel model;
 	private JTable tbCaTruc;
-	private JLabel lbDanhSachCaTruc; // Đổi kiểu từ Component sang JLabel để dễ set thuộc tính
+	private JLabel lbDanhSachCaTruc;
 	private JLabel lbThongTinCaTruc;
 	private JLabel lbMaCaTruc;
 	private JTextField txtMaCaTruc;
@@ -37,173 +41,162 @@ public class CaTrucPanel extends JPanel {
 	private JComboBox<String> cbCaTruc;
 	private JLabel lbTrangThai;
 	private JComboBox<String> cbTrangThai;
+	private JLabel lbSoLuong;
+	private JTextField txtSoLuong;
+	private JButton btnThem;
+	private JButton btnSua;
+	private JButton btnLuu;
+	private JButton btnXoa;
 
 	public CaTrucPanel() {
 		taoGiaoDien();
 	}
 
+	// ==================== KHU VỰC GIAO DIỆN ====================
 	private void taoGiaoDien() {
 		setLayout(new BorderLayout());
-		JPanel pnMain = new JPanel();
+
+		// Panel chính chứa 2 cột (Danh sách bên trái rộng hơn để đủ 6 cột bảng, Thông tin bên phải)
+		JPanel pnMain = new JPanel(new GridBagLayout());
 		pnMain.setBackground(UIUtils.COLOR_BACKGROUND);
-		pnMain.setLayout(new GridLayout(1, 2, 15, 0)); // Chia 2 cột, khoảng cách 15px
-		pnMain.setBorder(new EmptyBorder(15, 15, 15, 15)); // Tạo khoảng đệm viền xung quanh panel chính cho đẹp mắt
-		
-		// ==================== CỘT TRÁI (DANH SÁCH) ====================
-		Box boxLeft = Box.createVerticalBox();
-		boxLeft.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-		    // Tạo viền khung màu đen
-		    javax.swing.BorderFactory.createTitledBorder(
-		        javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1), // Đường viền màu đen, độ dày 1px
-		        "",                                                         // Tiêu đề trống
-		        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-		        javax.swing.border.TitledBorder.DEFAULT_POSITION,
-		        null,
-		        Color.BLACK                                                 
-		    ),
-		    new javax.swing.border.EmptyBorder(15, 15, 15, 15) // Thêm từ khóa "new" vào đây
-		));
+		pnMain.setBorder(new EmptyBorder(22, 22, 22, 22));
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.gridy = 0;
+		gbc.weighty = 1.0;
+
+		// ==================== CỘT TRÁI (DANH SÁCH CA TRỰC) ====================
+		JPanel cardLeft = UIUtils.createCardPanel(UIUtils.COLOR_CARD_SURFACE, 18, new Insets(18, 18, 18, 18));
+		cardLeft.setLayout(new BorderLayout(0, 14));
+
 		lbDanhSachCaTruc = UIUtils.createTitleLabel("DANH SÁCH CA TRỰC");
-		lbDanhSachCaTruc.setAlignmentX(Component.LEFT_ALIGNMENT); // Căn lề trái
-		
-		String[] headerTable = {"Mã lịch trực", "Tên nhân viên", "Ca trực", "Ngày trực", "Trạng thái"};
-		
-		model = new DefaultTableModel(headerTable, 0);
+		cardLeft.add(lbDanhSachCaTruc, BorderLayout.NORTH);
+
+		String[] headerTable = {"Mã ca trực", "Nhân viên", "Ca trực", "Ngày trực", "Số lượng", "Trạng thái"};
+		model = new DefaultTableModel(headerTable, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 		tbCaTruc = new JTable(model);
-		JScrollPane panelCaTruc = new JScrollPane(tbCaTruc);
-		panelCaTruc.setAlignmentX(Component.LEFT_ALIGNMENT); // Căn lề trái cho bảng
-		
-		boxLeft.add(Box.createVerticalStrut(10));
-		boxLeft.add(lbDanhSachCaTruc);
-		boxLeft.add(Box.createVerticalStrut(10));
-		boxLeft.add(panelCaTruc);
-		
-		// ==================== CỘT PHẢI (THÔNG TIN) ====================
-		Box boxRight = Box.createVerticalBox();
-		boxRight.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-		    // Tạo viền khung màu đen
-		    javax.swing.BorderFactory.createTitledBorder(
-		        javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1), // Đường viền màu đen, độ dày 1px
-		        "",                                                         // Tiêu đề trống
-		        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-		        javax.swing.border.TitledBorder.DEFAULT_POSITION,
-		        null,
-		        Color.BLACK                                                 
-		    ),
-		    new javax.swing.border.EmptyBorder(15, 15, 15, 15) // Thêm từ khóa "new" vào đây
-		));
+		tbCaTruc.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+		tbCaTruc.setFillsViewportHeight(true);
+		JScrollPane panelCaTruc = UIUtils.createTableScrollPane(tbCaTruc);
+		UIUtils.centerTableCells(tbCaTruc, 0, 2, 3, 4, 5);
+
+		// Căn độ rộng từng cột để tiêu đề không bao giờ bị cắt "..."
+		int[] colWidths = {95, 115, 85, 95, 82, 105};
+		for (int i = 0; i < colWidths.length; i++) {
+			tbCaTruc.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+			tbCaTruc.getColumnModel().getColumn(i).setMinWidth(75);
+		}
+
+		cardLeft.add(panelCaTruc, BorderLayout.CENTER);
+
+		// ==================== CỘT PHẢI (THÔNG TIN CA TRỰC) ====================
+		JPanel cardRight = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 18, new Insets(18, 22, 18, 22));
+		cardRight.setLayout(new BoxLayout(cardRight, BoxLayout.Y_AXIS));
+
 		lbThongTinCaTruc = UIUtils.createTitleLabel("THÔNG TIN CA TRỰC");
-		lbThongTinCaTruc.setAlignmentX(Component.LEFT_ALIGNMENT); // Căn lề trái
-		
+
 		// Kích thước chuẩn cho các ô nhập liệu và nhãn
-		Dimension inputSize = new Dimension(290, 35);
-		Dimension labelSize = new Dimension(110, 35); // Cố định chiều rộng nhãn để thẳng hàng tuyệt đối
+		Dimension labelSize = new Dimension(115, 36);
+		Dimension inputSize = new Dimension(255, 36);
 
 		// 1. Mã ca trực
-		Box pnMaCaTruc = Box.createHorizontalBox();
-		pnMaCaTruc.setAlignmentX(Component.LEFT_ALIGNMENT);
 		lbMaCaTruc = UIUtils.createLbThongTinCaTruc("ID lịch trực: ");
-		lbMaCaTruc.setPreferredSize(labelSize);
-		lbMaCaTruc.setMinimumSize(labelSize);
-		lbMaCaTruc.setMaximumSize(labelSize);
-		
 		txtMaCaTruc = UIUtils.createTXTThongTinCaTruc();
-		txtMaCaTruc.setPreferredSize(inputSize);
-		txtMaCaTruc.setMaximumSize(inputSize);
-		txtMaCaTruc.setMinimumSize(inputSize);
-		
-		pnMaCaTruc.add(lbMaCaTruc);
-		pnMaCaTruc.add(txtMaCaTruc);
-		pnMaCaTruc.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+		Box pnMaCaTruc = UIUtils.createRowCaTruc(lbMaCaTruc, txtMaCaTruc, labelSize, inputSize);
 
 		// 2. Tên nhân viên
-		Box pnTenNhanVien = Box.createHorizontalBox();
-		pnTenNhanVien.setAlignmentX(Component.LEFT_ALIGNMENT);
-		lbTenNhanVien = UIUtils.createLbThongTinCaTruc("Nhân viên: ");
-		lbTenNhanVien.setPreferredSize(labelSize);
-		lbTenNhanVien.setMinimumSize(labelSize);
-		lbTenNhanVien.setMaximumSize(labelSize);
-		
+		lbTenNhanVien = UIUtils.createLbThongTinCaTruc("Nhân viên");
 		txtTenNhanVien = UIUtils.createTXTThongTinCaTruc();
-		txtTenNhanVien.setPreferredSize(inputSize);
-		txtTenNhanVien.setMaximumSize(inputSize);
-		txtTenNhanVien.setMinimumSize(inputSize);
-		
-		pnTenNhanVien.add(lbTenNhanVien);
-		pnTenNhanVien.add(txtTenNhanVien);
-		pnTenNhanVien.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+		Box pnTenNhanVien = UIUtils.createRowCaTruc(lbTenNhanVien, txtTenNhanVien, labelSize, inputSize);
 
 		// 3. Ngày trực
-		Box pnNgayTruc = Box.createHorizontalBox();
-		pnNgayTruc.setAlignmentX(Component.LEFT_ALIGNMENT);
 		lbNgayTruc = UIUtils.createLbThongTinCaTruc("Ngày trực: ");
-		lbNgayTruc.setPreferredSize(labelSize);
-		lbNgayTruc.setMinimumSize(labelSize);
-		lbNgayTruc.setMaximumSize(labelSize);
-		
 		txtNgayTruc = UIUtils.createTXTThongTinCaTruc();
-		txtNgayTruc.setPreferredSize(inputSize);
-		txtNgayTruc.setMaximumSize(inputSize);
-		txtNgayTruc.setMinimumSize(inputSize);
-		
-		pnNgayTruc.add(lbNgayTruc);
-		pnNgayTruc.add(txtNgayTruc);
-		pnNgayTruc.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+		Box pnNgayTruc = UIUtils.createRowCaTruc(lbNgayTruc, txtNgayTruc, labelSize, inputSize);
 
 		// 4. Ca trực (JComboBox)
-		Box pnCaTruc = Box.createHorizontalBox();
-		pnCaTruc.setAlignmentX(Component.LEFT_ALIGNMENT);
 		lbCaTrucField = UIUtils.createLbThongTinCaTruc("Ca trực: ");
-		lbCaTrucField.setPreferredSize(labelSize);
-		lbCaTrucField.setMinimumSize(labelSize);
-		lbCaTrucField.setMaximumSize(labelSize);
-		
 		cbCaTruc = UIUtils.createComboBoxThongTinCaTruc(new String[]{"Ca sáng (6:00 - 11:00)", "Ca chiều (12:00 - 17:00)"});
-		cbCaTruc.setPreferredSize(inputSize);
-		cbCaTruc.setMaximumSize(inputSize);
-		cbCaTruc.setMinimumSize(inputSize);
-		
-		pnCaTruc.add(lbCaTrucField);
-		pnCaTruc.add(cbCaTruc);
-		pnCaTruc.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+		Box pnCaTruc = UIUtils.createRowCaTruc(lbCaTrucField, cbCaTruc, labelSize, inputSize);
 
 		// 5. Trạng thái (JComboBox)
-		Box pnTrangThai = Box.createHorizontalBox();
-		pnTrangThai.setAlignmentX(Component.LEFT_ALIGNMENT);
 		lbTrangThai = UIUtils.createLbThongTinCaTruc("Trạng thái: ");
-		lbTrangThai.setPreferredSize(labelSize);
-		lbTrangThai.setMinimumSize(labelSize);
-		lbTrangThai.setMaximumSize(labelSize);
-		
 		cbTrangThai = UIUtils.createComboBoxThongTinCaTruc(new String[]{"Đã hoàn thành", "Vắng có phép", "Vắng không có phép"});
-		cbTrangThai.setPreferredSize(inputSize);
-		cbTrangThai.setMaximumSize(inputSize);
-		cbTrangThai.setMinimumSize(inputSize);
-		
-		pnTrangThai.add(lbTrangThai);
-		pnTrangThai.add(cbTrangThai);
-		pnTrangThai.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+		Box pnTrangThai = UIUtils.createRowCaTruc(lbTrangThai, cbTrangThai, labelSize, inputSize);
 
-		// Sắp xếp các thành phần vào boxRight
-		boxRight.add(Box.createVerticalStrut(10));
-		boxRight.add(lbThongTinCaTruc);
-		boxRight.add(Box.createVerticalStrut(15));
-		boxRight.add(pnMaCaTruc);
-		boxRight.add(Box.createVerticalStrut(10));
-		boxRight.add(pnTenNhanVien);
-		boxRight.add(Box.createVerticalStrut(10));
-		boxRight.add(pnNgayTruc);
-		boxRight.add(Box.createVerticalStrut(10));
-		boxRight.add(pnCaTruc);
-		boxRight.add(Box.createVerticalStrut(10));
-		boxRight.add(pnTrangThai);
-		
-		// Đẩy toàn bộ nội dung cột phải lên trên, không bị dãn dọc
-		boxRight.add(Box.createVerticalGlue()); 
+		// 6. Số lượng
+		lbSoLuong = UIUtils.createLbThongTinCaTruc("Số lượng: ");
+		txtSoLuong = UIUtils.createTXTThongTinCaTruc();
+		Box pnSoLuong = UIUtils.createRowCaTruc(lbSoLuong, txtSoLuong, labelSize, inputSize);
 
-		// Đưa 2 cột vào panel chính
-		pnMain.add(boxLeft);
-		pnMain.add(boxRight);
+		// Thêm các thành phần vào cardRight theo thứ tự
+		cardRight.add(Box.createVerticalStrut(2));
+		cardRight.add(lbThongTinCaTruc);
+		cardRight.add(Box.createVerticalStrut(18));
+		cardRight.add(pnMaCaTruc);
+		cardRight.add(Box.createVerticalStrut(14));
+		cardRight.add(pnTenNhanVien);
+		cardRight.add(Box.createVerticalStrut(14));
+		cardRight.add(pnNgayTruc);
+		cardRight.add(Box.createVerticalStrut(14));
+		cardRight.add(pnCaTruc);
+		cardRight.add(Box.createVerticalStrut(14));
+		cardRight.add(pnSoLuong);
+		cardRight.add(Box.createVerticalStrut(14));
+		cardRight.add(pnTrangThai);
+		cardRight.add(Box.createVerticalStrut(22));
+
+		// Nhóm các nút Thêm, Sửa, Xóa trên cùng 1 hàng ngang
+		JPanel pnBTN = new JPanel();
+		pnBTN.setLayout(new BoxLayout(pnBTN, BoxLayout.X_AXIS));
+		pnBTN.setOpaque(false);
+		pnBTN.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pnBTN.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+		btnThem = UIUtils.createJbuttonThongTinCaTruc("Thêm ca", "#2EA043");
+		btnSua  = UIUtils.createJbuttonThongTinCaTruc("Sửa ca", "#377DAF");
+		btnXoa  = UIUtils.createJbuttonThongTinCaTruc("Xóa ca", "#B92D2D");
+
+		pnBTN.add(Box.createHorizontalGlue());
+		pnBTN.add(btnThem);
+		pnBTN.add(Box.createHorizontalStrut(10));
+		pnBTN.add(btnSua);
+		pnBTN.add(Box.createHorizontalStrut(10));
+		pnBTN.add(btnXoa);
+		pnBTN.add(Box.createHorizontalGlue());
+		cardRight.add(pnBTN);
+		cardRight.add(Box.createVerticalStrut(14));
+
+		// Nhóm nút Lưu ca
+		JPanel pnBtnLuu = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		pnBtnLuu.setOpaque(false);
+		pnBtnLuu.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pnBtnLuu.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+
+		btnLuu = UIUtils.taoNutPhang("Lưu ca", UIUtils.COLOR_BTN_LUU, Color.WHITE, new Font(UIUtils.FONT_FAMILY, Font.BOLD, 15), new Dimension(210, 40));
+
+		pnBtnLuu.add(btnLuu);
+		cardRight.add(pnBtnLuu);
+
+		cardRight.add(Box.createVerticalGlue());
+
+		// Đưa 2 cột vào panel chính với tỉ lệ 58% bảng - 42% form
+		gbc.gridx = 0;
+		gbc.weightx = 0.58;
+		gbc.insets = new Insets(0, 0, 0, 18);
+		pnMain.add(cardLeft, gbc);
+
+		gbc.gridx = 1;
+		gbc.weightx = 0.42;
+		gbc.insets = new Insets(0, 0, 0, 0);
+		pnMain.add(cardRight, gbc);
+
 		add(pnMain, BorderLayout.CENTER);
 	}
 }

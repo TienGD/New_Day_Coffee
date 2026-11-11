@@ -1,29 +1,31 @@
 package newDayCoffee.gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+
+import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Validator;
 
 public class LoginFrame extends JFrame implements ActionListener {
 
@@ -38,7 +40,14 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private String TaiKhoanNhap = "Tài khoản";
 	private String MatKhauNhap = "Mật khẩu";
 
-	
+	// Thành phần giao diện Panel Quên mật khẩu
+	private CardLayout cardLayout;
+	private JPanel pnCardContainer;
+	private JPanel quenMatKhauPanel;
+	private JTextField txtEmailQuenMK;
+	private JPasswordField passMatKhauMoi;
+	private JButton btnDatLaiMatKhau;
+	private JButton btnQuayLaiDangNhap;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	public LoginFrame() {
@@ -46,114 +55,73 @@ public class LoginFrame extends JFrame implements ActionListener {
 		themSuKienChoCacNut();
 	}
 
-	
 	// ==================== KHU VỰC GIAO DIỆN ====================
 	private void khoiTaoGiaoDien() {
 		setTitle("Đăng nhập");
-		setSize(500, 400);
+		setSize(540, 460);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		getContentPane().setBackground(Color.decode("#AC7F5E"));
 
-		// Sử dụng BoxLayout theo trục dọc (VerticalBox) cho toàn bộ nội dung
+		JPanel pnRoot = new JPanel(new GridBagLayout());
+		pnRoot.setBackground(UIUtils.COLOR_SIDEBAR);
+		setContentPane(pnRoot);
+
+		// Thẻ Card Đăng nhập nổi bật ở trung tâm (tái sử dụng từ UIUtils)
+		JPanel cardLogin = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 24, new Insets(26, 32, 24, 32));
+		cardLogin.setLayout(new BorderLayout());
+		cardLogin.setPreferredSize(new Dimension(410, 365));
+
 		Box mainBox = Box.createVerticalBox();
 		mainBox.setOpaque(false);
-		
 		mainBox.add(Box.createVerticalGlue());
+
+		// Biểu tượng tách cà phê phía trên tiêu đề
+		Box pnIcon = Box.createHorizontalBox();
+		JPanel logoEmblem = UIUtils.taoLogoTron(46, UIUtils.COLOR_HEADER);
+		logoEmblem.setMaximumSize(new Dimension(46, 46));
+		pnIcon.add(Box.createHorizontalGlue());
+		pnIcon.add(logoEmblem);
+		pnIcon.add(Box.createHorizontalGlue());
+		mainBox.add(pnIcon);
+		mainBox.add(Box.createRigidArea(new Dimension(0, 10)));
 
 		// TIÊU ĐỀ CHÍNH
 		Box pnHeader = Box.createHorizontalBox();
 		lbHeader = new JLabel("Đăng nhập", JLabel.CENTER);
-		lbHeader.setFont(new Font("Arial", Font.BOLD, 26));
-		lbHeader.setForeground(Color.decode("#682D03"));
-		
+		lbHeader.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 26));
+		lbHeader.setForeground(UIUtils.COLOR_ACCENT_GOLD);
+
 		pnHeader.add(Box.createHorizontalGlue());
 		pnHeader.add(lbHeader);
 		pnHeader.add(Box.createHorizontalGlue());
 		mainBox.add(pnHeader);
 
-		mainBox.add(Box.createRigidArea(new Dimension(0, 25)));
+		mainBox.add(Box.createRigidArea(new Dimension(0, 22)));
 
-		Font fontNhap = new Font("Arial", Font.PLAIN, 14);
+		Font fontNhap = new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 14);
+		Dimension inputSize = new Dimension(330, 42);
 
-		// 1. Ô Tài khoản (Sử dụng RoundedJTextField với độ bo tròn 15 pixel)
+		// 1. Ô Tài khoản (bo tròn 15px, tái sử dụng từ UIUtils)
 		Box pnTaiKhoan = Box.createHorizontalBox();
-		txtMa = new RoundedJTextField(15) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				if (getText().isEmpty()) {
-					Graphics2D g2 = (Graphics2D) g.create();
-					g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					g2.setColor(Color.GRAY);
-					g2.setFont(fontNhap);
+		txtMa = UIUtils.createRoundedTextFieldWithHint(15, TaiKhoanNhap, fontNhap, inputSize);
 
-					Insets insets = getInsets();
-					int textY = (getHeight() - g2.getFontMetrics().getHeight()) / 2 + g2.getFontMetrics().getAscent();
-					g2.drawString(TaiKhoanNhap, insets.left, textY);
-					g2.dispose();
-				}
-			}
-		};
-		txtMa.setMaximumSize(new Dimension(320, 40));
-		txtMa.setPreferredSize(new Dimension(320, 40));
-		txtMa.setFont(fontNhap);
-		txtMa.setBackground(Color.WHITE);
-		
 		pnTaiKhoan.add(Box.createHorizontalGlue());
 		pnTaiKhoan.add(txtMa);
 		pnTaiKhoan.add(Box.createHorizontalGlue());
 		mainBox.add(pnTaiKhoan);
 
-		mainBox.add(Box.createRigidArea(new Dimension(0, 15)));
+		mainBox.add(Box.createRigidArea(new Dimension(0, 14)));
 
-		// 2. Ô Mật khẩu kèm Icon ẩn/hiện (mắt) đặt trong Container bo tròn
+		// 2. Ô Mật khẩu kèm Icon ẩn/hiện đặt trong Container bo tròn (tái sử dụng từ UIUtils)
 		Box pnMatKhau = Box.createHorizontalBox();
-		
-		// Panel chứa mật khẩu và icon mắt cũng được tùy biến vẽ bo tròn góc
-		JPanel panelPassContainer = new JPanel(new BorderLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(getBackground());
-				g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 15, 15));
-				g2.dispose();
-				super.paintComponent(g);
-			}
-		};
-		panelPassContainer.setOpaque(false);
-		panelPassContainer.setMaximumSize(new Dimension(320, 40));
-		panelPassContainer.setPreferredSize(new Dimension(320, 40));
-		panelPassContainer.setBackground(Color.WHITE);
-		panelPassContainer.setBorder(new EmptyBorder(0, 5, 0, 5));
+		JPanel panelPassContainer = UIUtils.createRoundedContainer(15, UIUtils.COLOR_BG_INPUT, inputSize);
 
-		passMatKhau = new RoundedJPasswordField(15) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				if (getPassword().length == 0) {
-					Graphics2D g2 = (Graphics2D) g.create();
-					g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					g2.setColor(Color.GRAY);
-					g2.setFont(fontNhap);
+		passMatKhau = UIUtils.createRoundedPasswordFieldWithHint(15, MatKhauNhap, fontNhap);
+		passMatKhau.setBorder(new EmptyBorder(0, 8, 0, 8));
 
-					Insets insets = getInsets();
-					int textY = (getHeight() - g2.getFontMetrics().getHeight()) / 2 + g2.getFontMetrics().getAscent();
-					g2.drawString(MatKhauNhap, insets.left, textY);
-					g2.dispose();
-				}
-			}
-		};
-		passMatKhau.setFont(fontNhap);
-		passMatKhau.setBorder(null);
-		passMatKhau.setOpaque(false);
-
-		// Icon mắt ẩn/hiện mật khẩu
 		lblShowHidePass = new JLabel(" 👁 ");
-		lblShowHidePass.setForeground(Color.GRAY);
-		lblShowHidePass.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-		
+		lblShowHidePass.setForeground(new Color(120, 95, 75));
+		lblShowHidePass.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
 		JPanel panelRightIcon = new JPanel(new BorderLayout());
 		panelRightIcon.setOpaque(false);
@@ -161,7 +129,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 		panelPassContainer.add(passMatKhau, BorderLayout.CENTER);
 		panelPassContainer.add(panelRightIcon, BorderLayout.EAST);
-		
+
 		pnMatKhau.add(Box.createHorizontalGlue());
 		pnMatKhau.add(panelPassContainer);
 		pnMatKhau.add(Box.createHorizontalGlue());
@@ -171,28 +139,29 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 		// 3. Nút Đăng nhập
 		Box pnBtnDangNhap = Box.createHorizontalBox();
-		btnDangNhap = new JButton("Đăng nhập");
-		btnDangNhap.setBackground(Color.decode("#682D03"));
-		btnDangNhap.setForeground(Color.white);
-		btnDangNhap.setMaximumSize(new Dimension(320, 40));
-		btnDangNhap.setPreferredSize(new Dimension(320, 40));
-		btnDangNhap.setFocusPainted(false);
-		btnDangNhap.setFont(new Font("Arial", Font.BOLD, 14));
-		
+		btnDangNhap = UIUtils.taoNutPhang(
+			"Đăng nhập",
+			new Color(186, 118, 58),
+			Color.WHITE,
+			new Font(UIUtils.FONT_FAMILY, Font.BOLD, 15),
+			inputSize
+		);
+		btnDangNhap.setMaximumSize(inputSize);
+
 		pnBtnDangNhap.add(Box.createHorizontalGlue());
 		pnBtnDangNhap.add(btnDangNhap);
 		pnBtnDangNhap.add(Box.createHorizontalGlue());
 		mainBox.add(pnBtnDangNhap);
 
-		mainBox.add(Box.createRigidArea(new Dimension(0, 15)));
+		mainBox.add(Box.createRigidArea(new Dimension(0, 14)));
 
-		// 4. Dòng "Quên mật khẩu?" dạng JLabel có sự kiện chuột
+		// 4. Dòng "Quên mật khẩu?"
 		Box pnQuenMK = Box.createHorizontalBox();
 		lblQuenMatKhau = new JLabel("Quên mật khẩu?", JLabel.CENTER);
-		lblQuenMatKhau.setFont(new Font("Arial", Font.PLAIN, 13));
-		lblQuenMatKhau.setForeground(Color.WHITE);
-		lblQuenMatKhau.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-		
+		lblQuenMatKhau.setFont(UIUtils.FONT_LABEL);
+		lblQuenMatKhau.setForeground(new Color(235, 215, 195));
+		lblQuenMatKhau.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
 		pnQuenMK.add(Box.createHorizontalGlue());
 		pnQuenMK.add(lblQuenMatKhau);
 		pnQuenMK.add(Box.createHorizontalGlue());
@@ -200,91 +169,201 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 		mainBox.add(Box.createVerticalGlue());
 
-		this.add(mainBox, BorderLayout.CENTER);
+		cardLogin.add(mainBox, BorderLayout.CENTER);
+
+		// Khởi tạo CardLayout chuyển đổi giữa Đăng nhập và Panel Quên mật khẩu
+		cardLayout = new CardLayout();
+		pnCardContainer = new JPanel(cardLayout);
+		pnCardContainer.setOpaque(false);
+
+		quenMatKhauPanel = taoPanelQuenMatKhau();
+
+		pnCardContainer.add(cardLogin, "DANG_NHAP");
+		pnCardContainer.add(quenMatKhauPanel, "QUEN_MAT_KHAU");
+
+		pnRoot.add(pnCardContainer);
 	}
+
+	private JPanel taoPanelQuenMatKhau() {
+		JPanel cardQuenMK = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 24, new Insets(24, 32, 22, 32));
+		cardQuenMK.setLayout(new BorderLayout());
+		cardQuenMK.setPreferredSize(new Dimension(410, 365));
+
+		Box mainBox = Box.createVerticalBox();
+		mainBox.setOpaque(false);
+		mainBox.add(Box.createVerticalGlue());
+
+		// Biểu tượng tách cà phê đồng bộ với màn hình Đăng nhập
+		Box pnIcon = Box.createHorizontalBox();
+		JPanel logoEmblem = UIUtils.taoLogoTron(46, UIUtils.COLOR_HEADER);
+		logoEmblem.setMaximumSize(new Dimension(46, 46));
+		pnIcon.add(Box.createHorizontalGlue());
+		pnIcon.add(logoEmblem);
+		pnIcon.add(Box.createHorizontalGlue());
+		mainBox.add(pnIcon);
+		mainBox.add(Box.createRigidArea(new Dimension(0, 10)));
+
+		// TIÊU ĐỀ QUÊN MẬT KHẨU
+		Box pnHeader = Box.createHorizontalBox();
+		JLabel lbTitleQuenMK = new JLabel("Quên mật khẩu", JLabel.CENTER);
+		lbTitleQuenMK.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 25));
+		lbTitleQuenMK.setForeground(UIUtils.COLOR_ACCENT_GOLD);
+
+		pnHeader.add(Box.createHorizontalGlue());
+		pnHeader.add(lbTitleQuenMK);
+		pnHeader.add(Box.createHorizontalGlue());
+		mainBox.add(pnHeader);
+
+		mainBox.add(Box.createRigidArea(new Dimension(0, 20)));
+
+		Font fontNhap = new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 14);
+		Dimension inputSize = new Dimension(330, 42);
+
+		// 1. Ô Nhập Email nhân viên
+		Box pnEmail = Box.createHorizontalBox();
+		txtEmailQuenMK = UIUtils.createRoundedTextFieldWithHint(15, "Nhập email nhân viên", fontNhap, inputSize);
+
+		pnEmail.add(Box.createHorizontalGlue());
+		pnEmail.add(txtEmailQuenMK);
+		pnEmail.add(Box.createHorizontalGlue());
+		mainBox.add(pnEmail);
+
+		mainBox.add(Box.createRigidArea(new Dimension(0, 14)));
+
+		// 2. Ô Nhập Mật khẩu mới
+		Box pnMatKhauMoi = Box.createHorizontalBox();
+		JPanel panelPassContainer = UIUtils.createRoundedContainer(15, UIUtils.COLOR_BG_INPUT, inputSize);
+
+		passMatKhauMoi = UIUtils.createRoundedPasswordFieldWithHint(15, "Nhập mật khẩu mới", fontNhap);
+		passMatKhauMoi.setBorder(new EmptyBorder(0, 8, 0, 8));
+
+		JLabel lblEyeQuenMK = new JLabel(" 👁 ");
+		lblEyeQuenMK.setForeground(new Color(120, 95, 75));
+		lblEyeQuenMK.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+		JPanel panelRightIcon = new JPanel(new BorderLayout());
+		panelRightIcon.setOpaque(false);
+		panelRightIcon.add(lblEyeQuenMK, BorderLayout.CENTER);
+
+		panelPassContainer.add(passMatKhauMoi, BorderLayout.CENTER);
+		panelPassContainer.add(panelRightIcon, BorderLayout.EAST);
+
+		pnMatKhauMoi.add(Box.createHorizontalGlue());
+		pnMatKhauMoi.add(panelPassContainer);
+		pnMatKhauMoi.add(Box.createHorizontalGlue());
+		mainBox.add(pnMatKhauMoi);
+
+		mainBox.add(Box.createRigidArea(new Dimension(0, 20)));
+
+		// 3. Nút Đặt lại mật khẩu
+		Box pnBtnXacNhan = Box.createHorizontalBox();
+		btnDatLaiMatKhau = UIUtils.taoNutPhang(
+			"Đặt lại mật khẩu",
+			new Color(186, 118, 58),
+			Color.WHITE,
+			new Font(UIUtils.FONT_FAMILY, Font.BOLD, 15),
+			inputSize
+		);
+		btnDatLaiMatKhau.setMaximumSize(inputSize);
+
+		pnBtnXacNhan.add(Box.createHorizontalGlue());
+		pnBtnXacNhan.add(btnDatLaiMatKhau);
+		pnBtnXacNhan.add(Box.createHorizontalGlue());
+		mainBox.add(pnBtnXacNhan);
+
+		mainBox.add(Box.createRigidArea(new Dimension(0, 12)));
+
+		// 4. Nút Quay lại đăng nhập
+		Box pnQuayLai = Box.createHorizontalBox();
+		btnQuayLaiDangNhap = new JButton("← Quay lại đăng nhập");
+		btnQuayLaiDangNhap.setFont(UIUtils.FONT_LABEL_BOLD);
+		btnQuayLaiDangNhap.setForeground(UIUtils.COLOR_ACCENT_GOLD);
+		btnQuayLaiDangNhap.setOpaque(false);
+		btnQuayLaiDangNhap.setContentAreaFilled(false);
+		btnQuayLaiDangNhap.setBorderPainted(false);
+		btnQuayLaiDangNhap.setFocusPainted(false);
+		btnQuayLaiDangNhap.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+		pnQuayLai.add(Box.createHorizontalGlue());
+		pnQuayLai.add(btnQuayLaiDangNhap);
+		pnQuayLai.add(Box.createHorizontalGlue());
+		mainBox.add(pnQuayLai);
+
+		mainBox.add(Box.createVerticalGlue());
+
+		cardQuenMK.add(mainBox, BorderLayout.CENTER);
+		return cardQuenMK;
+	}
+
 	private void themSuKienChoCacNut() {
 		btnDangNhap.addActionListener(this);
-		
+		btnDatLaiMatKhau.addActionListener(this);
+		btnQuayLaiDangNhap.addActionListener(this);
+
+		lblQuenMatKhau.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				hienThiManHinhQuenMatKhau();
+			}
+		});
 	}
-	
+
+	public void hienThiManHinhQuenMatKhau() {
+		setTitle("Quên mật khẩu");
+		txtEmailQuenMK.setText("");
+		passMatKhauMoi.setText("");
+		cardLayout.show(pnCardContainer, "QUEN_MAT_KHAU");
+	}
+
+	public void hienThiManHinhDangNhap() {
+		setTitle("Đăng nhập");
+		cardLayout.show(pnCardContainer, "DANG_NHAP");
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
-		
-		if(o.equals(btnDangNhap)) {
+
+		if (o.equals(btnDangNhap)) {
 			MainFrame mainFrame = new MainFrame();
 			mainFrame.setVisible(true);
-			
-			// Đóng cửa sổ Login hiện tại
 			this.dispose();
+		} else if (o.equals(btnQuayLaiDangNhap)) {
+			hienThiManHinhDangNhap();
+		} else if (o.equals(btnDatLaiMatKhau)) {
+			String email = Validator.chuanHoa(txtEmailQuenMK.getText());
+			String matKhauMoi = new String(passMatKhauMoi.getPassword()).trim();
+
+			if (email.isEmpty()) {
+				JOptionPane.showMessageDialog(this, "Vui lòng nhập email nhân viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+				txtEmailQuenMK.requestFocus();
+				return;
+			}
+			String loiEmail = Validator.kiemTraEmail(email);
+			if (loiEmail != null) {
+				JOptionPane.showMessageDialog(this, loiEmail, "Thông báo", JOptionPane.WARNING_MESSAGE);
+				txtEmailQuenMK.requestFocus();
+				return;
+			}
+			if (matKhauMoi.isEmpty()) {
+				JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu mới.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+				passMatKhauMoi.requestFocus();
+				return;
+			}
+			if (matKhauMoi.length() < 6) {
+				JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+				passMatKhauMoi.requestFocus();
+				return;
+			}
+
+			JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công cho email: " + email, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+			hienThiManHinhDangNhap();
 		}
-		
 	}
 
-	
-	// ==================== LỚP TÙY CHỈNH: Ô NHẬP LIỆU BO TRÒN GÓC ====================
-		private static class RoundedJTextField extends JTextField {
-			private int cornerRadius;
-
-			public RoundedJTextField(int radius) {
-				super();
-				this.cornerRadius = radius;
-				setOpaque(false); // Để vẽ nền bo tròn trong suốt phần thừa
-				setBorder(new EmptyBorder(0, 10, 0, 10)); // Khoảng đệm lề trong cho chữ
-			}
-
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				
-				// Vẽ nền trắng bo tròn
-				g2.setColor(getBackground());
-				g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-				
-				g2.dispose();
-				super.paintComponent(g);
-			}
-
-			@Override
-			protected void paintBorder(Graphics g) {
-				// Không vẽ viền mặc định, có thể tùy biến vẽ viền tại đây nếu muốn
-			}
-		}
-
-		private static class RoundedJPasswordField extends JPasswordField {
-			private int cornerRadius;
-
-			public RoundedJPasswordField(int radius) {
-				super();
-				this.cornerRadius = radius;
-				setOpaque(false);
-				setBorder(new EmptyBorder(0, 10, 0, 10));
-			}
-
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				
-				g2.setColor(getBackground());
-				g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-				
-				g2.dispose();
-				super.paintComponent(g);
-			}
-
-			@Override
-			protected void paintBorder(Graphics g) {
-			}
-		}
-	
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			new LoginFrame().setVisible(true);
 		});
 	}
-
-
-	
 }

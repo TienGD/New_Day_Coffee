@@ -3,34 +3,33 @@ package newDayCoffee.gui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.gui.panels.BanHangPOSPanel;
+import newDayCoffee.gui.panels.CaTrucCuaToiPanel;
 import newDayCoffee.gui.panels.CaTrucPanel;
+import newDayCoffee.gui.panels.HoaDonPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
+import newDayCoffee.gui.panels.TaiKhoanPanel;
 import newDayCoffee.gui.panels.ThanhToanPOSPanel;
 import newDayCoffee.gui.panels.TongQuanPanel;
 import newDayCoffee.utils.Auth;
+import newDayCoffee.utils.UIUtils;
 
 public class MainFrame extends JFrame implements ActionListener {
 
@@ -43,24 +42,30 @@ public class MainFrame extends JFrame implements ActionListener {
 	private CardLayout cardLayout;
 
 	// Header dùng chung - chỉ đổi chữ tiêu đề khi chuyển màn hình
-	private JLabel lbHeaderTieuDe; // Nhãn tiêu đề trên header (VD: "BÁN HÀNG", "NHÂN VIÊN", ...)
+	private JLabel lbHeaderTieuDe;
 
-	// Khai báo các nút menu độc lập để dễ quản lý sự kiện không dùng vòng lặp
+	// Khai báo các nút menu độc lập
 	private JButton btnTongQuan;
 	private JButton btnBanHang;
 	private JButton btnThucDon;
 	private JButton btnNhanVien;
+	private JButton btnHoaDon;
+	private JButton btnCaTruc;
+	private JButton btnCaTrucCuaToi;
+	private JButton btnTaiKhoan;
 
-	// 5 panel chức năng (chỉ chứa phần nội dung, không còn header riêng)
+	// Các panel chức năng
 	private TongQuanPanel tongQuanPanel;
 	private BanHangPOSPanel banHangPOSPanel;
 	private QuanLyThucDonPanel quanLyThucDonPanel;
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
 	private ThanhToanPOSPanel thanhToanPanel;
-	private JButton btnCaTruc;
 	private CaTrucPanel CaTrucPanel;
+	private CaTrucCuaToiPanel CaTrucCuaToiPanel;
+	private HoaDonPanel HoaDonPanel;
+	private TaiKhoanPanel TaiKhoanPanel;
 
-	// ==================== KHU VỰC TẦNG XỬ LÝ ===================
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	public MainFrame() {
 		khoiTaoGiaoDien();
 	}
@@ -68,143 +73,139 @@ public class MainFrame extends JFrame implements ActionListener {
 	// ==================== KHU VỰC GIAO DIỆN ====================
 	private void khoiTaoGiaoDien() {
 		setTitle("New Day Coffee");
-		setSize(1280, 720);
+		setSize(1280, 740);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		getContentPane().setBackground(new Color(245, 235, 224));
+		getContentPane().setBackground(UIUtils.COLOR_BACKGROUND);
 
-		Font fontMenu = new Font("Arial", Font.BOLD, 19);
-		Font fontThuong = new Font("Arial", Font.PLAIN, 14);
+		Font fontMenu = new Font(UIUtils.FONT_FAMILY, Font.BOLD, 15);
+		Font fontThuong = new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 13);
 
 		setLayout(new BorderLayout());
 
 		// 1. THANH MENU BÊN TRÁI (SIDEBAR)
 		JPanel pnSidebar = new JPanel(new BorderLayout());
-		pnSidebar.setPreferredSize(new Dimension(220, 0));
-		pnSidebar.setBackground(new Color(193, 148, 112));
-		pnSidebar.setBorder(new EmptyBorder(25, 20, 20, 20));
+		pnSidebar.setPreferredSize(new Dimension(235, 0));
+		pnSidebar.setBackground(UIUtils.COLOR_SIDEBAR);
+		pnSidebar.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(110, 72, 44)),
+			new EmptyBorder(22, 18, 20, 18)
+		));
 
 		// LOGO VÀ TÊN HỆ THỐNG
-		JPanel pnLogo = new JPanel();
-		pnLogo.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		JPanel pnLogo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
 		pnLogo.setOpaque(false);
+		pnLogo.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(110, 72, 44)),
+			new EmptyBorder(0, 0, 18, 0)
+		));
 
-		JPanel circleLogo = new JPanel() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(139, 69, 19));
-				g2.fillOval(0, 0, 32, 32);
-				g2.dispose();
-			}
-		};
-		circleLogo.setPreferredSize(new Dimension(32, 32));
-		circleLogo.setOpaque(false);
+		JPanel circleLogo = UIUtils.taoLogoTron(36, UIUtils.COLOR_HEADER);
 
 		lbSysName = new JLabel("Hệ thống quản lý CAFE");
-		lbSysName.setFont(new Font("Arial", Font.BOLD, 13));
-		lbSysName.setForeground(new Color(140, 30, 30));
+		lbSysName.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 13));
+		lbSysName.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 
 		pnLogo.add(circleLogo);
 		pnLogo.add(lbSysName);
 		pnSidebar.add(pnLogo, BorderLayout.NORTH);
 
-		// DANH SÁCH MENU (Khởi tạo trực tiếp từng nút không dùng vòng lặp)
+		// DANH SÁCH MENU
 		Box pnMenu = Box.createVerticalBox();
-		pnMenu.setBorder(new EmptyBorder(40, 5, 0, 0));
+		pnMenu.setBorder(new EmptyBorder(22, 0, 0, 0));
 
-		// Nút Tổng quan (Mặc định chọn sẵn nên màu đen)
-		btnTongQuan = taoNutMenu("Tổng quan", fontMenu);
+		btnTongQuan = UIUtils.taoNutMenu("Tổng quan", fontMenu, this);
 		btnTongQuan.setForeground(Color.BLACK);
 		pnMenu.add(btnTongQuan);
-		pnMenu.add(Box.createVerticalStrut(22));
+		pnMenu.add(Box.createVerticalStrut(8));
 
-		// Nút Bán hàng
-		btnBanHang = taoNutMenu("Bán hàng", fontMenu);
+		btnBanHang = UIUtils.taoNutMenu("Bán hàng", fontMenu, this);
 		pnMenu.add(btnBanHang);
-		pnMenu.add(Box.createVerticalStrut(22));
+		pnMenu.add(Box.createVerticalStrut(8));
 
-		// Các nút chỉ dành cho Quản lý
-		btnThucDon = taoNutMenu("Thực đơn", fontMenu);
+		btnThucDon = UIUtils.taoNutMenu("Thực đơn", fontMenu, this);
 		pnMenu.add(btnThucDon);
-		pnMenu.add(Box.createVerticalStrut(22));
+		pnMenu.add(Box.createVerticalStrut(8));
 
-		btnNhanVien = taoNutMenu("Nhân viên", fontMenu);
+		btnNhanVien = UIUtils.taoNutMenu("Nhân viên", fontMenu, this);
 		pnMenu.add(btnNhanVien);
-		pnMenu.add(Box.createVerticalStrut(22));
-		
-		btnCaTruc = taoNutMenu("Ca trực", fontMenu);
+		pnMenu.add(Box.createVerticalStrut(8));
+
+		btnCaTruc = UIUtils.taoNutMenu("Ca trực", fontMenu, this);
 		pnMenu.add(btnCaTruc);
-		pnMenu.add(Box.createVerticalStrut(22));
+		pnMenu.add(Box.createVerticalStrut(8));
+
+		btnCaTrucCuaToi = UIUtils.taoNutMenu("Ca trực của tôi", fontMenu, this);
+		pnMenu.add(btnCaTrucCuaToi);
+		pnMenu.add(Box.createVerticalStrut(8));
+
+		btnHoaDon = UIUtils.taoNutMenu("Hóa đơn", fontMenu, this);
+		pnMenu.add(btnHoaDon);
+		pnMenu.add(Box.createVerticalStrut(8));
+
+		btnTaiKhoan = UIUtils.taoNutMenu("Tài khoản", fontMenu, this);
+		pnMenu.add(btnTaiKhoan);
+		pnMenu.add(Box.createVerticalStrut(8));
 
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
 
 		// THÔNG TIN NGƯỜI DÙNG + ĐĂNG XUẤT
-		JPanel pnNguoiDung = new JPanel();
-		pnNguoiDung.setLayout(new java.awt.GridLayout(0, 1, 0, 4));
-		pnNguoiDung.setOpaque(false);
+		JPanel pnNguoiDung = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 14, new Insets(12, 14, 12, 14));
+		pnNguoiDung.setLayout(new GridLayout(0, 1, 0, 4));
 
-		lbTenNguoiDung = new JLabel(Auth.getTenHienThi());
-		lbTenNguoiDung.setFont(new Font("Arial", Font.BOLD, 13));
-		lbTenNguoiDung.setForeground(Color.BLACK);
+		lbTenNguoiDung = new JLabel(Auth.getTenHienThi(), JLabel.CENTER);
+		lbTenNguoiDung.setFont(UIUtils.FONT_LABEL_BOLD);
+		lbTenNguoiDung.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 
 		String chucVu = "";
 		if (Auth.getNguoiDung() != null) {
 			chucVu = "Chức vụ: " + Auth.getNguoiDung().getChucVu();
 		}
-		lbChucVu = new JLabel(chucVu);
+		lbChucVu = new JLabel(chucVu, JLabel.CENTER);
 		lbChucVu.setFont(fontThuong);
-		lbChucVu.setForeground(new Color(80, 40, 10));
+		lbChucVu.setForeground(new Color(220, 200, 182));
 
-		btnDangXuat = new JButton("Đăng xuất");
-		btnDangXuat.setFont(fontThuong);
-		btnDangXuat.setBackground(new Color(140, 30, 30));
-		btnDangXuat.setForeground(Color.WHITE);
-		btnDangXuat.setFocusPainted(false);
-		btnDangXuat.setBorderPainted(false);
-		btnDangXuat.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		btnDangXuat.setPreferredSize(new Dimension(0, 32));
-
-		btnDangXuat.addActionListener(this); // Đăng ký sự kiện trực tiếp
+		btnDangXuat = UIUtils.createButton("Đăng xuất", new Color(168, 42, 42), new Font(UIUtils.FONT_FAMILY, Font.BOLD, 13), 0, 34);
+		btnDangXuat.addActionListener(this);
 
 		pnNguoiDung.add(lbTenNguoiDung);
 		pnNguoiDung.add(lbChucVu);
-		pnNguoiDung.add(Box.createVerticalStrut(6));
+		pnNguoiDung.add(Box.createVerticalStrut(4));
 		pnNguoiDung.add(btnDangXuat);
 		pnSidebar.add(pnNguoiDung, BorderLayout.SOUTH);
 
 		add(pnSidebar, BorderLayout.WEST);
 
+		// 2. KHU VỰC BÊN PHẢI (HEADER CHUNG + CONTENT CARDLAYOUT)
 		JPanel pnRightArea = new JPanel(new BorderLayout());
 		pnRightArea.setOpaque(false);
 
-		// --- HEADER DÙNG CHUNG (nằm ngoài CardLayout, không bao giờ bị swap) ---
+		// --- HEADER DÙNG CHUNG ---
 		JPanel pnHeaderChung = new JPanel(new BorderLayout());
-		pnHeaderChung.setBackground(new Color(139, 69, 19)); // Màu nâu cố định, không đổi
-		pnHeaderChung.setPreferredSize(new Dimension(0, 75));
-		pnHeaderChung.setBorder(new EmptyBorder(0, 30, 0, 30));
+		pnHeaderChung.setBackground(UIUtils.COLOR_HEADER);
+		pnHeaderChung.setPreferredSize(new Dimension(0, 72));
+		pnHeaderChung.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(110, 72, 44)),
+			new EmptyBorder(0, 30, 0, 30)
+		));
 
-		// Tiêu đề bên trái - sẽ thay đổi CHỮ khi chuyển màn hình (không đổi màu nền)
-		lbHeaderTieuDe = new JLabel("CHI NHÁNH GÒ VẤP"); // Mặc định màn hình Tổng quan
-		lbHeaderTieuDe.setFont(new Font("Arial", Font.BOLD, 22));
-		lbHeaderTieuDe.setForeground(Color.WHITE);
+		lbHeaderTieuDe = new JLabel("CHI NHÁNH GÒ VẤP");
+		lbHeaderTieuDe.setFont(UIUtils.titleFont);
+		lbHeaderTieuDe.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 		pnHeaderChung.add(lbHeaderTieuDe, BorderLayout.WEST);
 
-		// Các badge bên phải (Ca kết + Người dùng) - luôn hiển thị, không đổi
-		JPanel pnBadges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 18));
+		JPanel pnBadges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 17));
 		pnBadges.setOpaque(false);
 
-		JPanel badgeCaKet = taoBadge(155);
+		JPanel badgeCaKet = UIUtils.taoBadge(155);
 		JLabel lbCaKet = new JLabel("Ca đang mở");
-		lbCaKet.setFont(fontThuong);
-		lbCaKet.setForeground(Color.WHITE);
+		lbCaKet.setFont(UIUtils.FONT_LABEL_BOLD);
+		lbCaKet.setForeground(new Color(142, 240, 172));
 		badgeCaKet.add(lbCaKet);
 
-		JPanel badgeNguoiDung = taoBadge(240);
-		JLabel lbNguoiDungHeader = new JLabel(taoNhanNguoiDung());
-		lbNguoiDungHeader.setFont(fontThuong);
+		JPanel badgeNguoiDung = UIUtils.taoBadge(240);
+		JLabel lbNguoiDungHeader = new JLabel(UIUtils.taoNhanNguoiDung());
+		lbNguoiDungHeader.setFont(UIUtils.FONT_LABEL_BOLD);
 		lbNguoiDungHeader.setForeground(Color.WHITE);
 		badgeNguoiDung.add(lbNguoiDungHeader);
 
@@ -219,129 +220,86 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard = new JPanel(cardLayout);
 		pnContainerCard.setOpaque(false);
 
-		// Khởi tạo các panel chức năng (không còn header riêng bên trong)
 		tongQuanPanel = new TongQuanPanel();
 		banHangPOSPanel = new BanHangPOSPanel();
 		quanLyThucDonPanel = new QuanLyThucDonPanel();
 		quanLyNhanVienPanel = new QuanLyNhanVienPanel();
 		CaTrucPanel = new CaTrucPanel();
-//		thanhToanPanel = new ThanhToanPOSPanel();
+		CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
+		HoaDonPanel = new HoaDonPanel();
+		TaiKhoanPanel = new TaiKhoanPanel();
 
-		// Thêm vào CardLayout kèm theo tên định danh tương ứng
 		pnContainerCard.add(tongQuanPanel, "Tổng quan");
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
 		pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
 		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
-		pnContainerCard.add(CaTrucPanel,"Ca trực");
-//		pnContainerCard.add(thanhToanPanel, "Thanh toán");
+		pnContainerCard.add(CaTrucPanel, "Ca trực");
+		pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
+		pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
+		pnContainerCard.add(TaiKhoanPanel, "Tài khoản");
 
-		// Hiển thị panel "Tổng quan" làm mặc định
 		cardLayout.show(pnContainerCard, "Tổng quan");
 
 		pnRightArea.add(pnContainerCard, BorderLayout.CENTER);
 		add(pnRightArea, BorderLayout.CENTER);
 	}
 
-	// Phương thức hỗ trợ tạo nhanh nút menu để tránh lặp code
-	private JButton taoNutMenu(String text, Font font) {
-		JButton btn = new JButton(text);
-		btn.setFont(font);
-		btn.setForeground(Color.WHITE);
-		btn.setHorizontalAlignment(SwingConstants.LEFT);
-		btn.setOpaque(false);
-		btn.setContentAreaFilled(false);
-		btn.setBorderPainted(false);
-		btn.setFocusPainted(false);
-		btn.setRolloverEnabled(false);
-		btn.setBorder(new EmptyBorder(0, 0, 0, 0));
-		btn.setMargin(new Insets(0, 0, 0, 0));
-		btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		btn.addActionListener(this); // Đăng ký sự kiện trực tiếp không dùng vòng lặp
-		return btn;
-	}
-
-	/**
-	 * Tạo badge bo góc dùng trên header (nền nâu nhạt hơn).
-	 * Dùng paintComponent để vẽ hình bo góc tùy chỉnh.
-	 */
-	private JPanel taoBadge(int width) {
-		JPanel badge = new JPanel(new GridBagLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(172, 118, 78)); // Màu badge cố định
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-				g2.dispose();
-			}
-		};
-		badge.setOpaque(false);
-		badge.setPreferredSize(new Dimension(width, 38));
-		return badge;
-	}
-
-	// Hàm chuyển màu tất cả các nút menu về trắng
-	private void resetMauMenu() {
-		btnTongQuan.setForeground(Color.WHITE);
-		btnBanHang.setForeground(Color.WHITE);
-		if (btnThucDon != null) btnThucDon.setForeground(Color.WHITE);
-		if (btnNhanVien != null) btnNhanVien.setForeground(Color.WHITE);
-		btnCaTruc.setForeground(Color.white);
-	}
-
-	/** Trả về nhãn hiển thị người đang đăng nhập trên header */
-	private String taoNhanNguoiDung() {
-		if (Auth.laQuanLy()) {
-			return "Quản lý: " + Auth.getTenHienThi();
-		}
-		return "Nhân viên: " + Auth.getTenHienThi();
-	}
-
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 
-		// Xử lý chuyển đổi qua lại giữa các màn hình bằng điều kiện rẽ nhánh (Không dùng vòng lặp)
-		// Mỗi nhánh: (1) chuyển CardLayout, (2) reset màu menu,
-		//            (3) tô đen nút đang chọn, (4) đổi CHỮ tiêu đề header (không đổi màu nền!)
 		if (o.equals(btnTongQuan)) {
 			cardLayout.show(pnContainerCard, "Tổng quan");
-			resetMauMenu();
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
 			btnTongQuan.setForeground(Color.BLACK);
+			btnTongQuan.repaint();
 			lbHeaderTieuDe.setText("CHI NHÁNH GÒ VẤP");
-		}
-		else if (o.equals(btnBanHang)) {
+		} else if (o.equals(btnBanHang)) {
 			cardLayout.show(pnContainerCard, "Bán hàng");
-			resetMauMenu();
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
 			btnBanHang.setForeground(Color.BLACK);
+			btnBanHang.repaint();
 			lbHeaderTieuDe.setText("BÁN HÀNG");
-		}
-		else if (btnThucDon != null && o.equals(btnThucDon)) {
+		} else if (btnThucDon != null && o.equals(btnThucDon)) {
 			cardLayout.show(pnContainerCard, "Thực đơn");
-			resetMauMenu();
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
 			btnThucDon.setForeground(Color.BLACK);
+			btnThucDon.repaint();
 			lbHeaderTieuDe.setText("THỰC ĐƠN QUÁN");
-		}
-		else if (btnNhanVien != null && o.equals(btnNhanVien)) {
+		} else if (btnNhanVien != null && o.equals(btnNhanVien)) {
 			cardLayout.show(pnContainerCard, "Nhân viên");
-			resetMauMenu();
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
 			btnNhanVien.setForeground(Color.BLACK);
+			btnNhanVien.repaint();
 			lbHeaderTieuDe.setText("NHÂN VIÊN");
-		}
-		else if(btnCaTruc !=null && o.equals(btnCaTruc)) {
+		} else if (btnCaTruc != null && o.equals(btnCaTruc)) {
 			cardLayout.show(pnContainerCard, "Ca trực");
-			resetMauMenu();
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
 			btnCaTruc.setForeground(Color.BLACK);
+			btnCaTruc.repaint();
 			lbHeaderTieuDe.setText("CA TRỰC");
+		} else if (btnCaTrucCuaToi != null && o.equals(btnCaTrucCuaToi)) {
+			cardLayout.show(pnContainerCard, "Ca trực của tôi");
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
+			btnCaTrucCuaToi.setForeground(Color.BLACK);
+			btnCaTrucCuaToi.repaint();
+			lbHeaderTieuDe.setText("CA TRỰC CỦA TÔI");
+		} else if (btnHoaDon != null && o.equals(btnHoaDon)) {
+			cardLayout.show(pnContainerCard, "Danh sách hóa đơn");
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
+			btnHoaDon.setForeground(Color.BLACK);
+			btnHoaDon.repaint();
+			lbHeaderTieuDe.setText("HÓA ĐƠN");
+		} else if (btnTaiKhoan != null && o.equals(btnTaiKhoan)) {
+			cardLayout.show(pnContainerCard, "Tài khoản");
+			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
+			btnTaiKhoan.setForeground(Color.BLACK);
+			btnTaiKhoan.repaint();
+			lbHeaderTieuDe.setText("TÀI KHOẢN");
+		} else if (btnDangXuat != null && o.equals(btnDangXuat)) {
+			Auth.dangXuat();
+			new LoginFrame().setVisible(true);
+			this.dispose();
 		}
-//		else if (o.equals(btnDangXuat)) {
-//			int choice = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-//			if (choice == JOptionPane.YES_OPTION) {
-//				new LoginFrame().setVisible(true);
-//				this.dispose();
-//			}
-//		}
 	}
 }

@@ -1,36 +1,27 @@
-﻿package newDayCoffee.gui.panels;
+package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import newDayCoffee.utils.UIUtils;
 
 /**
  * Màn hình tổng quan: doanh thu, số đơn, món bán chạy và danh sách cần chú ý.
@@ -62,10 +53,8 @@ public class TongQuanPanel extends JPanel {
 	private JButton btnThemChuY;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-
 	public TongQuanPanel() {
 		khoiTaoGiaoDien();
-	
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -73,17 +62,15 @@ public class TongQuanPanel extends JPanel {
 		setLayout(new BorderLayout());
 		setOpaque(false);
 
-		Font fontTieuDe = new Font("Arial", Font.BOLD, 22);
-		Font fontDam = new Font("Arial", Font.BOLD, 15);
-		Font fontThuong = new Font("Arial", Font.PLAIN, 14);
-
+		Font fontDam = new Font(UIUtils.FONT_FAMILY, Font.BOLD, 15);
+		Font fontThuong = new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 14);
 
 		// NỘI DUNG CHÍNH (TỔNG QUAN)
-		JPanel pnMainContent = new JPanel(new BorderLayout(0, 20));
+		JPanel pnMainContent = new JPanel(new BorderLayout(0, 22));
 		pnMainContent.setOpaque(false);
-		pnMainContent.setBorder(new EmptyBorder(20, 30, 30, 30));
+		pnMainContent.setBorder(new EmptyBorder(22, 30, 28, 30));
 
-		// PHẦN TRÊN: TIÊU ĐỀ TỔNG QUAN + 4 THẺ THỐNG KÊ
+		// PHẦN TRÊN: 4 THẺ THỐNG KÊ
 		JPanel pnTop = new JPanel(new BorderLayout(0, 15));
 		pnTop.setOpaque(false);
 		JPanel pnCards = new JPanel(new GridLayout(1, 4, 22, 0));
@@ -102,7 +89,7 @@ public class TongQuanPanel extends JPanel {
 		JLabel[] dsGiaTriThe = {lbDoanhThu, lbSoDon, lbSoMon, lbMonBanChayNhat};
 
 		for (int i = 0; i < tieuDeThe.length; i++) {
-			JPanel card = taoTheThongKe(tieuDeThe[i], dsGiaTriThe[i], fontThuong, coChuThe[i]);
+			JPanel card = UIUtils.taoTheThongKeTongQuan(tieuDeThe[i], dsGiaTriThe[i], fontThuong, coChuThe[i]);
 			pnCards.add(card);
 		}
 		pnTop.add(pnCards, BorderLayout.CENTER);
@@ -116,13 +103,13 @@ public class TongQuanPanel extends JPanel {
 		gbc.weighty = 1.0;
 
 		// 3.1 KHUNG MÓN BÁN CHẠY HÔM NAY (BÊN TRÁI)
-		JPanel pnBestSellers = taoPanelNenNau();
+		JPanel pnBestSellers = UIUtils.taoPanelNenNau();
 		pnBestSellers.setLayout(new BorderLayout(0, 15));
-		pnBestSellers.setBorder(new EmptyBorder(20, 25, 25, 30));
+		pnBestSellers.setBorder(new EmptyBorder(20, 25, 22, 25));
 
 		JLabel lbBestSellerTitle = new JLabel("Món bán chạy hôm nay");
 		lbBestSellerTitle.setFont(fontDam);
-		lbBestSellerTitle.setForeground(Color.WHITE);
+		lbBestSellerTitle.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 		pnBestSellers.add(lbBestSellerTitle, BorderLayout.NORTH);
 
 		modelMonBanChay = new DefaultTableModel(new Object[]{"Đồ uống", "Số lượng"}, 0) {
@@ -132,19 +119,19 @@ public class TongQuanPanel extends JPanel {
 			}
 		};
 		tblMonBanChay = new JTable(modelMonBanChay);
-		tblMonBanChay.setFont(new Font("Arial", Font.PLAIN, 13));
-		tblMonBanChay.setForeground(new Color(220, 200, 185));
-		tblMonBanChay.setBackground(new Color(95, 58, 30));
-		tblMonBanChay.setRowHeight(32);
+		tblMonBanChay.setFont(UIUtils.FONT_LABEL);
+		tblMonBanChay.setForeground(Color.WHITE);
+		tblMonBanChay.setBackground(UIUtils.COLOR_DARK_ROAST);
+		tblMonBanChay.setRowHeight(34);
 		tblMonBanChay.setShowGrid(false);
 		tblMonBanChay.setIntercellSpacing(new Dimension(0, 0));
-		tblMonBanChay.setSelectionBackground(new Color(120, 80, 45));
+		tblMonBanChay.setSelectionBackground(new Color(125, 80, 45));
 		tblMonBanChay.setSelectionForeground(Color.WHITE);
-		tblMonBanChay.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
-		tblMonBanChay.getTableHeader().setBackground(new Color(139, 69, 19));
-		tblMonBanChay.getTableHeader().setForeground(Color.WHITE);
+		tblMonBanChay.getTableHeader().setFont(UIUtils.FONT_LABEL_BOLD);
+		tblMonBanChay.getTableHeader().setBackground(UIUtils.COLOR_HEADER);
+		tblMonBanChay.getTableHeader().setForeground(UIUtils.COLOR_ACCENT_GOLD);
 		tblMonBanChay.getTableHeader().setBorder(null);
-		tblMonBanChay.getColumnModel().getColumn(1).setMaxWidth(80);
+		tblMonBanChay.getColumnModel().getColumn(1).setMaxWidth(90);
 
 		JScrollPane scrollMonBanChay = new JScrollPane(tblMonBanChay);
 		scrollMonBanChay.setOpaque(false);
@@ -154,11 +141,11 @@ public class TongQuanPanel extends JPanel {
 		pnBestSellers.add(scrollMonBanChay, BorderLayout.CENTER);
 
 		// NÚT SẮP XẾP
-		JPanel pnBtnSort = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+		JPanel pnBtnSort = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
 		pnBtnSort.setOpaque(false);
 
-		btnBanChay = taoNutNenNau("Bán chạy ▲", fontDam);
-		btnBanCham = taoNutNenNau("Bán chậm ▼", fontDam);
+		btnBanChay = UIUtils.taoNutNenNau("Bán chạy ▲", fontDam);
+		btnBanCham = UIUtils.taoNutNenNau("Bán chậm ▼", fontDam);
 
 		pnBtnSort.add(btnBanChay);
 		pnBtnSort.add(btnBanCham);
@@ -171,22 +158,22 @@ public class TongQuanPanel extends JPanel {
 		pnBottom.add(pnBestSellers, gbc);
 
 		// 3.2 KHUNG CẦN CHÚ Ý (BÊN PHẢI)
-		JPanel pnAttention = taoPanelNenNau();
-		pnAttention.setLayout(new BorderLayout(0, 20));
+		JPanel pnAttention = UIUtils.taoPanelNenNau();
+		pnAttention.setLayout(new BorderLayout(0, 18));
 		pnAttention.setBorder(new EmptyBorder(20, 20, 20, 20));
 
 		JLabel lbAttentionTitle = new JLabel("Cần chú ý");
 		lbAttentionTitle.setFont(fontDam);
-		lbAttentionTitle.setForeground(Color.WHITE);
+		lbAttentionTitle.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 		pnAttention.add(lbAttentionTitle, BorderLayout.NORTH);
 
 		modelChuY = new DefaultListModel<>();
 
 		listChuY = new JList<>(modelChuY);
-		listChuY.setFont(new Font("Arial", Font.PLAIN, 13));
-		listChuY.setForeground(new Color(220, 200, 185));
-		listChuY.setBackground(new Color(95, 58, 30));
-		listChuY.setSelectionBackground(new Color(120, 80, 45));
+		listChuY.setFont(UIUtils.FONT_LABEL);
+		listChuY.setForeground(Color.WHITE);
+		listChuY.setBackground(UIUtils.COLOR_DARK_ROAST);
+		listChuY.setSelectionBackground(new Color(125, 80, 45));
 		listChuY.setSelectionForeground(Color.WHITE);
 		listChuY.setFixedCellHeight(44);
 		listChuY.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -200,10 +187,10 @@ public class TongQuanPanel extends JPanel {
 		pnAttention.add(scrollChuY, BorderLayout.CENTER);
 
 		// NÚT THÊM CHÚ Ý
-		JPanel pnBtnWrapThemChuY = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 8));
+		JPanel pnBtnWrapThemChuY = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 6));
 		pnBtnWrapThemChuY.setOpaque(false);
 
-		btnThemChuY = taoNutNenNau("+ Thêm chú ý", fontDam);
+		btnThemChuY = UIUtils.taoNutNenNau("+ Thêm chú ý", fontDam);
 		btnThemChuY.setPreferredSize(new Dimension(145, 34));
 
 		pnBtnWrapThemChuY.add(btnThemChuY);
@@ -218,68 +205,4 @@ public class TongQuanPanel extends JPanel {
 		pnMainContent.add(pnBottom, BorderLayout.CENTER);
 		add(pnMainContent, BorderLayout.CENTER);
 	}
-
-	/** Tạo một thẻ thống kê nền nâu, chữ trắng. */
-	private JPanel taoTheThongKe(String tieuDe, JLabel lbGiaTri, Font fontThuong, int coChu) {
-		JPanel card = new JPanel() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(139, 69, 19));
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-				g2.dispose();
-			}
-		};
-		card.setOpaque(false);
-		card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-		card.setBorder(new EmptyBorder(18, 15, 18, 15));
-
-		JLabel lbCardTitle = new JLabel(tieuDe);
-		lbCardTitle.setFont(fontThuong);
-		lbCardTitle.setForeground(new Color(220, 200, 185));
-		lbCardTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		lbGiaTri.setFont(new Font("Arial", Font.BOLD, coChu));
-		lbGiaTri.setForeground(Color.WHITE);
-		lbGiaTri.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		card.add(lbCardTitle);
-		card.add(Box.createVerticalStrut(18));
-		card.add(lbGiaTri);
-		return card;
-	}
-
-	/** Tạo panel nền nâu bo góc dùng cho các khối nội dung. */
-	private JPanel taoPanelNenNau() {
-		JPanel panel = new JPanel() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(139, 69, 19));
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-				g2.dispose();
-			}
-		};
-		panel.setOpaque(false);
-		return panel;
-	}
-
-	/** Tạo nút nền nâu dùng trong các khối tối. */
-	private JButton taoNutNenNau(String text, Font font) {
-		JButton btn = new JButton(text);
-		btn.setFont(font);
-		btn.setBackground(new Color(95, 58, 30));
-		btn.setForeground(Color.WHITE);
-		btn.setFocusPainted(false);
-		btn.setBorderPainted(false);
-		btn.setPreferredSize(new Dimension(130, 32));
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		return btn;
-	}
-
-	
 }
