@@ -1,10 +1,11 @@
 package newDayCoffee.dto;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class HoaDonDTO {
     private String maHD;
-    private String ngayLap;
+    private LocalDate ngayLap;
     private NhanVienDTO maNV;
     private double tienKhachDua;
     private String ghiChu;
@@ -14,7 +15,7 @@ public class HoaDonDTO {
     
     public HoaDonDTO() {
         this.maHD = "";
-        this.ngayLap = "";
+        this.ngayLap = LocalDate.now();
         this.maNV = new NhanVienDTO();
         this.tienKhachDua = 0;
         this.ghiChu = "";
@@ -26,7 +27,7 @@ public class HoaDonDTO {
         this.maHD = maHD;
     }
 
-    public HoaDonDTO(String maHD, String ngayLap, NhanVienDTO maNV, double tienKhachDua, String ghiChu, String trangThai) {
+    public HoaDonDTO(String maHD, LocalDate ngayLap, NhanVienDTO maNV, double tienKhachDua, String ghiChu, String trangThai) {
         this.maHD = maHD;
         this.ngayLap = ngayLap;
         this.maNV = maNV;
@@ -44,11 +45,11 @@ public class HoaDonDTO {
         this.maHD = maHD;
     }
 
-    public String getNgayLap() {
+    public LocalDate getNgayLap() {
         return ngayLap;
     }
 
-    public void setNgayLap(String ngayLap) {
+    public void setNgayLap(LocalDate ngayLap) {
         this.ngayLap = ngayLap;
     }
 

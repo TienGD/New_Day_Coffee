@@ -14,7 +14,6 @@ public class ChiTietHoaDonDTO {
     }
 
     public ChiTietHoaDonDTO(String maHD, String maMon) {
-        this();
         this.hoaDon.setMaHD(maHD);
         this.doUong.setMaMon(maMon);
     }

@@ -5,6 +5,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.JButton;
+import newDayCoffee.utils.UIUtils;
 
 public class CustomButton extends JButton {
 
@@ -12,7 +13,7 @@ public class CustomButton extends JButton {
         super(text);
         setBackground(bg);
         setForeground(Color.WHITE);
-        setFont(font);
+        setFont(font != null ? font : UIUtils.FONT_BUTTON);
         setFocusPainted(false);
         setBorderPainted(false);
         setPreferredSize(new Dimension(width, height));
@@ -20,6 +21,6 @@ public class CustomButton extends JButton {
     }
 
     public CustomButton(String text, Color bg, int width, int height) {
-        this(text, bg, new Font("Arial", Font.BOLD, 13), width, height);
+        this(text, bg, UIUtils.FONT_BUTTON, width, height);
     }
 }
