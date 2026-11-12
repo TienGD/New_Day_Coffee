@@ -47,6 +47,31 @@ public class Auth {
                 && "Quản lí".equals(nguoiDungHienTai.getChucVu());
     }
 
+    /** Quyền màn hình dùng chung cho menu và điều hướng. */
+    public static boolean coQuyenTruyCapManHinh(String tenManHinh) {
+        if (!isDangNhap() || tenManHinh == null) {
+            return false;
+        }
+        if ("Tổng quan".equals(tenManHinh)) {
+            return true;
+        }
+        switch (tenManHinh) {
+            case "Thực đơn":
+            case "Nhân viên":
+            case "Ca trực":
+            case "Danh sách hóa đơn":
+            case "Tài khoản":
+                return laQuanLy();
+            case "Bán hàng":
+            case "Thanh toán":
+            case "Ca trực của tôi":
+                // shortcut: Chua kiem tra ca lam; bo sung khi co nghiep vu xac nhan ca.
+                return !laQuanLy();
+            default:
+                return false;
+        }
+    }
+
     public static String getTenHienThi() {
         if (nguoiDungHienTai == null) {
             return "Khách";

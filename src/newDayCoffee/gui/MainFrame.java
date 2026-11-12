@@ -135,36 +135,52 @@ public class MainFrame extends JFrame implements ActionListener {
 
 		btnTongQuan = UIUtils.taoNutMenu("Tổng quan", fontMenu, this);
 		btnTongQuan.setForeground(Color.BLACK);
-		pnMenu.add(btnTongQuan);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Tổng quan")) {
+			pnMenu.add(btnTongQuan);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnBanHang = UIUtils.taoNutMenu("Bán hàng", fontMenu, this);
-		pnMenu.add(btnBanHang);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Bán hàng")) {
+			pnMenu.add(btnBanHang);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnThucDon = UIUtils.taoNutMenu("Thực đơn", fontMenu, this);
-		pnMenu.add(btnThucDon);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Thực đơn")) {
+			pnMenu.add(btnThucDon);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnNhanVien = UIUtils.taoNutMenu("Nhân viên", fontMenu, this);
-		pnMenu.add(btnNhanVien);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Nhân viên")) {
+			pnMenu.add(btnNhanVien);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnCaTruc = UIUtils.taoNutMenu("Ca trực", fontMenu, this);
-		pnMenu.add(btnCaTruc);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Ca trực")) {
+			pnMenu.add(btnCaTruc);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnCaTrucCuaToi = UIUtils.taoNutMenu("Ca trực của tôi", fontMenu, this);
-		pnMenu.add(btnCaTrucCuaToi);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
+			pnMenu.add(btnCaTrucCuaToi);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnHoaDon = UIUtils.taoNutMenu("Hóa đơn", fontMenu, this);
-		pnMenu.add(btnHoaDon);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Danh sách hóa đơn")) {
+			pnMenu.add(btnHoaDon);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		btnTaiKhoan = UIUtils.taoNutMenu("Tài khoản", fontMenu, this);
-		pnMenu.add(btnTaiKhoan);
-		pnMenu.add(Box.createVerticalStrut(8));
+		if (Auth.coQuyenTruyCapManHinh("Tài khoản")) {
+			pnMenu.add(btnTaiKhoan);
+			pnMenu.add(Box.createVerticalStrut(8));
+		}
 
 		pnSidebar.add(pnMenu, BorderLayout.CENTER);
 
@@ -239,25 +255,42 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard = new JPanel(cardLayout);
 		pnContainerCard.setOpaque(false);
 
-		tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
-		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, chiTietHoaDonBUS);
-		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
-		quanLyNhanVienPanel = new QuanLyNhanVienPanel(DSNhanVienBUS);
-		thanhToanPanel = new ThanhToanPOSPanel(this, chiTietHoaDonBUS, hoaDonBUS, dsHoaDonBUS);
-		CaTrucPanel = new CaTrucPanel();
-		CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
-		HoaDonPanel = new HoaDonPanel(dsHoaDonBUS);
-		TaiKhoanPanel = new TaiKhoanPanel(taiKhoanBUS);
-
-		pnContainerCard.add(tongQuanPanel, "Tổng quan");
-		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
-		pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
-		pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
-		pnContainerCard.add(CaTrucPanel, "Ca trực");
-		pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
-		pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
-		pnContainerCard.add(thanhToanPanel, "Thanh toán");
-		pnContainerCard.add(TaiKhoanPanel, "Tài khoản");
+		if (Auth.coQuyenTruyCapManHinh("Tổng quan")) {
+			tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
+			pnContainerCard.add(tongQuanPanel, "Tổng quan");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Bán hàng")) {
+			banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, chiTietHoaDonBUS);
+			pnContainerCard.add(banHangPOSPanel, "Bán hàng");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Thực đơn")) {
+			quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
+			pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Nhân viên")) {
+			quanLyNhanVienPanel = new QuanLyNhanVienPanel(DSNhanVienBUS);
+			pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Thanh toán")) {
+			thanhToanPanel = new ThanhToanPOSPanel(this, chiTietHoaDonBUS, hoaDonBUS, dsHoaDonBUS);
+			pnContainerCard.add(thanhToanPanel, "Thanh toán");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Ca trực")) {
+			CaTrucPanel = new CaTrucPanel();
+			pnContainerCard.add(CaTrucPanel, "Ca trực");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
+			CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
+			pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Danh sách hóa đơn")) {
+			HoaDonPanel = new HoaDonPanel(dsHoaDonBUS);
+			pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
+		}
+		if (Auth.coQuyenTruyCapManHinh("Tài khoản")) {
+			TaiKhoanPanel = new TaiKhoanPanel(taiKhoanBUS);
+			pnContainerCard.add(TaiKhoanPanel, "Tài khoản");
+		}
 
 		cardLayout.show(pnContainerCard, "Tổng quan");
 
@@ -294,6 +327,9 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	/** Mở màn hình thanh toán kèm ghi chú của đơn hàng đang bán. */
 	public void moThanhToan(String ghiChu) {
+		if (!Auth.coQuyenTruyCapManHinh("Thanh toán")) {
+			return;
+		}
 		thanhToanPanel.datGhiChu(ghiChu);
 		switchCard("Thanh toán");
 	}
@@ -305,6 +341,9 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	/** Chuyển màn hình, cập nhật tiêu đề, menu và dữ liệu hiển thị. */
 	public void switchCard(String tenManHinh) {
+		if (!Auth.coQuyenTruyCapManHinh(tenManHinh)) {
+			return;
+		}
 		cardLayout.show(pnContainerCard, tenManHinh);
 		UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien,
 				btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
