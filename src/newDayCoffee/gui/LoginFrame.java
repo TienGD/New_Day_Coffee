@@ -24,8 +24,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import newDayCoffee.bus.DSTaiKhoanBUS;
+import newDayCoffee.bus.NhanVienBUS;
 import newDayCoffee.utils.UIUtils;
-import newDayCoffee.utils.Validator;
 
 public class LoginFrame extends JFrame implements ActionListener {
 
@@ -50,7 +51,20 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private JButton btnQuayLaiDangNhap;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final DSTaiKhoanBUS taiKhoanBUS;
+	private final NhanVienBUS nhanVienBUS;
+
 	public LoginFrame() {
+		this(new DSTaiKhoanBUS(), null);
+	}
+
+	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+		this.taiKhoanBUS = taiKhoanBUS;
+		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
+
+		// Tạo tài khoản mẫu ql01 / nv01 để đăng nhập thử
+		this.nhanVienBUS.taoDuLieuMau();
+
 		khoiTaoGiaoDien();
 		themSuKienChoCacNut();
 	}
@@ -299,6 +313,8 @@ public class LoginFrame extends JFrame implements ActionListener {
 		btnDangNhap.addActionListener(this);
 		btnDatLaiMatKhau.addActionListener(this);
 		btnQuayLaiDangNhap.addActionListener(this);
+		txtMa.addActionListener(this);
+		passMatKhau.addActionListener(this);
 
 		lblQuenMatKhau.addMouseListener(new MouseAdapter() {
 			@Override
@@ -324,46 +340,54 @@ public class LoginFrame extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 
-		if (o.equals(btnDangNhap)) {
-			MainFrame mainFrame = new MainFrame();
-			mainFrame.setVisible(true);
-			this.dispose();
+		if (o.equals(btnDangNhap) || o.equals(txtMa) || o.equals(passMatKhau)) {
+			xuLyDangNhap();
 		} else if (o.equals(btnQuayLaiDangNhap)) {
 			hienThiManHinhDangNhap();
 		} else if (o.equals(btnDatLaiMatKhau)) {
-			String email = Validator.chuanHoa(txtEmailQuenMK.getText());
-			String matKhauMoi = new String(passMatKhauMoi.getPassword()).trim();
-
-			if (email.isEmpty()) {
-				JOptionPane.showMessageDialog(this, "Vui lòng nhập email nhân viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
-				txtEmailQuenMK.requestFocus();
-				return;
-			}
-			String loiEmail = Validator.kiemTraEmail(email);
-			if (loiEmail != null) {
-				JOptionPane.showMessageDialog(this, loiEmail, "Thông báo", JOptionPane.WARNING_MESSAGE);
-				txtEmailQuenMK.requestFocus();
-				return;
-			}
-			if (matKhauMoi.isEmpty()) {
-				JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu mới.", "Thông báo", JOptionPane.WARNING_MESSAGE);
-				passMatKhauMoi.requestFocus();
-				return;
-			}
-			if (matKhauMoi.length() < 6) {
-				JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.", "Thông báo", JOptionPane.WARNING_MESSAGE);
-				passMatKhauMoi.requestFocus();
-				return;
-			}
-
-			JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công cho email: " + email, "Thành công", JOptionPane.INFORMATION_MESSAGE);
-			hienThiManHinhDangNhap();
+			xuLyDatLaiMatKhau();
 		}
 	}
 
+	// ==================== KHU VỰC XỬ LÝ ĐĂNG NHẬP ====================
+	private void xuLyDangNhap() {
+		String maNV = txtMa.getText();
+		String matKhau = new String(passMatKhau.getPassword());
+
+		String loi = nhanVienBUS.dangNhap(maNV, matKhau);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Đăng nhập thất bại", JOptionPane.ERROR_MESSAGE);
+			passMatKhau.setText("");
+			passMatKhau.requestFocusInWindow();
+			return;
+		}
+
+		MainFrame mainFrame = new MainFrame(taiKhoanBUS, nhanVienBUS);
+		mainFrame.setVisible(true);
+		this.dispose();
+	}
+
+	private void xuLyDatLaiMatKhau() {
+		String email = txtEmailQuenMK.getText();
+		String matKhauMoi = new String(passMatKhauMoi.getPassword());
+
+		String loi = nhanVienBUS.datLaiMatKhau(email, matKhauMoi);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Đặt lại mật khẩu thất bại", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công.", "Thành công",
+				JOptionPane.INFORMATION_MESSAGE);
+		hienThiManHinhDangNhap();
+	}
+
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			new LoginFrame().setVisible(true);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				new LoginFrame().setVisible(true);
+			}
 		});
 	}
 }

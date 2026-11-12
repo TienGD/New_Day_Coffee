@@ -6,19 +6,26 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.DSTaiKhoanBUS;
+import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 
 /**
@@ -34,7 +41,7 @@ import newDayCoffee.utils.UIUtils;
  *
  * Toàn bộ các cấu hình UI dùng chung đều được gọi từ class UIUtils.
  */
-public class TaiKhoanPanel extends JPanel {
+public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelectionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	// Nhập liệu thông tin tài khoản
@@ -56,9 +63,14 @@ public class TaiKhoanPanel extends JPanel {
 	private JTable tblTaiKhoan;
 	private DefaultTableModel modelTaiKhoan;
 
-	public TaiKhoanPanel() {
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final DSTaiKhoanBUS dsTaiKhoanBUS;
+
+	public TaiKhoanPanel(DSTaiKhoanBUS dsTaiKhoanBUS) {
+		this.dsTaiKhoanBUS = dsTaiKhoanBUS;
 		khoiTaoGiaoDien();
-		themDuLieuMau();
+		ganSuKien();
+		capNhatBang();
 	}
 
 	// ==================== KHU VỰC KHỞI TẠO GIAO DIỆN ====================
@@ -198,11 +210,162 @@ public class TaiKhoanPanel extends JPanel {
 		add(pnContent, BorderLayout.CENTER);
 	}
 
-	// ==================== DỮ LIỆU MẪU ĐỒNG BỘ THEO NHÂN VIÊN ====================
-	private void themDuLieuMau() {
-		modelTaiKhoan.addRow(new Object[]{"A01", "123456"});
-		modelTaiKhoan.addRow(new Object[]{"A02", "123456"});
-		modelTaiKhoan.addRow(new Object[]{"A03", "123456"});
-		modelTaiKhoan.addRow(new Object[]{"A04", "123456"});
+	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+	private void ganSuKien() {
+		btnThem.addActionListener(this);
+		btnXoa.addActionListener(this);
+		btnSua.addActionListener(this);
+		btnLuu.addActionListener(this);
+		btnTimKiem.addActionListener(this);
+		btnLamMoi.addActionListener(this);
+		txtTimMa.addActionListener(this);
+
+		tblTaiKhoan.getSelectionModel().addListSelectionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+
+		if (nguon == btnThem) {
+			themTaiKhoan();
+		} else if (nguon == btnSua) {
+			suaTaiKhoan();
+		} else if (nguon == btnXoa) {
+			xoaTaiKhoan();
+		} else if (nguon == btnLuu) {
+			luuDuLieu();
+		} else if (nguon == btnTimKiem || nguon == txtTimMa) {
+			capNhatBang();
+		} else if (nguon == btnLamMoi) {
+			lamMoi();
+		}
+	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		if (e.getValueIsAdjusting()) {
+			return;
+		}
+		int dong = tblTaiKhoan.getSelectedRow();
+		if (dong < 0) {
+			return;
+		}
+
+		txtMaNV.setText(String.valueOf(modelTaiKhoan.getValueAt(dong, 0)));
+		txtMaNV.setEditable(false);
+		txtMatKhau.setText(String.valueOf(modelTaiKhoan.getValueAt(dong, 1)));
+	}
+
+	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+	/** Nạp lại bảng tài khoản theo mã đang tìm. */
+	public void capNhatBang() {
+		modelTaiKhoan.setRowCount(0);
+
+		String maTim = txtTimMa.getText().trim();
+		if (maTim.isEmpty()) {
+			for (TaiKhoanDTO taiKhoan : dsTaiKhoanBUS.layDanhSach()) {
+				modelTaiKhoan.addRow(new Object[]{
+					taiKhoan.getMaNV().getMaNV(),
+					taiKhoan.getMatKhau()
+				});
+			}
+		} else {
+			TaiKhoanDTO taiKhoan = dsTaiKhoanBUS.timTheoMa(maTim);
+			if (taiKhoan == null) {
+				JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản.",
+						"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+			modelTaiKhoan.addRow(new Object[]{
+				taiKhoan.getMaNV().getMaNV(),
+				taiKhoan.getMatKhau()
+			});
+		}
+	}
+
+	private void themTaiKhoan() {
+		String matKhau = new String(txtMatKhau.getPassword());
+		String loi = dsTaiKhoanBUS.themTaiKhoan(txtMaNV.getText(), matKhau);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		JOptionPane.showMessageDialog(this, "Đã thêm tài khoản.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+		xoaForm();
+		capNhatBang();
+	}
+
+	private void suaTaiKhoan() {
+		String maNV = layMaDangChon();
+		String matKhau = new String(txtMatKhau.getPassword());
+		String loi = dsTaiKhoanBUS.doiMatKhau(maNV, matKhau);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi, "Không thể sửa tài khoản", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		JOptionPane.showMessageDialog(this, "Đã cập nhật mật khẩu.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+		capNhatBang();
+	}
+
+	private void xoaTaiKhoan() {
+		String maNV = layMaDangChon();
+		if (maNV.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng chọn hoặc nhập mã tài khoản cần xóa.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		int luaChon = JOptionPane.showConfirmDialog(this, "Xóa tài khoản \"" + maNV + "\"?",
+				"Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+		if (luaChon != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		if (!dsTaiKhoanBUS.xoaTaiKhoan(maNV)) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản cần xóa.",
+					"Không thể xóa tài khoản", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		JOptionPane.showMessageDialog(this, "Đã xóa tài khoản.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+		xoaForm();
+		capNhatBang();
+	}
+
+	private void luuDuLieu() {
+		if (dsTaiKhoanBUS.luuVaoCSDL()) {
+			JOptionPane.showMessageDialog(this, "Đã lưu danh sách tài khoản.",
+					"Thành công", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(this, "Lưu dữ liệu thất bại.",
+					"Lỗi", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private String layMaDangChon() {
+		String maNV = txtMaNV.getText().trim();
+		if (!maNV.isEmpty()) {
+			return maNV;
+		}
+
+		int dong = tblTaiKhoan.getSelectedRow();
+		if (dong < 0) {
+			return "";
+		}
+		return String.valueOf(modelTaiKhoan.getValueAt(dong, 0));
+	}
+
+	private void lamMoi() {
+		txtTimMa.setText("");
+		xoaForm();
+		capNhatBang();
+	}
+
+	private void xoaForm() {
+		txtMaNV.setEditable(true);
+		txtMaNV.setText("");
+		txtMatKhau.setText("");
+		tblTaiKhoan.clearSelection();
+		txtMaNV.requestFocusInWindow();
 	}
 }

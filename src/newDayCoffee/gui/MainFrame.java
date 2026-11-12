@@ -19,6 +19,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.bus.DSTaiKhoanBUS;
+import newDayCoffee.bus.HoaDonBUS;
+import newDayCoffee.bus.NhanVienBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.CaTrucCuaToiPanel;
 import newDayCoffee.gui.panels.CaTrucPanel;
@@ -66,7 +71,18 @@ public class MainFrame extends JFrame implements ActionListener {
 	private TaiKhoanPanel TaiKhoanPanel;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	public MainFrame() {
+	private final DSTaiKhoanBUS taiKhoanBUS;
+	private final NhanVienBUS nhanVienBUS;
+	private final DSDoUongBUS dsDoUongBUS;
+	private final DSHoaDonBUS dsHoaDonBUS;
+	private final HoaDonBUS hoaDonBUS;
+
+	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+		this.taiKhoanBUS = taiKhoanBUS;
+		this.nhanVienBUS = nhanVienBUS;
+		this.dsDoUongBUS = new DSDoUongBUS();
+		this.dsHoaDonBUS = new DSHoaDonBUS();
+		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, nhanVienBUS);
 		khoiTaoGiaoDien();
 	}
 
@@ -220,14 +236,15 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard = new JPanel(cardLayout);
 		pnContainerCard.setOpaque(false);
 
-		tongQuanPanel = new TongQuanPanel();
-		banHangPOSPanel = new BanHangPOSPanel();
-		quanLyThucDonPanel = new QuanLyThucDonPanel();
-		quanLyNhanVienPanel = new QuanLyNhanVienPanel();
+		tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
+		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, hoaDonBUS);
+		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
+		quanLyNhanVienPanel = new QuanLyNhanVienPanel(nhanVienBUS);
+		thanhToanPanel = new ThanhToanPOSPanel(this, hoaDonBUS, dsHoaDonBUS);
 		CaTrucPanel = new CaTrucPanel();
 		CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
-		HoaDonPanel = new HoaDonPanel();
-		TaiKhoanPanel = new TaiKhoanPanel();
+		HoaDonPanel = new HoaDonPanel(dsHoaDonBUS);
+		TaiKhoanPanel = new TaiKhoanPanel(taiKhoanBUS);
 
 		pnContainerCard.add(tongQuanPanel, "Tổng quan");
 		pnContainerCard.add(banHangPOSPanel, "Bán hàng");
@@ -236,6 +253,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard.add(CaTrucPanel, "Ca trực");
 		pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
 		pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
+		pnContainerCard.add(thanhToanPanel, "Thanh toán");
 		pnContainerCard.add(TaiKhoanPanel, "Tài khoản");
 
 		cardLayout.show(pnContainerCard, "Tổng quan");
@@ -249,57 +267,68 @@ public class MainFrame extends JFrame implements ActionListener {
 		Object o = e.getSource();
 
 		if (o.equals(btnTongQuan)) {
-			cardLayout.show(pnContainerCard, "Tổng quan");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnTongQuan.setForeground(Color.BLACK);
-			btnTongQuan.repaint();
-			lbHeaderTieuDe.setText("CHI NHÁNH GÒ VẤP");
+			switchCard("Tổng quan");
 		} else if (o.equals(btnBanHang)) {
-			cardLayout.show(pnContainerCard, "Bán hàng");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnBanHang.setForeground(Color.BLACK);
-			btnBanHang.repaint();
-			lbHeaderTieuDe.setText("BÁN HÀNG");
-		} else if (btnThucDon != null && o.equals(btnThucDon)) {
-			cardLayout.show(pnContainerCard, "Thực đơn");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnThucDon.setForeground(Color.BLACK);
-			btnThucDon.repaint();
-			lbHeaderTieuDe.setText("THỰC ĐƠN QUÁN");
-		} else if (btnNhanVien != null && o.equals(btnNhanVien)) {
-			cardLayout.show(pnContainerCard, "Nhân viên");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnNhanVien.setForeground(Color.BLACK);
-			btnNhanVien.repaint();
-			lbHeaderTieuDe.setText("NHÂN VIÊN");
-		} else if (btnCaTruc != null && o.equals(btnCaTruc)) {
-			cardLayout.show(pnContainerCard, "Ca trực");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnCaTruc.setForeground(Color.BLACK);
-			btnCaTruc.repaint();
-			lbHeaderTieuDe.setText("CA TRỰC");
-		} else if (btnCaTrucCuaToi != null && o.equals(btnCaTrucCuaToi)) {
-			cardLayout.show(pnContainerCard, "Ca trực của tôi");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnCaTrucCuaToi.setForeground(Color.BLACK);
-			btnCaTrucCuaToi.repaint();
-			lbHeaderTieuDe.setText("CA TRỰC CỦA TÔI");
-		} else if (btnHoaDon != null && o.equals(btnHoaDon)) {
-			cardLayout.show(pnContainerCard, "Danh sách hóa đơn");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnHoaDon.setForeground(Color.BLACK);
-			btnHoaDon.repaint();
-			lbHeaderTieuDe.setText("HÓA ĐƠN");
-		} else if (btnTaiKhoan != null && o.equals(btnTaiKhoan)) {
-			cardLayout.show(pnContainerCard, "Tài khoản");
-			UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien, btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
-			btnTaiKhoan.setForeground(Color.BLACK);
-			btnTaiKhoan.repaint();
-			lbHeaderTieuDe.setText("TÀI KHOẢN");
-		} else if (btnDangXuat != null && o.equals(btnDangXuat)) {
-			Auth.dangXuat();
-			new LoginFrame().setVisible(true);
+			switchCard("Bán hàng");
+		} else if (o.equals(btnThucDon)) {
+			switchCard("Thực đơn");
+		} else if (o.equals(btnNhanVien)) {
+			switchCard("Nhân viên");
+		} else if (o.equals(btnCaTruc)) {
+			switchCard("Ca trực");
+		} else if (o.equals(btnCaTrucCuaToi)) {
+			switchCard("Ca trực của tôi");
+		} else if (o.equals(btnHoaDon)) {
+			switchCard("Danh sách hóa đơn");
+		} else if (o.equals(btnTaiKhoan)) {
+			switchCard("Tài khoản");
+		} else if (o.equals(btnDangXuat)) {
+			nhanVienBUS.dangXuat();
+			new LoginFrame(taiKhoanBUS, nhanVienBUS).setVisible(true);
 			this.dispose();
+		}
+	}
+
+	/** Chuyển màn hình, cập nhật tiêu đề, menu và dữ liệu hiển thị. */
+	public void switchCard(String tenManHinh) {
+		cardLayout.show(pnContainerCard, tenManHinh);
+		UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien,
+				btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
+
+		if (tenManHinh.equals("Tổng quan")) {
+			btnTongQuan.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("CHI NHÁNH GÒ VẤP");
+			tongQuanPanel.capNhatDuLieu();
+		} else if (tenManHinh.equals("Bán hàng")) {
+			btnBanHang.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("BÁN HÀNG");
+			banHangPOSPanel.capNhatDanhSachMon();
+			banHangPOSPanel.capNhatGioHang();
+		} else if (tenManHinh.equals("Thực đơn")) {
+			btnThucDon.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("THỰC ĐƠN QUÁN");
+			quanLyThucDonPanel.capNhatBang();
+		} else if (tenManHinh.equals("Nhân viên")) {
+			btnNhanVien.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("NHÂN VIÊN");
+			quanLyNhanVienPanel.capNhatBang();
+		} else if (tenManHinh.equals("Ca trực")) {
+			btnCaTruc.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("CA TRỰC");
+		} else if (tenManHinh.equals("Ca trực của tôi")) {
+			btnCaTrucCuaToi.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("CA TRỰC CỦA TÔI");
+		} else if (tenManHinh.equals("Danh sách hóa đơn")) {
+			btnHoaDon.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("HÓA ĐƠN");
+			HoaDonPanel.capNhatDuLieu();
+		} else if (tenManHinh.equals("Thanh toán")) {
+			btnBanHang.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("THANH TOÁN");
+			thanhToanPanel.capNhatDuLieu();
+		} else if (tenManHinh.equals("Tài khoản")) {
+			btnTaiKhoan.setForeground(Color.BLACK);
+			lbHeaderTieuDe.setText("TÀI KHOẢN");
 		}
 	}
 }

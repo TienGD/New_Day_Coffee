@@ -47,6 +47,11 @@ public class Validator {
         if (loi != null) {
             return loi;
         }
+        return kiemTraMatKhau(matKhau);
+    }
+
+    /** Kiểm tra mật khẩu dùng chung cho đăng nhập và đổi mật khẩu. */
+    public static String kiemTraMatKhau(String matKhau) {
         if (rong(matKhau)) {
             return "Vui lòng nhập mật khẩu.";
         }

@@ -2,6 +2,9 @@ package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Insets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -10,6 +13,10 @@ import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.dto.HoaDonDTO;
+import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.utils.UIUtils;
 
 public class HoaDonPanel extends JPanel {
@@ -19,8 +26,13 @@ public class HoaDonPanel extends JPanel {
 	private DefaultTableModel model;
 	private JTable tb;
 
-	public HoaDonPanel() {
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final DSHoaDonBUS dsHoaDonBUS;
+
+	public HoaDonPanel(DSHoaDonBUS dsHoaDonBUS) {
+		this.dsHoaDonBUS = dsHoaDonBUS;
 		taoGiaoDien();
+		capNhatDuLieu();
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -31,7 +43,8 @@ public class HoaDonPanel extends JPanel {
 
 		JPanel pnHeaderCard = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 16, new Insets(14, 20, 14, 20));
 		pnHeaderCard.setLayout(new BorderLayout());
-		lbHeader = UIUtils.createTitleLabel("DANH SÁCH CÁC HÓA ĐƠN TRONG NGÀY: 11-09-2026");
+		lbHeader = UIUtils.createTitleLabel("DANH SÁCH CÁC HÓA ĐƠN TRONG NGÀY: "
+				+ LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
 		pnHeaderCard.add(lbHeader, BorderLayout.WEST);
 		add(pnHeaderCard, BorderLayout.NORTH);
 
@@ -51,5 +64,36 @@ public class HoaDonPanel extends JPanel {
 
 		pnTableCard.add(pane, BorderLayout.CENTER);
 		add(pnTableCard, BorderLayout.CENTER);
+	}
+
+	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+	/** Nạp lại danh sách hóa đơn và chi tiết của từng hóa đơn trong ngày. */
+	public void capNhatDuLieu() {
+		model.setRowCount(0);
+
+		List<HoaDonDTO> dsHoaDon = dsHoaDonBUS.layDanhSachHoaDon();
+		for (int i = 0; i < dsHoaDon.size(); i++) {
+			HoaDonDTO hoaDon = dsHoaDon.get(i);
+			if (hoaDon.getNgayLap() == null || !LocalDate.now().equals(hoaDon.getNgayLap())) {
+				continue;
+			}
+
+			NhanVienDTO nhanVien = hoaDon.getMaNV();
+			String tenNV = nhanVien == null ? "" : nhanVien.getTenNV();
+
+			List<ChiTietHoaDonDTO> dsChiTiet = dsHoaDonBUS.layChiTiet(hoaDon.getMaHD());
+			for (int j = 0; j < dsChiTiet.size(); j++) {
+				ChiTietHoaDonDTO chiTiet = dsChiTiet.get(j);
+				model.addRow(new Object[]{
+					hoaDon.getMaHD(),
+					DSHoaDonBUS.dinhDangNgay(hoaDon.getNgayLap()),
+					tenNV,
+					chiTiet.getTenMon(),
+					String.valueOf(chiTiet.getSoLuong()),
+					DSHoaDonBUS.dinhDangTien(chiTiet.getDonGia()),
+					DSHoaDonBUS.dinhDangTien(chiTiet.getThanhTien())
+				});
+			}
+		}
 	}
 }

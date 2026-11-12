@@ -9,10 +9,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -21,6 +25,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.utils.UIUtils;
 
 /**
@@ -29,7 +35,7 @@ import newDayCoffee.utils.UIUtils;
  * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán
  * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý bằng ActionListener.
  */
-public class TongQuanPanel extends JPanel {
+public class TongQuanPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JLabel lbTitle;
@@ -53,8 +59,14 @@ public class TongQuanPanel extends JPanel {
 	private JButton btnThemChuY;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	public TongQuanPanel() {
+	private final DSHoaDonBUS dsHoaDonBUS;
+	private boolean sapXepGiam = true;
+
+	public TongQuanPanel(DSHoaDonBUS dsHoaDonBUS) {
+		this.dsHoaDonBUS = dsHoaDonBUS;
 		khoiTaoGiaoDien();
+		ganSuKien();
+		capNhatDuLieu();
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -204,5 +216,70 @@ public class TongQuanPanel extends JPanel {
 
 		pnMainContent.add(pnBottom, BorderLayout.CENTER);
 		add(pnMainContent, BorderLayout.CENTER);
+	}
+
+	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+	private void ganSuKien() {
+		btnBanChay.addActionListener(this);
+		btnBanCham.addActionListener(this);
+		btnThemChuY.addActionListener(this);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+
+		if (nguon == btnBanChay) {
+			sapXepGiam = true;
+			capNhatBangMonBanChay();
+		} else if (nguon == btnBanCham) {
+			sapXepGiam = false;
+			capNhatBangMonBanChay();
+		} else if (nguon == btnThemChuY) {
+			themChuY();
+		}
+	}
+
+	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+	/** Nạp lại toàn bộ số liệu từ DSHoaDonBUS. */
+	public void capNhatDuLieu() {
+		lbDoanhThu.setText(DSHoaDonBUS.dinhDangTien(dsHoaDonBUS.doanhThuHomNay()));
+		lbSoDon.setText(dsHoaDonBUS.soDonHomNay() + " đơn");
+		lbSoMon.setText(dsHoaDonBUS.soLuongMonHomNay() + " món");
+
+		List<ChiTietHoaDonDTO> dsBanChay = dsHoaDonBUS.layMonBanChay(true);
+		if (dsBanChay.isEmpty()) {
+			lbMonBanChayNhat.setText("Chưa có");
+		} else {
+			lbMonBanChayNhat.setText(dsBanChay.get(0).getTenMon());
+		}
+
+		capNhatBangMonBanChay();
+	}
+
+	/** Nạp lại bảng món bán chạy theo thứ tự đang chọn. */
+	private void capNhatBangMonBanChay() {
+		List<ChiTietHoaDonDTO> dsMon = dsHoaDonBUS.layMonBanChay(sapXepGiam);
+
+		modelMonBanChay.setRowCount(0);
+		for (int i = 0; i < dsMon.size(); i++) {
+			ChiTietHoaDonDTO mon = dsMon.get(i);
+			modelMonBanChay.addRow(new Object[]{mon.getTenMon(), mon.getSoLuong()});
+		}
+	}
+
+	private void themChuY() {
+		String noiDung = JOptionPane.showInputDialog(this, "Nhập nội dung cần chú ý:", "Thêm chú ý",
+				JOptionPane.INFORMATION_MESSAGE);
+		if (noiDung == null) {
+			return;
+		}
+		noiDung = noiDung.trim();
+		if (noiDung.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Nội dung chú ý không được để trống.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		modelChuY.addElement("(i)  " + noiDung);
 	}
 }

@@ -8,6 +8,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -25,9 +28,20 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.bus.HoaDonBUS;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.dto.DoUongDTO;
+import newDayCoffee.gui.MainFrame;
 import newDayCoffee.utils.UIUtils;
 
-public class BanHangPOSPanel extends JPanel {
+/**
+ * Màn hình bán hàng (POS).
+ *
+ * Panel nhận DSDoUongBUS để hiển thị thực đơn và HoaDonBUS để quản lý giỏ hàng.
+ * Mọi sự kiện đều dùng ActionListener.
+ */
+public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JTextField txtTimKiem;
@@ -43,18 +57,27 @@ public class BanHangPOSPanel extends JPanel {
 	private String HintTimKiem = "Tìm kiếm món";
 	private String nhomDangLoc = "Tất cả";
 
-	// Lưu nhãn số lượng trên từng thẻ món để cập nhật nhanh
-	private final Map<String, JLabel> nhanSoLuong = new HashMap<>();
+	// Ô số lượng trên từng thẻ món
+	private final Map<String, JTextField> oSoLuong = new HashMap<>();
 	// Thứ tự mã món tương ứng với từng dòng trong bảng đơn hàng
 	private final List<String> maMonTrongBang = new ArrayList<>();
 	// Nút lọc theo nhóm món
 	private final Map<JButton, String> nhomCuaNutLoc = new HashMap<>();
-	// Nút tăng / giảm trên thẻ món
-	private final Map<JButton, String> maMonCuaNutCong = new HashMap<>();
-	private final Map<JButton, String> maMonCuaNutTru = new HashMap<>();
 
-	public BanHangPOSPanel() {
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private final MainFrame mainFrame;
+	private final DSDoUongBUS dsDoUongBUS;
+	private final HoaDonBUS hoaDonBUS;
+
+	public BanHangPOSPanel(MainFrame mainFrame, DSDoUongBUS dsDoUongBUS, HoaDonBUS hoaDonBUS) {
+		this.mainFrame = mainFrame;
+		this.dsDoUongBUS = dsDoUongBUS;
+		this.hoaDonBUS = hoaDonBUS;
+
 		khoiTaoGiaoDien();
+		ganSuKien();
+		capNhatDanhSachMon();
+		capNhatGioHang();
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -111,10 +134,6 @@ public class BanHangPOSPanel extends JPanel {
 			if ("Tất cả".equals(dsLoai[i])) {
 				nutMacDinh = btnLoai;
 			}
-			btnLoai.addActionListener(e -> {
-				nhomDangLoc = nhomCuaNutLoc.get(btnLoai);
-				UIUtils.capNhatTrangThaiNutLocPOS(btnLoai, nhomCuaNutLoc.keySet());
-			});
 			pnFilterBar.add(btnLoai);
 		}
 		if (nutMacDinh != null) {
@@ -124,13 +143,10 @@ public class BanHangPOSPanel extends JPanel {
 		pnTopFilter.add(pnFilterBar, BorderLayout.CENTER);
 		pnLeftCol.add(pnTopFilter, BorderLayout.NORTH);
 
-		// Lưới danh sách thẻ món
+		// Lưới danh sách thẻ món - được nạp động từ DSDoUongBUS
 		pnGridMon = new JPanel(new GridLayout(0, 3, 16, 16));
 		pnGridMon.setOpaque(false);
 		pnGridMon.setBorder(new EmptyBorder(4, 4, 4, 4));
-
-		JPanel coffee = UIUtils.taoTheMonPOS("cof1", "Coffee", "ngon", "1234");
-		pnGridMon.add(coffee);
 
 		JPanel pnGridWrapper = new JPanel(new BorderLayout());
 		pnGridWrapper.setOpaque(false);
@@ -250,5 +266,155 @@ public class BanHangPOSPanel extends JPanel {
 		pnMainContent.add(pnRightCol, gbc);
 
 		add(pnMainContent, BorderLayout.CENTER);
+	}
+
+	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+	private void ganSuKien() {
+		btnTimKiem.addActionListener(this);
+		btnXoa.addActionListener(this);
+		btnThanhToan.addActionListener(this);
+		txtTimKiem.addActionListener(this);
+
+		for (JButton btnLoc : nhomCuaNutLoc.keySet()) {
+			btnLoc.addActionListener(this);
+		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object nguon = e.getSource();
+		String lenh = e.getActionCommand();
+
+		if (nguon == btnTimKiem || nguon == txtTimKiem) {
+			timKiemMon();
+		} else if (nguon == btnXoa) {
+			xoaMonDangChon();
+		} else if (nguon == btnThanhToan) {
+			thanhToan();
+		} else if (nhomCuaNutLoc.containsKey(nguon)) {
+			nhomDangLoc = nhomCuaNutLoc.get(nguon);
+			UIUtils.capNhatTrangThaiNutLocPOS((JButton) nguon, nhomCuaNutLoc.keySet());
+			capNhatDanhSachMon();
+		} else if (lenh != null && lenh.startsWith("TANG:")) {
+			themMon(lenh.substring(5));
+		} else if (lenh != null && lenh.startsWith("GIAM:")) {
+			botMon(lenh.substring(5));
+		}
+	}
+
+	// ==================== KHU VỰC GIỎ HÀNG ====================
+	private void themMon(String maMon) {
+		DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+		if (hoaDonBUS.themMon(doUong)) {
+			capNhatGioHang();
+		}
+	}
+
+	private void botMon(String maMon) {
+		if (hoaDonBUS.giamMon(maMon)) {
+			capNhatGioHang();
+		}
+	}
+
+	// ==================== KHU VỰC CẬP NHẬT GIAO DIỆN ====================
+	/** Nạp lại danh sách thẻ món theo từ khóa và nhóm đang chọn. */
+	public void capNhatDanhSachMon() {
+		pnGridMon.removeAll();
+		oSoLuong.clear();
+
+		List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
+		for (int i = 0; i < dsMon.size(); i++) {
+			DoUongDTO mon = dsMon.get(i);
+			JPanel card = UIUtils.taoTheMonPOS(mon.getMaMon(), mon.getTenMon(),
+					mon.getMoTa(), HoaDonBUS.dinhDangTien(mon.getDonGia()), this);
+			Object o = card.getClientProperty("txtSoLuong");
+			if (o instanceof JTextField) {
+				oSoLuong.put(mon.getMaMon(), (JTextField) o);
+			}
+			pnGridMon.add(card);
+		}
+
+		capNhatSoLuongTrenThe();
+		pnGridMon.revalidate();
+		pnGridMon.repaint();
+	}
+
+	/** Nạp lại bảng đơn hàng và tổng tiền từ HoaDonBUS. */
+	public void capNhatGioHang() {
+		modelDonHang.setRowCount(0);
+		maMonTrongBang.clear();
+
+		List<ChiTietHoaDonDTO> gioHang = hoaDonBUS.layGioHang();
+		for (int i = 0; i < gioHang.size(); i++) {
+			ChiTietHoaDonDTO dong = gioHang.get(i);
+			modelDonHang.addRow(new Object[]{
+				String.valueOf(i + 1),
+				dong.getTenMon(),
+				String.valueOf(dong.getSoLuong()),
+				HoaDonBUS.dinhDangTien(dong.getDonGia()),
+				HoaDonBUS.dinhDangTien(dong.getThanhTien()),
+				""
+			});
+			maMonTrongBang.add(dong.getMaMon());
+		}
+
+		lbTongTienGiaTri.setText(HoaDonBUS.dinhDangTien(hoaDonBUS.tongTien()));
+		capNhatSoLuongTrenThe();
+	}
+
+	/** Cập nhật số lượng hiển thị trên từng thẻ món. */
+	private void capNhatSoLuongTrenThe() {
+		for (Map.Entry<String, JTextField> muc : oSoLuong.entrySet()) {
+			ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(muc.getKey());
+			if (dong == null) {
+				muc.getValue().setText("0");
+			} else {
+				muc.getValue().setText(String.valueOf(dong.getSoLuong()));
+			}
+		}
+	}
+
+	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+	private void timKiemMon() {
+		capNhatDanhSachMon();
+		if (oSoLuong.isEmpty() && !txtTimKiem.getText().trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
+					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+
+	private void xoaMonDangChon() {
+		int dongDangChon = tblDonHang.getSelectedRow();
+		if (dongDangChon < 0) {
+			JOptionPane.showMessageDialog(this, "Vui lòng chọn món cần xóa trong đơn hàng.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		String maMon = maMonTrongBang.get(dongDangChon);
+		ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(maMon);
+		if (dong == null) {
+			return;
+		}
+
+		int luaChon = JOptionPane.showConfirmDialog(this,
+				"Xóa \"" + dong.getTenMon() + "\" khỏi đơn hàng?",
+				"Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+		if (luaChon == JOptionPane.YES_OPTION) {
+			hoaDonBUS.xoaMon(maMon);
+			capNhatGioHang();
+		}
+	}
+
+	private void thanhToan() {
+		if (hoaDonBUS.gioHangRong()) {
+			JOptionPane.showMessageDialog(this, "Đơn hàng chưa có món nào để thanh toán.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		if (mainFrame != null) {
+			mainFrame.switchCard("Thanh toán");
+		}
 	}
 }

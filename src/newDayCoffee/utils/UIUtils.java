@@ -736,6 +736,11 @@ public class UIUtils {
 	}
 
 	public static JPanel taoTheMonPOS(String maMon, String tenMon, String moTa, String giaBan) {
+		return taoTheMonPOS(maMon, tenMon, moTa, giaBan, null);
+	}
+
+	public static JPanel taoTheMonPOS(String maMon, String tenMon, String moTa, String giaBan,
+			ActionListener listener) {
 		JPanel pnInfo = new JPanel();
 		pnInfo.setLayout(new BoxLayout(pnInfo, BoxLayout.Y_AXIS));
 		pnInfo.setOpaque(false);
@@ -775,6 +780,12 @@ public class UIUtils {
 
 		JButton btnTru = createButton("-", COLOR_HEADER, new Font(FONT_FAMILY, Font.BOLD, 13), 40, 26);
 		JButton btnCong = createButton("+", COLOR_BTN_THEM, new Font(FONT_FAMILY, Font.BOLD, 12), 40, 26);
+		btnTru.setActionCommand("GIAM:" + maMon);
+		btnCong.setActionCommand("TANG:" + maMon);
+		if (listener != null) {
+			btnTru.addActionListener(listener);
+			btnCong.addActionListener(listener);
+		}
 
 		pnSpinner.add(btnTru, BorderLayout.WEST);
 		pnSpinner.add(txtSoLuong, BorderLayout.CENTER);
@@ -829,6 +840,7 @@ public class UIUtils {
 			}
 		};
 		cardMon.setOpaque(false);
+		cardMon.putClientProperty("txtSoLuong", txtSoLuong);
 		cardMon.add(pnInfo);
 
 		return cardMon;
