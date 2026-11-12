@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
@@ -12,23 +12,22 @@ import newDayCoffee.dto.HoaDonDTO;
 /**
  * Xử lý nghiệp vụ trên danh sách hóa đơn.
  *
- * Lớp này giữ toàn bộ hóa đơn và chi tiết hóa đơn trong bộ nhớ,
- * đồng thời cung cấp số liệu thống kê cho màn hình Tổng quan.
+ * Lớp này giữ toàn bộ hóa đơn trong bộ nhớ và ủy quyền phần chi tiết hóa đơn
+ * cho ChiTietHoaDonBUS. DTO do giao diện tạo và truyền vào; lớp này không tự
+ * tạo đối tượng DTO.
  */
 public class DSHoaDonBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<HoaDonDTO> dsHoaDon;
-    private final List<ChiTietHoaDonDTO> dsChiTiet;
+    private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 
     private static final DateTimeFormatter DINH_DANG_MA =
             DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final DateTimeFormatter DINH_DANG_NGAY =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-    public DSHoaDonBUS() {
-        dsHoaDon = new ArrayList<>();
-        dsChiTiet = new ArrayList<>();
+    public DSHoaDonBUS(ChiTietHoaDonBUS chiTietHoaDonBUS) {
+        this.dsHoaDon = new ArrayList<>();
+        this.chiTietHoaDonBUS = chiTietHoaDonBUS;
     }
 
     // ==================== KHU VỰC MÃ HÓA ĐƠN ====================
@@ -53,14 +52,7 @@ public class DSHoaDonBUS {
 
     /** Trả về bản sao chi tiết của một hóa đơn. */
     public List<ChiTietHoaDonDTO> layChiTiet(String maHD) {
-        List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
-        String ma = chuanHoa(maHD);
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (chiTiet.getMaHD().equalsIgnoreCase(ma)) {
-                ketQua.add(chiTiet);
-            }
-        }
-        return ketQua;
+        return chiTietHoaDonBUS.layTheoHoaDon(maHD);
     }
 
     public HoaDonDTO timTheoMa(String maHD) {
@@ -86,29 +78,23 @@ public class DSHoaDonBUS {
         if (hoaDon == null) {
             return 0;
         }
-        double tong = 0;
-        List<ChiTietHoaDonDTO> ds = layChiTiet(hoaDon.getMaHD());
-        for (ChiTietHoaDonDTO chiTiet : ds) {
-            tong = tong + chiTiet.getThanhTien();
-        }
-        return tong;
+        return chiTietHoaDonBUS.tongTienTheoHoaDon(hoaDon.getMaHD());
     }
 
     // ==================== KHU VỰC THÊM HÓA ĐƠN ====================
-    /** Lưu một hóa đơn mới cùng chi tiết của nó. */
-    public boolean themHoaDon(HoaDonDTO hoaDon, List<ChiTietHoaDonDTO> dsChiTietMoi) {
-        if (hoaDon == null || dsChiTietMoi == null || dsChiTietMoi.isEmpty()) {
+    /** Lưu một hóa đơn mới cùng chi tiết đang nằm trong giỏ hàng. */
+    public boolean themHoaDon(HoaDonDTO hoaDon) {
+        if (hoaDon == null || timTheoMa(hoaDon.getMaHD()) != null) {
             return false;
         }
-        if (timTheoMa(hoaDon.getMaHD()) != null) {
+
+        List<ChiTietHoaDonDTO> dsChiTietMoi = chiTietHoaDonBUS.layGioHang();
+        if (dsChiTietMoi.isEmpty()) {
             return false;
         }
 
         dsHoaDon.add(hoaDon);
-        for (ChiTietHoaDonDTO chiTiet : dsChiTietMoi) {
-            chiTiet.setHoaDon(hoaDon);
-            dsChiTiet.add(chiTiet);
-        }
+        chiTietHoaDonBUS.ganHoaDon(hoaDon, dsChiTietMoi);
         return true;
     }
 
@@ -145,59 +131,25 @@ public class DSHoaDonBUS {
 
     /** Tổng số lượng món đã bán trong hôm nay. */
     public int soLuongMonHomNay() {
-        int tong = 0;
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laHomNay(timTheoMa(chiTiet.getMaHD()))) {
-                tong = tong + chiTiet.getSoLuong();
-            }
-        }
-        return tong;
+        return chiTietHoaDonBUS.tongSoLuongTheoHoaDon(layMaHoaDonHomNay());
     }
 
     /**
-     * Tổng hợp số lượng bán ra của từng món trong hôm nay.
-     * Kết quả chỉ dùng tên món và số lượng.
+     * Danh sách món bán chạy hôm nay, đã sắp xếp theo số lượng.
+     * Mỗi phần tử gồm tên món (khóa) và tổng số lượng (giá trị).
      */
-    public List<ChiTietHoaDonDTO> thongKeMonBanChay() {
-        List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
-
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (!laHomNay(timTheoMa(chiTiet.getMaHD()))) {
-                continue;
-            }
-
-            ChiTietHoaDonDTO dongDaCo = timDongThongKe(ketQua, chiTiet.getMaMon());
-            if (dongDaCo == null) {
-                ketQua.add(new ChiTietHoaDonDTO(new HoaDonDTO(), chiTiet.getDoUong(),
-                        chiTiet.getSoLuong(), chiTiet.getDonGia()));
-            } else {
-                dongDaCo.setSoLuong(dongDaCo.getSoLuong() + chiTiet.getSoLuong());
-            }
-        }
-        return ketQua;
-    }
-
-    private ChiTietHoaDonDTO timDongThongKe(List<ChiTietHoaDonDTO> ds, String maMon) {
-        for (ChiTietHoaDonDTO chiTiet : ds) {
-            if (chiTiet.getMaMon().equalsIgnoreCase(maMon)) {
-                return chiTiet;
-            }
-        }
-        return null;
-    }
-
-    /** Danh sách món bán chạy hôm nay, đã sắp xếp theo số lượng. */
-    public List<ChiTietHoaDonDTO> layMonBanChay(boolean giamDan) {
-        List<ChiTietHoaDonDTO> ketQua = thongKeMonBanChay();
+    public List<Map.Entry<String, Integer>> layMonBanChay(boolean giamDan) {
+        Map<String, Integer> thongKe = chiTietHoaDonBUS.thongKeMonBanChay(layMaHoaDonHomNay());
+        List<Map.Entry<String, Integer>> ketQua = new ArrayList<>(thongKe.entrySet());
 
         // Sắp xếp nổi bọt vì số lượng món trong ngày không lớn
         for (int i = 0; i < ketQua.size() - 1; i++) {
             for (int j = i + 1; j < ketQua.size(); j++) {
                 boolean canDoi = giamDan
-                        ? ketQua.get(j).getSoLuong() > ketQua.get(i).getSoLuong()
-                        : ketQua.get(j).getSoLuong() < ketQua.get(i).getSoLuong();
+                        ? ketQua.get(j).getValue() > ketQua.get(i).getValue()
+                        : ketQua.get(j).getValue() < ketQua.get(i).getValue();
                 if (canDoi) {
-                    ChiTietHoaDonDTO tam = ketQua.get(i);
+                    Map.Entry<String, Integer> tam = ketQua.get(i);
                     ketQua.set(i, ketQua.get(j));
                     ketQua.set(j, tam);
                 }
@@ -206,18 +158,15 @@ public class DSHoaDonBUS {
         return ketQua;
     }
 
-    // ==================== KHU VỰC ĐỊNH DẠNG ====================
-    /** Định dạng ngày hiển thị: dd-MM-yyyy. */
-    public static String dinhDangNgay(LocalDate ngay) {
-        if (ngay == null) {
-            return "";
+    /** Mã các hóa đơn được lập trong ngày hôm nay. */
+    private List<String> layMaHoaDonHomNay() {
+        List<String> ketQua = new ArrayList<>();
+        for (HoaDonDTO hoaDon : dsHoaDon) {
+            if (laHomNay(hoaDon)) {
+                ketQua.add(hoaDon.getMaHD());
+            }
         }
-        return ngay.format(DINH_DANG_NGAY);
-    }
-
-    /** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
-    public static String dinhDangTien(double soTien) {
-        return String.format(Locale.US, "%,.0f", soTien).replace(',', '.') + "Đ";
+        return ketQua;
     }
 
     private static String chuanHoa(String giaTri) {

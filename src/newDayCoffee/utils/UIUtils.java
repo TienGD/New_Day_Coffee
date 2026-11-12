@@ -14,6 +14,9 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -373,6 +376,31 @@ public class UIUtils {
 				}
 			}
 		}
+	}
+
+	// ==================== CÁC PHƯƠNG THỨC ĐỊNH DẠNG HIỂN THỊ ====================
+
+	/** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
+	public static String dinhDangTien(double soTien) {
+		return String.format(Locale.US, "%,.0f", soTien).replace(',', '.') + "Đ";
+	}
+
+	/** Định dạng số tiền không kèm ký hiệu, dùng để đưa ngược lên form sửa. */
+	public static String dinhDangTienNhap(double soTien) {
+		return String.format(Locale.US, "%,.0f", soTien).replace(",", "");
+	}
+
+	/** Định dạng số tiền không kèm ký hiệu để hiển thị trong câu thông báo. */
+	public static String dinhDangTienKhongDonVi(double soTien) {
+		return dinhDangTien(soTien).replace("Đ", "");
+	}
+
+	/** Định dạng ngày hiển thị: dd-MM-yyyy. */
+	public static String dinhDangNgay(LocalDate ngay) {
+		if (ngay == null) {
+			return "";
+		}
+		return ngay.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
 	}
 
 	// ==================== CÁC PHƯƠNG THỨC DÙNG CHO LOGIN FRAME ====================

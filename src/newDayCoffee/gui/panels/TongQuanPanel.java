@@ -12,6 +12,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -26,7 +27,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSHoaDonBUS;
-import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.utils.UIUtils;
 
 /**
@@ -243,15 +243,15 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại toàn bộ số liệu từ DSHoaDonBUS. */
 	public void capNhatDuLieu() {
-		lbDoanhThu.setText(DSHoaDonBUS.dinhDangTien(dsHoaDonBUS.doanhThuHomNay()));
+		lbDoanhThu.setText(UIUtils.dinhDangTien(dsHoaDonBUS.doanhThuHomNay()));
 		lbSoDon.setText(dsHoaDonBUS.soDonHomNay() + " đơn");
 		lbSoMon.setText(dsHoaDonBUS.soLuongMonHomNay() + " món");
 
-		List<ChiTietHoaDonDTO> dsBanChay = dsHoaDonBUS.layMonBanChay(true);
+		List<Map.Entry<String, Integer>> dsBanChay = dsHoaDonBUS.layMonBanChay(true);
 		if (dsBanChay.isEmpty()) {
 			lbMonBanChayNhat.setText("Chưa có");
 		} else {
-			lbMonBanChayNhat.setText(dsBanChay.get(0).getTenMon());
+			lbMonBanChayNhat.setText(dsBanChay.get(0).getKey());
 		}
 
 		capNhatBangMonBanChay();
@@ -259,12 +259,12 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 
 	/** Nạp lại bảng món bán chạy theo thứ tự đang chọn. */
 	private void capNhatBangMonBanChay() {
-		List<ChiTietHoaDonDTO> dsMon = dsHoaDonBUS.layMonBanChay(sapXepGiam);
+		List<Map.Entry<String, Integer>> dsMon = dsHoaDonBUS.layMonBanChay(sapXepGiam);
 
 		modelMonBanChay.setRowCount(0);
 		for (int i = 0; i < dsMon.size(); i++) {
-			ChiTietHoaDonDTO mon = dsMon.get(i);
-			modelMonBanChay.addRow(new Object[]{mon.getTenMon(), mon.getSoLuong()});
+			Map.Entry<String, Integer> mon = dsMon.get(i);
+			modelMonBanChay.addRow(new Object[]{mon.getKey(), mon.getValue()});
 		}
 	}
 

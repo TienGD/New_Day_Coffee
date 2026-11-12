@@ -25,6 +25,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
+import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
@@ -306,7 +307,8 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 			return;
 		}
 
-		String loi = dsTaiKhoanBUS.themTaiKhoan(maNV, matKhau);
+		TaiKhoanDTO taiKhoan = new TaiKhoanDTO(new NhanVienDTO(maNV), matKhau);
+		String loi = dsTaiKhoanBUS.themTaiKhoan(taiKhoan);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
 			return;

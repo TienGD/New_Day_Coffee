@@ -17,11 +17,9 @@ public class DSDoUongBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<DoUongDTO> dsDoUong;
-    private final DoUongBUS doUongBUS;
 
     public DSDoUongBUS() {
         dsDoUong = new ArrayList<>();
-        doUongBUS = new DoUongBUS();
     }
 
     // ==================== KHU VỰC ĐỌC / TÌM KIẾM ====================
@@ -159,17 +157,19 @@ public class DSDoUongBUS {
     }
 
     // ==================== KHU VỰC THÊM / SỬA / XÓA ====================
-    /** Thêm món mới sau khi kiểm tra mã trùng. */
-    public String themDoUong(String maMon, String tenMon, double donGia, String moTa) {
+    /** Thêm món mới sau khi kiểm tra mã trùng. DTO do giao diện tạo và truyền vào. */
+    public String themDoUong(DoUongDTO doUong) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm món.";
         }
-        if (timTheoMa(maMon) != null) {
+        if (doUong == null) {
+            return "Thông tin món không hợp lệ.";
+        }
+        if (timTheoMa(doUong.getMaMon()) != null) {
             return "Mã món đã tồn tại.";
         }
 
-        DoUongDTO du = doUongBUS.taoDoUong(maMon, tenMon, donGia, moTa);
-        dsDoUong.add(du);
+        dsDoUong.add(doUong);
         return null;
     }
 

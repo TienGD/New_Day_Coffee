@@ -25,7 +25,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSDoUongBUS;
-import newDayCoffee.bus.DoUongBUS;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
@@ -275,7 +274,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		txtMaMon.setText(doUong.getMaMon());
 		txtMaMon.setEditable(false);
 		txtTenMon.setText(doUong.getTenMon());
-		txtDonGia.setText(DoUongBUS.dinhDangGiaNhap(doUong.getDonGia()));
+		txtDonGia.setText(UIUtils.dinhDangTienNhap(doUong.getDonGia()));
 		txtMoTa.setText(doUong.getMoTa());
 	}
 
@@ -291,7 +290,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 			modelThucDon.addRow(new Object[]{
 				doUong.getMaMon(),
 				doUong.getTenMon(),
-				DoUongBUS.dinhDangGia(doUong.getDonGia()),
+				UIUtils.dinhDangTien(doUong.getDonGia()),
 				doUong.getMoTa()
 			});
 		}
@@ -331,7 +330,8 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		String maMon = txtMaMon.getText().trim();
 		String tenMon = txtTenMon.getText().trim();
 		double donGia = docSoTien(txtDonGia.getText());
-		String ketQua = dsDoUongBUS.themDoUong(maMon, tenMon, donGia, txtMoTa.getText());
+		DoUongDTO doUong = new DoUongDTO(maMon, tenMon, donGia, txtMoTa.getText().trim());
+		String ketQua = dsDoUongBUS.themDoUong(doUong);
 		if (ketQua != null) {
 			JOptionPane.showMessageDialog(this, ketQua, "Không thể thêm món", JOptionPane.ERROR_MESSAGE);
 			return;

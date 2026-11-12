@@ -22,8 +22,9 @@ import javax.swing.border.EmptyBorder;
 import newDayCoffee.bus.DSHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
 import newDayCoffee.bus.DSTaiKhoanBUS;
+import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.HoaDonBUS;
-import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.bus.DSNhanVienBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.CaTrucCuaToiPanel;
 import newDayCoffee.gui.panels.CaTrucPanel;
@@ -72,17 +73,19 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSTaiKhoanBUS taiKhoanBUS;
-	private final NhanVienBUS nhanVienBUS;
+	private final DSNhanVienBUS DSNhanVienBUS;
 	private final DSDoUongBUS dsDoUongBUS;
+	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private final HoaDonBUS hoaDonBUS;
 
-	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
-		this.nhanVienBUS = nhanVienBUS;
+		this.DSNhanVienBUS = DSNhanVienBUS;
 		this.dsDoUongBUS = new DSDoUongBUS();
-		this.dsHoaDonBUS = new DSHoaDonBUS();
-		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, nhanVienBUS);
+		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS();
+		this.dsHoaDonBUS = new DSHoaDonBUS(chiTietHoaDonBUS);
+		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, chiTietHoaDonBUS);
 		khoiTaoGiaoDien();
 	}
 
@@ -237,10 +240,10 @@ public class MainFrame extends JFrame implements ActionListener {
 		pnContainerCard.setOpaque(false);
 
 		tongQuanPanel = new TongQuanPanel(dsHoaDonBUS);
-		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, hoaDonBUS);
+		banHangPOSPanel = new BanHangPOSPanel(this, dsDoUongBUS, chiTietHoaDonBUS);
 		quanLyThucDonPanel = new QuanLyThucDonPanel(dsDoUongBUS);
-		quanLyNhanVienPanel = new QuanLyNhanVienPanel(nhanVienBUS);
-		thanhToanPanel = new ThanhToanPOSPanel(this, hoaDonBUS, dsHoaDonBUS);
+		quanLyNhanVienPanel = new QuanLyNhanVienPanel(DSNhanVienBUS);
+		thanhToanPanel = new ThanhToanPOSPanel(this, chiTietHoaDonBUS, hoaDonBUS, dsHoaDonBUS);
 		CaTrucPanel = new CaTrucPanel();
 		CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
 		HoaDonPanel = new HoaDonPanel(dsHoaDonBUS);
@@ -283,8 +286,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (o.equals(btnTaiKhoan)) {
 			switchCard("Tài khoản");
 		} else if (o.equals(btnDangXuat)) {
-			nhanVienBUS.dangXuat();
-			new LoginFrame(taiKhoanBUS, nhanVienBUS).setVisible(true);
+			DSNhanVienBUS.dangXuat();
+			new LoginFrame(taiKhoanBUS, DSNhanVienBUS).setVisible(true);
 			this.dispose();
 		}
 	}

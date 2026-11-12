@@ -1,11 +1,10 @@
 package newDayCoffee.bus;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.Auth;
 
 /**
@@ -14,13 +13,13 @@ import newDayCoffee.utils.Auth;
  * Lớp này quản lý dữ liệu nhân viên, gọi DSTaiKhoanBUS để quản lý tài khoản
  * và Auth để lưu / xóa phiên đăng nhập. Việc kiểm tra dữ liệu form do giao diện thực hiện.
  */
-public class NhanVienBUS {
+public class DSNhanVienBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<NhanVienDTO> dsNhanVien;
     private final DSTaiKhoanBUS taiKhoanBUS;
 
-    public NhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
+    public DSNhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
     }
@@ -90,31 +89,17 @@ public class NhanVienBUS {
         return ketQua;
     }
 
-    // ==================== KHU VỰC CHUYỂN ĐỔI TỪ FORM ====================
-    /** Tạo DTO từ dữ liệu người dùng nhập trên form. */
-    public NhanVienDTO taoNhanVienTuForm(String maNV, String tenNV, LocalDate ngaySinh,
-            String sdt, String email, String chucVu, String gioiTinh) {
-        return new NhanVienDTO(chuanHoa(maNV), chuanHoa(tenNV), ngaySinh,
-                chuanHoa(sdt), chuanHoa(email),
-                chuanHoa(chucVu), chuanHoa(gioiTinh), "");
-    }
-
-    /** Định dạng ngày sinh để hiển thị trên bảng: dd-MM-yyyy. */
-    public static String dinhDangNgay(LocalDate ngaySinh) {
-        if (ngaySinh == null) {
-            return "";
-        }
-        return ngaySinh.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-    }
-
     // ==================== KHU VỰC THÊM / SỬA / XÓA ====================
-    /** Thêm nhân viên mới và tạo tài khoản với mật khẩu mặc định. */
-    public String themNhanVien(NhanVienDTO nv) {
+    /** Thêm nhân viên mới và tài khoản đi kèm. DTO do giao diện tạo và truyền vào. */
+    public String themNhanVien(NhanVienDTO nv, TaiKhoanDTO tk) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm nhân viên.";
         }
-        if (nv == null) {
+        if (nv == null || tk == null || tk.getMaNV() == null) {
             return "Thông tin nhân viên không hợp lệ.";
+        }
+        if (!chuanHoa(tk.getMaNV().getMaNV()).equalsIgnoreCase(chuanHoa(nv.getMaNV()))) {
+            return "Tài khoản không khớp với mã nhân viên.";
         }
         if (timTheoMa(nv.getMaNV()) != null) {
             return "Mã nhân viên đã tồn tại.";
@@ -124,7 +109,7 @@ public class NhanVienBUS {
         }
 
         dsNhanVien.add(nv);
-        String loiTaiKhoan = taiKhoanBUS.themTaiKhoan(nv.getMaNV(), "123456");
+        String loiTaiKhoan = taiKhoanBUS.themTaiKhoan(tk);
         if (loiTaiKhoan != null) {
             dsNhanVien.remove(nv);
             return loiTaiKhoan;
@@ -209,24 +194,22 @@ public class NhanVienBUS {
 
     // ==================== KHU VỰC DỮ LIỆU MẪU (TẠM THỜI) ====================
     /**
-     * Thêm 2 tài khoản mẫu để test đăng nhập:
-     * ql01 / 123456 (quản lí), nv01 / 123456 (thu ngân).
+     * Nạp 2 nhân viên mẫu cùng tài khoản của họ để test đăng nhập.
+     * DTO do giao diện tạo và truyền vào, BUS chỉ lưu dữ liệu.
      */
-    public void taoDuLieuMau() {
+    public void napDuLieuMau(NhanVienDTO quanLy, NhanVienDTO thuNgan,
+            TaiKhoanDTO taiKhoanQuanLy, TaiKhoanDTO taiKhoanThuNgan) {
         if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
             return;
         }
-
-        NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
-                LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
-                "Quản lí", "Nam", "123456");
-        NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
-                LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
-                "Thu ngân", "Nữ", "123456");
+        if (quanLy == null || thuNgan == null
+                || taiKhoanQuanLy == null || taiKhoanThuNgan == null) {
+            return;
+        }
 
         dsNhanVien.add(quanLy);
         dsNhanVien.add(thuNgan);
-        taiKhoanBUS.themTaiKhoan(quanLy.getMaNV(), "123456");
-        taiKhoanBUS.themTaiKhoan(thuNgan.getMaNV(), "123456");
+        taiKhoanBUS.themTaiKhoan(taiKhoanQuanLy);
+        taiKhoanBUS.themTaiKhoan(taiKhoanThuNgan);
     }
 }

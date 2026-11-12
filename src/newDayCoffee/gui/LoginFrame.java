@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDate;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -25,7 +26,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
-import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
 
@@ -53,21 +56,35 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSTaiKhoanBUS taiKhoanBUS;
-	private final NhanVienBUS nhanVienBUS;
+	private final DSNhanVienBUS DSNhanVienBUS;
 
 	public LoginFrame() {
 		this(new DSTaiKhoanBUS(), null);
 	}
 
-	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, NhanVienBUS nhanVienBUS) {
+	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
-		this.nhanVienBUS = (nhanVienBUS == null) ? new NhanVienBUS(taiKhoanBUS) : nhanVienBUS;
+		this.DSNhanVienBUS = (DSNhanVienBUS == null) ? new DSNhanVienBUS(taiKhoanBUS) : DSNhanVienBUS;
 
 		// Tạo tài khoản mẫu ql01 / nv01 để đăng nhập thử
-		this.nhanVienBUS.taoDuLieuMau();
+		taoDuLieuMau();
 
 		khoiTaoGiaoDien();
 		themSuKienChoCacNut();
+	}
+
+	/** Tạo DTO mẫu tại giao diện rồi chuyển cho BUS lưu trữ. */
+	private void taoDuLieuMau() {
+		NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
+				LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
+				"Quản lí", "Nam", "");
+		NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
+				LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
+				"Thu ngân", "Nữ", "");
+
+		TaiKhoanDTO taiKhoanQuanLy = new TaiKhoanDTO(quanLy, "123456");
+		TaiKhoanDTO taiKhoanThuNgan = new TaiKhoanDTO(thuNgan, "123456");
+		DSNhanVienBUS.napDuLieuMau(quanLy, thuNgan, taiKhoanQuanLy, taiKhoanThuNgan);
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -382,7 +399,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		String loi = nhanVienBUS.dangNhap(maNV, matKhau);
+		String loi = DSNhanVienBUS.dangNhap(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Đăng nhập thất bại", JOptionPane.ERROR_MESSAGE);
 			passMatKhau.setText("");
@@ -390,7 +407,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		MainFrame mainFrame = new MainFrame(taiKhoanBUS, nhanVienBUS);
+		MainFrame mainFrame = new MainFrame(taiKhoanBUS, DSNhanVienBUS);
 		mainFrame.setVisible(true);
 		this.dispose();
 	}
@@ -425,7 +442,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		String loi = nhanVienBUS.datLaiMatKhau(email, matKhauMoi);
+		String loi = DSNhanVienBUS.datLaiMatKhau(email, matKhauMoi);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Đặt lại mật khẩu thất bại", JOptionPane.ERROR_MESSAGE);
 			return;

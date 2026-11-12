@@ -3,7 +3,6 @@ package newDayCoffee.bus;
 import java.util.ArrayList;
 import java.util.List;
 
-import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 
 /**
@@ -53,14 +52,20 @@ public class DSTaiKhoanBUS {
     }
 
     // ==================== KHU VỰC THÊM / XÓA TÀI KHOẢN ====================
-    /** Thêm tài khoản mới. Bỏ trống mật khẩu thì dùng mật khẩu mặc định. */
-    public String themTaiKhoan(String maNV, String matKhau) {
+    /** Thêm tài khoản mới. DTO do giao diện tạo và truyền vào. */
+    public String themTaiKhoan(TaiKhoanDTO tk) {
+        if (tk == null || tk.getMaNV() == null) {
+            return "Thông tin tài khoản không hợp lệ.";
+        }
+
+        String maNV = chuanHoa(tk.getMaNV().getMaNV());
         if (timTheoMa(maNV) != null) {
             return "Tài khoản cho mã nhân viên này đã tồn tại.";
         }
 
-        String mk = chuanHoa(matKhau).isEmpty() ? "123456" : matKhau;
-        TaiKhoanDTO tk = new TaiKhoanDTO(new NhanVienDTO(chuanHoa(maNV)), mk);
+        if (chuanHoa(tk.getMatKhau()).isEmpty()) {
+            tk.setMatKhau("123456");
+        }
         dsTaiKhoan.add(tk);
         return null;
     }

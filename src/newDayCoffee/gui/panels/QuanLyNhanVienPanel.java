@@ -33,8 +33,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
-import newDayCoffee.bus.NhanVienBUS;
+import newDayCoffee.bus.DSNhanVienBUS;
 import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
 
@@ -66,10 +67,10 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	private DefaultTableModel modelNhanVien;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final NhanVienBUS nhanVienBUS;
+	private final DSNhanVienBUS DSNhanVienBUS;
 
-	public QuanLyNhanVienPanel(NhanVienBUS nhanVienBUS) {
-		this.nhanVienBUS = nhanVienBUS;
+	public QuanLyNhanVienPanel(DSNhanVienBUS DSNhanVienBUS) {
+		this.DSNhanVienBUS = DSNhanVienBUS;
 		khoiTaoGiaoDien();
 		ganSuKien();
 		capNhatBang();
@@ -312,7 +313,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		}
 
 		String maNV = String.valueOf(modelNhanVien.getValueAt(dong, 0));
-		NhanVienDTO nhanVien = nhanVienBUS.timTheoMa(maNV);
+		NhanVienDTO nhanVien = DSNhanVienBUS.timTheoMa(maNV);
 		if (nhanVien == null) {
 			return;
 		}
@@ -320,7 +321,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		txtMaNV.setText(nhanVien.getMaNV());
 		txtMaNV.setEditable(false);
 		txtTenNV.setText(nhanVien.getTenNV());
-		txtNgaySinh.setText(NhanVienBUS.dinhDangNgay(nhanVien.getNgaySinh()));
+		txtNgaySinh.setText(UIUtils.dinhDangNgay(nhanVien.getNgaySinh()));
 		txtSDT.setText(nhanVien.getSdt());
 		txtEmail.setText(nhanVien.getEmail());
 		cboChucVu.setSelectedItem(nhanVien.getChucVu());
@@ -330,7 +331,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại bảng theo mã / tên đang nhập. */
 	public void capNhatBang() {
-		List<NhanVienDTO> dsNhanVien = nhanVienBUS.timKiem(txtTimMa.getText(), txtTimTen.getText());
+		List<NhanVienDTO> dsNhanVien = DSNhanVienBUS.timKiem(txtTimMa.getText(), txtTimTen.getText());
 
 		modelNhanVien.setRowCount(0);
 		for (int i = 0; i < dsNhanVien.size(); i++) {
@@ -340,7 +341,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 				nhanVien.getTenNV(),
 				nhanVien.getGioiTinh(),
 				nhanVien.getChucVu(),
-				NhanVienBUS.dinhDangNgay(nhanVien.getNgaySinh()),
+				UIUtils.dinhDangNgay(nhanVien.getNgaySinh()),
 				nhanVien.getSdt(),
 				nhanVien.getEmail()
 			});
@@ -361,7 +362,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		}
 
 		NhanVienDTO nhanVien = taoNhanVienTuForm();
-		String ketQua = nhanVienBUS.themNhanVien(nhanVien);
+		TaiKhoanDTO taiKhoan = new TaiKhoanDTO(nhanVien, "123456");
+		String ketQua = DSNhanVienBUS.themNhanVien(nhanVien, taiKhoan);
 		if (ketQua != null) {
 			JOptionPane.showMessageDialog(this, ketQua, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -379,7 +381,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		}
 
 		NhanVienDTO nhanVien = taoNhanVienTuForm();
-		String ketQua = nhanVienBUS.suaNhanVien(nhanVien);
+		String ketQua = DSNhanVienBUS.suaNhanVien(nhanVien);
 		if (ketQua != null) {
 			JOptionPane.showMessageDialog(this, ketQua, "Không thể sửa nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -486,7 +488,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			return;
 		}
 
-		NhanVienDTO nhanVien = nhanVienBUS.timTheoMa(maNV);
+		NhanVienDTO nhanVien = DSNhanVienBUS.timTheoMa(maNV);
 		String tenNV = (nhanVien == null) ? maNV : nhanVien.getTenNV();
 
 		int luaChon = JOptionPane.showConfirmDialog(this, "Xóa nhân viên \"" + tenNV + "\"?",
@@ -495,7 +497,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			return;
 		}
 
-		String loi = nhanVienBUS.xoaNhanVien(maNV);
+		String loi = DSNhanVienBUS.xoaNhanVien(maNV);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể xóa nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -505,7 +507,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	}
 
 	private void luuDuLieu() {
-		if (nhanVienBUS.luuVaoCSDL()) {
+		if (DSNhanVienBUS.luuVaoCSDL()) {
 			JOptionPane.showMessageDialog(this, "Đã lưu danh sách nhân viên.",
 					"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		} else {
@@ -523,9 +525,9 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	private NhanVienDTO taoNhanVienTuForm() {
 		LocalDate ngaySinh = docNgay(txtNgaySinh.getText());
-		return nhanVienBUS.taoNhanVienTuForm(txtMaNV.getText(), txtTenNV.getText(),
-				ngaySinh, txtSDT.getText(), txtEmail.getText(),
-				layChucVu(), layGioiTinh());
+		return new NhanVienDTO(txtMaNV.getText().trim(), txtTenNV.getText().trim(),
+				ngaySinh, txtSDT.getText().trim(), txtEmail.getText().trim(),
+				layChucVu(), layGioiTinh(), "");
 	}
 
 	private String layChucVu() {

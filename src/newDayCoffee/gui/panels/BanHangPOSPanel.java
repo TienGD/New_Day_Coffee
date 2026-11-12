@@ -28,8 +28,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
-import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.gui.MainFrame;
@@ -38,7 +38,7 @@ import newDayCoffee.utils.UIUtils;
 /**
  * Màn hình bán hàng (POS).
  *
- * Panel nhận DSDoUongBUS để hiển thị thực đơn và HoaDonBUS để quản lý giỏ hàng.
+ * Panel nhận DSDoUongBUS để hiển thị thực đơn và ChiTietHoaDonBUS để quản lý giỏ hàng.
  * Mọi sự kiện đều dùng ActionListener.
  */
 public class BanHangPOSPanel extends JPanel implements ActionListener {
@@ -67,12 +67,13 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final MainFrame mainFrame;
 	private final DSDoUongBUS dsDoUongBUS;
-	private final HoaDonBUS hoaDonBUS;
+	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 
-	public BanHangPOSPanel(MainFrame mainFrame, DSDoUongBUS dsDoUongBUS, HoaDonBUS hoaDonBUS) {
+	public BanHangPOSPanel(MainFrame mainFrame, DSDoUongBUS dsDoUongBUS,
+			ChiTietHoaDonBUS chiTietHoaDonBUS) {
 		this.mainFrame = mainFrame;
 		this.dsDoUongBUS = dsDoUongBUS;
-		this.hoaDonBUS = hoaDonBUS;
+		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
 
 		khoiTaoGiaoDien();
 		ganSuKien();
@@ -305,13 +306,21 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC GIỎ HÀNG ====================
 	private void themMon(String maMon) {
 		DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
-		if (hoaDonBUS.themMon(doUong)) {
+		if (doUong == null) {
+			return;
+		}
+
+		ChiTietHoaDonDTO chiTiet = new ChiTietHoaDonDTO();
+		chiTiet.setDoUong(doUong);
+		chiTiet.setSoLuong(1);
+		chiTiet.setDonGia(doUong.getDonGia());
+		if (chiTietHoaDonBUS.themChiTiet(chiTiet)) {
 			capNhatGioHang();
 		}
 	}
 
 	private void botMon(String maMon) {
-		if (hoaDonBUS.giamMon(maMon)) {
+		if (chiTietHoaDonBUS.giamChiTiet(maMon)) {
 			capNhatGioHang();
 		}
 	}
@@ -326,7 +335,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		for (int i = 0; i < dsMon.size(); i++) {
 			DoUongDTO mon = dsMon.get(i);
 			JPanel card = UIUtils.taoTheMonPOS(mon.getMaMon(), mon.getTenMon(),
-					mon.getMoTa(), HoaDonBUS.dinhDangTien(mon.getDonGia()), this);
+					mon.getMoTa(), UIUtils.dinhDangTien(mon.getDonGia()), this);
 			Object o = card.getClientProperty("txtSoLuong");
 			if (o instanceof JTextField) {
 				oSoLuong.put(mon.getMaMon(), (JTextField) o);
@@ -339,33 +348,33 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		pnGridMon.repaint();
 	}
 
-	/** Nạp lại bảng đơn hàng và tổng tiền từ HoaDonBUS. */
+	/** Nạp lại bảng đơn hàng và tổng tiền từ ChiTietHoaDonBUS. */
 	public void capNhatGioHang() {
 		modelDonHang.setRowCount(0);
 		maMonTrongBang.clear();
 
-		List<ChiTietHoaDonDTO> gioHang = hoaDonBUS.layGioHang();
+		List<ChiTietHoaDonDTO> gioHang = chiTietHoaDonBUS.layGioHang();
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
 			modelDonHang.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
 				String.valueOf(dong.getSoLuong()),
-				HoaDonBUS.dinhDangTien(dong.getDonGia()),
-				HoaDonBUS.dinhDangTien(dong.getThanhTien()),
+				UIUtils.dinhDangTien(dong.getDonGia()),
+				UIUtils.dinhDangTien(dong.getThanhTien()),
 				""
 			});
 			maMonTrongBang.add(dong.getMaMon());
 		}
 
-		lbTongTienGiaTri.setText(HoaDonBUS.dinhDangTien(hoaDonBUS.tongTien()));
+		lbTongTienGiaTri.setText(UIUtils.dinhDangTien(chiTietHoaDonBUS.tongTienGioHang()));
 		capNhatSoLuongTrenThe();
 	}
 
 	/** Cập nhật số lượng hiển thị trên từng thẻ món. */
 	private void capNhatSoLuongTrenThe() {
 		for (Map.Entry<String, JTextField> muc : oSoLuong.entrySet()) {
-			ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(muc.getKey());
+			ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(muc.getKey());
 			if (dong == null) {
 				muc.getValue().setText("0");
 			} else {
@@ -392,7 +401,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		}
 
 		String maMon = maMonTrongBang.get(dongDangChon);
-		ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(maMon);
+		ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(maMon);
 		if (dong == null) {
 			return;
 		}
@@ -401,13 +410,13 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 				"Xóa \"" + dong.getTenMon() + "\" khỏi đơn hàng?",
 				"Xác nhận xóa", JOptionPane.YES_NO_OPTION);
 		if (luaChon == JOptionPane.YES_OPTION) {
-			hoaDonBUS.xoaMon(maMon);
+			chiTietHoaDonBUS.xoaChiTiet(maMon);
 			capNhatGioHang();
 		}
 	}
 
 	private void thanhToan() {
-		if (hoaDonBUS.gioHangRong()) {
+		if (chiTietHoaDonBUS.gioHangRong()) {
 			JOptionPane.showMessageDialog(this, "Đơn hàng chưa có món nào để thanh toán.",
 					"Thông báo", JOptionPane.WARNING_MESSAGE);
 			return;

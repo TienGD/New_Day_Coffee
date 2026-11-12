@@ -86,12 +86,12 @@ public class HoaDonPanel extends JPanel {
 				ChiTietHoaDonDTO chiTiet = dsChiTiet.get(j);
 				model.addRow(new Object[]{
 					hoaDon.getMaHD(),
-					DSHoaDonBUS.dinhDangNgay(hoaDon.getNgayLap()),
+					UIUtils.dinhDangNgay(hoaDon.getNgayLap()),
 					tenNV,
 					chiTiet.getTenMon(),
 					String.valueOf(chiTiet.getSoLuong()),
-					DSHoaDonBUS.dinhDangTien(chiTiet.getDonGia()),
-					DSHoaDonBUS.dinhDangTien(chiTiet.getThanhTien())
+					UIUtils.dinhDangTien(chiTiet.getDonGia()),
+					UIUtils.dinhDangTien(chiTiet.getThanhTien())
 				});
 			}
 		}

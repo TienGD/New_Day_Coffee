@@ -29,10 +29,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.DSHoaDonBUS;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
+import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.gui.MainFrame;
 import newDayCoffee.utils.Auth;
 import newDayCoffee.utils.UIUtils;
@@ -82,12 +84,15 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final MainFrame mainFrame;
+	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 	private final HoaDonBUS hoaDonBUS;
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private String phuongThucDangChon = "Tiền mặt";
 
-	public ThanhToanPOSPanel(MainFrame mainFrame, HoaDonBUS hoaDonBUS, DSHoaDonBUS dsHoaDonBUS) {
+	public ThanhToanPOSPanel(MainFrame mainFrame, ChiTietHoaDonBUS chiTietHoaDonBUS,
+			HoaDonBUS hoaDonBUS, DSHoaDonBUS dsHoaDonBUS) {
 		this.mainFrame = mainFrame;
+		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
 		this.hoaDonBUS = hoaDonBUS;
 		this.dsHoaDonBUS = dsHoaDonBUS;
 
@@ -518,7 +523,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		if (giaTriMoi < 0) {
 			giaTriMoi = 0;
 		}
-		txtKhachDua.setText(HoaDonBUS.dinhDangTienNhap(giaTriMoi));
+		txtKhachDua.setText(UIUtils.dinhDangTienNhap(giaTriMoi));
 	}
 
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
@@ -529,27 +534,27 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		lbNhanVienGiaTri.setText(Auth.getTenHienThi());
 
 		modelSanPham.setRowCount(0);
-		List<ChiTietHoaDonDTO> gioHang = hoaDonBUS.layGioHang();
+		List<ChiTietHoaDonDTO> gioHang = chiTietHoaDonBUS.layGioHang();
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
 			modelSanPham.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
 				String.valueOf(dong.getSoLuong()),
-				HoaDonBUS.dinhDangTien(dong.getDonGia()),
-				HoaDonBUS.dinhDangTien(dong.getThanhTien())
+				UIUtils.dinhDangTien(dong.getDonGia()),
+				UIUtils.dinhDangTien(dong.getThanhTien())
 			});
 		}
 
-		double tongTien = hoaDonBUS.tongTien();
-		lbTongTienHangGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
-		lbThanhTienGiaTri.setText(HoaDonBUS.dinhDangTien(tongTien));
+		double tongTien = chiTietHoaDonBUS.tongTienGioHang();
+		lbTongTienHangGiaTri.setText(UIUtils.dinhDangTien(tongTien));
+		lbThanhTienGiaTri.setText(UIUtils.dinhDangTien(tongTien));
 
 		capNhatTienThua();
 	}
 
 	private void capNhatTienThua() {
-		double tongTien = hoaDonBUS.tongTien();
+		double tongTien = chiTietHoaDonBUS.tongTienGioHang();
 		double khachDua = docSoTien(txtKhachDua.getText());
 		if (khachDua < 0) {
 			txtTienThua.setText("Tiền khách đưa không hợp lệ");
@@ -558,14 +563,10 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 		double chenhLech = khachDua - tongTien;
 		if (chenhLech < 0) {
-			txtTienThua.setText("Thiếu: " + dinhDangTienKhongDonVi(-chenhLech));
+			txtTienThua.setText("Thiếu: " + UIUtils.dinhDangTienKhongDonVi(-chenhLech));
 		} else {
-			txtTienThua.setText("Thừa: " + dinhDangTienKhongDonVi(chenhLech));
+			txtTienThua.setText("Thừa: " + UIUtils.dinhDangTienKhongDonVi(chenhLech));
 		}
-	}
-
-	private String dinhDangTienKhongDonVi(double soTien) {
-		return HoaDonBUS.dinhDangTien(soTien).replace("Đ", "");
 	}
 
 	/** Đọc số tiền người dùng nhập. Chấp nhận các dạng 15000, 15.000, 15,000. */
@@ -594,7 +595,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 			return;
 		}
 
-		JTextArea noiDung = new JTextArea(hoaDonBUS.taoNoiDungHoaDon(hoaDon));
+		JTextArea noiDung = new JTextArea(taoNoiDungHoaDon(hoaDon));
 		noiDung.setEditable(false);
 		noiDung.setFont(new Font("Monospaced", Font.PLAIN, 13));
 
@@ -608,7 +609,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 			return;
 		}
 
-		String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon);
+		String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon, noiDung.getText());
 		if (duongDan == null) {
 			JOptionPane.showMessageDialog(this, "Không thể lưu hóa đơn ra file.",
 					"Thông báo", JOptionPane.ERROR_MESSAGE);
@@ -618,8 +619,61 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		}
 	}
 
+	/** Tạo nội dung hóa đơn dạng văn bản để hiển thị hoặc ghi file. */
+	private String taoNoiDungHoaDon(HoaDonDTO hoaDon) {
+		if (hoaDon == null) {
+			return "";
+		}
+
+		double tongTien = dsHoaDonBUS.tongTienHoaDon(hoaDon);
+		double tienThoi = hoaDon.getTienKhachDua() - tongTien;
+
+		StringBuilder noiDung = new StringBuilder();
+		noiDung.append("        NEW DAY COFFEE\n");
+		noiDung.append("      HÓA ĐƠN THANH TOÁN\n");
+		noiDung.append("------------------------------------------\n");
+		noiDung.append("Mã hóa đơn : ").append(hoaDon.getMaHD()).append("\n");
+		noiDung.append("Ngày lập   : ").append(UIUtils.dinhDangNgay(hoaDon.getNgayLap())).append("\n");
+		noiDung.append("Nhân viên  : ").append(tenNhanVien(hoaDon.getMaNV())).append("\n");
+		noiDung.append("------------------------------------------\n");
+
+		List<ChiTietHoaDonDTO> dsChiTiet = dsHoaDonBUS.layChiTiet(hoaDon.getMaHD());
+		for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
+			noiDung.append(chiTiet.getTenMon())
+					.append("  x").append(chiTiet.getSoLuong())
+					.append("  ").append(UIUtils.dinhDangTien(chiTiet.getDonGia()))
+					.append(" = ").append(UIUtils.dinhDangTien(chiTiet.getThanhTien()))
+					.append("\n");
+		}
+
+		noiDung.append("------------------------------------------\n");
+		noiDung.append("Tổng tiền  : ").append(UIUtils.dinhDangTien(tongTien)).append("\n");
+		noiDung.append("Khách đưa  : ").append(UIUtils.dinhDangTien(hoaDon.getTienKhachDua())).append("\n");
+		noiDung.append("Tiền thối  : ").append(UIUtils.dinhDangTien(tienThoi)).append("\n");
+		noiDung.append("Trạng thái : ").append(hoaDon.getTrangThai()).append("\n");
+
+		if (hoaDon.getGhiChu() != null && !hoaDon.getGhiChu().trim().isEmpty()) {
+			noiDung.append("Ghi chú    : ").append(hoaDon.getGhiChu()).append("\n");
+		}
+
+		noiDung.append("------------------------------------------\n");
+		noiDung.append("Cảm ơn quý khách! Hẹn gặp lại.\n");
+		return noiDung.toString();
+	}
+
+	/** Lấy tên nhân viên lập hóa đơn để in phiếu. */
+	private String tenNhanVien(NhanVienDTO nhanVien) {
+		if (nhanVien == null) {
+			return "";
+		}
+		if (nhanVien.getTenNV() != null && !nhanVien.getTenNV().trim().isEmpty()) {
+			return nhanVien.getTenNV();
+		}
+		return nhanVien.getMaNV() == null ? "" : nhanVien.getMaNV();
+	}
+
 	private void thanhToan() {
-		if (hoaDonBUS.gioHangRong()) {
+		if (chiTietHoaDonBUS.gioHangRong()) {
 			JOptionPane.showMessageDialog(this, "Đơn hàng chưa có món nào để thanh toán.",
 					"Thông báo", JOptionPane.WARNING_MESSAGE);
 			return;
@@ -646,16 +700,20 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 			return;
 		}
 
-		double tongTien = hoaDonBUS.tongTien();
+		double tongTien = chiTietHoaDonBUS.tongTienGioHang();
 		if (tienKhachDua < tongTien) {
 			JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ. Còn thiếu "
-					+ HoaDonBUS.dinhDangTien(tongTien - tienKhachDua) + ".",
+					+ UIUtils.dinhDangTien(tongTien - tienKhachDua) + ".",
 					"Thông báo", JOptionPane.WARNING_MESSAGE);
 			txtKhachDua.requestFocusInWindow();
 			return;
 		}
 
-		String loi = hoaDonBUS.thanhToan(tienKhachDua, txtGhiChu.getText());
+		HoaDonDTO hoaDonMoi = new HoaDonDTO();
+		hoaDonMoi.setTienKhachDua(tienKhachDua);
+		hoaDonMoi.setGhiChu(txtGhiChu.getText());
+
+		String loi = hoaDonBUS.thanhToan(hoaDonMoi);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Thông báo", JOptionPane.WARNING_MESSAGE);
 			return;
