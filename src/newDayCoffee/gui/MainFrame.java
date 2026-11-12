@@ -292,6 +292,17 @@ public class MainFrame extends JFrame implements ActionListener {
 		}
 	}
 
+	/** Mở màn hình thanh toán kèm ghi chú của đơn hàng đang bán. */
+	public void moThanhToan(String ghiChu) {
+		thanhToanPanel.datGhiChu(ghiChu);
+		switchCard("Thanh toán");
+	}
+
+	/** Xóa ghi chú bán hàng sau khi thanh toán thành công. */
+	public void xoaGhiChuBanHang() {
+		banHangPOSPanel.xoaGhiChu();
+	}
+
 	/** Chuyển màn hình, cập nhật tiêu đề, menu và dữ liệu hiển thị. */
 	public void switchCard(String tenManHinh) {
 		cardLayout.show(pnContainerCard, tenManHinh);

@@ -90,18 +90,17 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		JLabel lbMaMon = new JLabel("Mã món");
 		lbMaMon.setFont(fontBold);
 		lbMaMon.setForeground(Color.WHITE);
-		txtMaMon = UIUtils.createTextField(120, 34);
+		txtMaMon = UIUtils.createTextField(120, 34, "Ví dụ: cof01");
 
 		JLabel lbTenMon = new JLabel("Tên món");
 		lbTenMon.setFont(fontBold);
 		lbTenMon.setForeground(Color.WHITE);
-		txtTenMon = UIUtils.createTextField(155, 34);
+		txtTenMon = UIUtils.createTextField(155, 34, "Ví dụ: Cà phê sữa đá");
 
 		JLabel lbDonGia = new JLabel("Giá bán");
 		lbDonGia.setFont(fontBold);
 		lbDonGia.setForeground(Color.WHITE);
-		txtDonGia = UIUtils.createTextField(120, 34);
-		txtDonGia.setText("0");
+		txtDonGia = UIUtils.createTextField(120, 34, "Ví dụ: 35000");
 
 		btnThem = UIUtils.createButton("Thêm", UIUtils.COLOR_BTN_THEM, fontBold, 85, 34);
 		btnSua  = UIUtils.createButton("Sửa", UIUtils.COLOR_BTN_SUA, fontBold, 80, 34);
@@ -130,7 +129,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		lbMoTa.setFont(fontBold);
 		lbMoTa.setForeground(Color.WHITE);
 
-		txtMoTa = UIUtils.createTextField(590, 34);
+		txtMoTa = UIUtils.createTextField(590, 34, "Ví dụ: Cà phê phin, sữa đặc, đá");
 
 		pnMoTa.add(lbMoTa);
 		pnMoTa.add(Box.createHorizontalStrut(11));
@@ -152,7 +151,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		lbTimKiem.setFont(fontBold);
 		lbTimKiem.setForeground(Color.WHITE);
 
-		txtTimKiem = UIUtils.createTextField(185, 34);
+		txtTimKiem = UIUtils.createTextField(185, 34, "Ví dụ: cof01");
 		txtTimKiem.setToolTipText("Nhập mã hoặc tên món: cofXX, teaXX, milXX...");
 
 		btnTimKiem = UIUtils.createButton("Tìm kiếm", UIUtils.COLOR_BTN_TIM, fontBold, 95, 34);
@@ -453,7 +452,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		txtMaMon.setEditable(true);
 		txtMaMon.setText("");
 		txtTenMon.setText("");
-		txtDonGia.setText("0");
+		txtDonGia.setText("");
 		txtMoTa.setText("");
 		tblThucDon.clearSelection();
 		txtMaMon.requestFocusInWindow();

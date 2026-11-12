@@ -11,6 +11,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -44,9 +46,10 @@ import newDayCoffee.utils.Validator;
  * Màn hình thanh toán đơn hàng (POS).
  *
  * Panel nhận MainFrame để quay lại màn hình bán hàng và HoaDonBUS để hiển thị
- * giỏ hàng, tính tiền thừa, lập hóa đơn. Mọi sự kiện đều dùng ActionListener.
+ * giỏ hàng, tính tiền thừa, lập hóa đơn. Các thao tác bấm nút dùng
+ * ActionListener; ô nhập tiền cập nhật thêm khi mất focus.
  */
-public class ThanhToanPOSPanel extends JPanel implements ActionListener {
+public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusListener {
 
 	private static final Color MAU_XAM_NHAT = UIUtils.COLOR_BG_INPUT;
 	private static final Color MAU_DO_DAM = new Color(158, 42, 42);
@@ -280,8 +283,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		gbcForm.insets = new Insets(0, 0, 6, 0);
 		pnFormLeft.add(lbKhachDua, gbcForm);
 
-		txtKhachDua = UIUtils.createTextField(0, 38);
-		txtKhachDua.setText("0");
+		txtKhachDua = UIUtils.createTextField(0, 38, "Ví dụ: 100000");
 		txtKhachDua.setForeground(new Color(60, 40, 25));
 		gbcForm.gridy = 1;
 		gbcForm.insets = new Insets(0, 0, 18, 0);
@@ -330,12 +332,10 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		gbcForm.insets = new Insets(0, 0, 8, 0);
 		pnFormLeft.add(lbGhiChu, gbcForm);
 
-		txtGhiChu = new JTextArea();
+		txtGhiChu = UIUtils.createTextAreaWithHint("Ví dụ: khách mang về...");
 		txtGhiChu.setBackground(mauXamNhat);
 		txtGhiChu.setForeground(new Color(40, 24, 14));
 		txtGhiChu.setFont(fontThuong);
-		txtGhiChu.setLineWrap(true);
-		txtGhiChu.setWrapStyleWord(true);
 		txtGhiChu.setBorder(BorderFactory.createCompoundBorder(
 			new LineBorder(new Color(185, 162, 140), 1, true),
 			new EmptyBorder(8, 10, 8, 10)
@@ -432,6 +432,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		btnInHoaDon.addActionListener(this);
 		btnThanhToan.addActionListener(this);
 		txtKhachDua.addActionListener(this);
+		txtKhachDua.addFocusListener(this);
 
 		for (int i = 0; i < dsNutBanPhim.length; i++) {
 			dsNutBanPhim[i].addActionListener(this);
@@ -474,9 +475,23 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	}
 
 	// ==================== KHU VỰC BÀN PHÍM NHẬP TIỀN ====================
+	@Override
+	public void focusGained(FocusEvent e) {
+		if (e.getSource() == txtKhachDua) {
+			txtKhachDua.selectAll();
+		}
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		if (e.getSource() == txtKhachDua) {
+			capNhatTienThua();
+		}
+	}
+
 	private void xuLyBanPhim(String nhanPhim) {
 		if (nhanPhim.equals("C")) {
-			txtKhachDua.setText("0");
+			txtKhachDua.setText("");
 		} else if (nhanPhim.equals("X")) {
 			xoaKyTuCuoi();
 		} else if (nhanPhim.equals("+")) {
@@ -512,7 +527,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 			return;
 		}
 		hienTai = hienTai.substring(0, hienTai.length() - 1);
-		txtKhachDua.setText(hienTai.isEmpty() ? "0" : hienTai);
+		txtKhachDua.setText(hienTai);
 	}
 
 	private void dieuChinhTien(double buocTien) {
@@ -574,7 +589,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	private double docSoTien(String chuoiTien) {
 		String s = chuoiTien == null ? "" : chuoiTien.trim();
 		if (s.isEmpty()) {
-			return -1;
+			return 0;
 		}
 		s = s.replace("đ", "").replace("Đ", "").replace(" ", "");
 		if (!s.matches(Validator.SO_TIEN)) {
@@ -726,8 +741,16 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 				"Thanh toán thành công!\nMã hóa đơn: " + maHoaDon,
 				"Thông báo", JOptionPane.INFORMATION_MESSAGE);
 
-		txtKhachDua.setText("0");
+		txtKhachDua.setText("");
 		txtGhiChu.setText("");
+		if (mainFrame != null) {
+			mainFrame.xoaGhiChuBanHang();
+		}
 		capNhatDuLieu();
+	}
+
+	/** Nhận ghi chú đơn hàng từ màn hình bán hàng trước khi thanh toán. */
+	public void datGhiChu(String ghiChu) {
+		txtGhiChu.setText(ghiChu == null ? "" : ghiChu);
 	}
 }

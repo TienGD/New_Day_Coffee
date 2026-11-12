@@ -108,8 +108,8 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		JPanel pnHaiCotInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		pnHaiCotInput.setOpaque(false);
 
-		txtMaNV = UIUtils.createTextField(175, 34);
-		txtMatKhau = UIUtils.createPasswordField(175, 34);
+		txtMaNV = UIUtils.createTextField(175, 34, "Ví dụ: nv01");
+		txtMatKhau = UIUtils.createPasswordField(175, 34, "Ví dụ: 123456");
 
 		JPanel dongMaNV = UIUtils.createInputRow("Mã nhân viên:", txtMaNV, UIUtils.FONT_LABEL_BOLD, 98);
 		JPanel dongMatKhau = UIUtils.createInputRow("Mật khẩu:", txtMatKhau, UIUtils.FONT_LABEL_BOLD, 76);
@@ -152,7 +152,7 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		pnTitleSearch.add(lbTitleTimKiem);
 
 		// Ô nhập mã cần tìm
-		txtTimMa = UIUtils.createTextField(190, 34);
+		txtTimMa = UIUtils.createTextField(190, 34, "Ví dụ: nv01");
 
 		// Nhóm nút tìm kiếm và làm mới trên cùng 1 hàng ngang
 		JPanel pnBtnSearchWrap = new JPanel();

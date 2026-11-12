@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
@@ -29,6 +30,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -86,6 +88,7 @@ public class UIUtils {
 	private static final Color COLOR_TEXT_DARK = new Color(40, 24, 14);
 	private static final Color COLOR_INPUT_BORDER = new Color(185, 162, 140);
 	private static final Color COLOR_CARD_BORDER = new Color(155, 112, 78);
+	private static final Color COLOR_HINT_TEXT = new Color(150, 138, 126);
 
 	// ==================== HỖ TRỢ TẠO KHỐI CARD MƯỢT MÀ ====================
 	public static JPanel createCardPanel(Color bgColor, int radius, Insets padding) {
@@ -118,7 +121,19 @@ public class UIUtils {
 	}
 
 	public static JTextField createTXTThongTinCaTruc() {
-		JTextField txt = new JTextField();
+		return createTXTThongTinCaTruc(null);
+	}
+
+	public static JTextField createTXTThongTinCaTruc(String goiY) {
+		JTextField txt = new JTextField() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				if (getText().isEmpty()) {
+					veChuGoiY(g, goiY, getInsets(), getFont(), getHeight(), true);
+				}
+			}
+		};
 		txt.setOpaque(true);
 		txt.setBackground(COLOR_BG_INPUT);
 		txt.setFont(new Font(FONT_FAMILY, Font.PLAIN, 14));
@@ -218,8 +233,42 @@ public class UIUtils {
 		return label;
 	}
 
+	/**
+	 * Vẽ chữ gợi ý mờ trong ô nhập khi ô đang trống.
+	 * canGiua = true: canh giữa theo chiều dọc (ô một dòng).
+	 * canGiua = false: canh theo lề trên (ô nhiều dòng).
+	 */
+	private static void veChuGoiY(Graphics g, String goiY, Insets insets, Font font, int chieuCao, boolean canGiua) {
+		if (goiY == null || goiY.isEmpty() || font == null) {
+			return;
+		}
+		Graphics2D g2 = (Graphics2D) g.create();
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setColor(COLOR_HINT_TEXT);
+		Font fontGoiY = font.deriveFont(Font.PLAIN, Math.max(10f, font.getSize2D() - 2f));
+		g2.setFont(fontGoiY);
+		FontMetrics fm = g2.getFontMetrics();
+		int textY = canGiua
+				? (chieuCao - fm.getHeight()) / 2 + fm.getAscent()
+				: insets.top + fm.getAscent();
+		g2.drawString(goiY, insets.left, textY);
+		g2.dispose();
+	}
+
 	public static JTextField createTextField(Color bg, int width, int height) {
-		JTextField txt = new JTextField();
+		return createTextField(bg, width, height, null);
+	}
+
+	public static JTextField createTextField(Color bg, int width, int height, String goiY) {
+		JTextField txt = new JTextField() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				if (getText().isEmpty()) {
+					veChuGoiY(g, goiY, getInsets(), getFont(), getHeight(), true);
+				}
+			}
+		};
 		txt.setOpaque(true);
 		txt.setBackground(bg);
 		txt.setForeground(COLOR_TEXT_DARK);
@@ -235,11 +284,42 @@ public class UIUtils {
 	}
 
 	public static JTextField createTextField(int width, int height) {
-		return createTextField(COLOR_BG_INPUT, width, height);
+		return createTextField(COLOR_BG_INPUT, width, height, null);
+	}
+
+	public static JTextField createTextField(int width, int height, String goiY) {
+		return createTextField(COLOR_BG_INPUT, width, height, goiY);
+	}
+
+	public static JTextArea createTextAreaWithHint(String goiY) {
+		JTextArea txt = new JTextArea() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				if (getText().isEmpty()) {
+					veChuGoiY(g, goiY, getInsets(), getFont(), getHeight(), false);
+				}
+			}
+		};
+		txt.setLineWrap(true);
+		txt.setWrapStyleWord(true);
+		return txt;
 	}
 
 	public static JPasswordField createPasswordField(Color bg, int width, int height) {
-		JPasswordField txt = new JPasswordField();
+		return createPasswordField(bg, width, height, null);
+	}
+
+	public static JPasswordField createPasswordField(Color bg, int width, int height, String goiY) {
+		JPasswordField txt = new JPasswordField() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				if (getPassword().length == 0) {
+					veChuGoiY(g, goiY, getInsets(), getFont(), getHeight(), true);
+				}
+			}
+		};
 		txt.setOpaque(true);
 		txt.setBackground(bg);
 		txt.setForeground(COLOR_TEXT_DARK);
@@ -255,7 +335,11 @@ public class UIUtils {
 	}
 
 	public static JPasswordField createPasswordField(int width, int height) {
-		return createPasswordField(COLOR_BG_INPUT, width, height);
+		return createPasswordField(COLOR_BG_INPUT, width, height, null);
+	}
+
+	public static JPasswordField createPasswordField(int width, int height, String goiY) {
+		return createPasswordField(COLOR_BG_INPUT, width, height, goiY);
 	}
 
 	public static JComboBox<String> createComboBox(String[] items, int width, int height) {
@@ -417,14 +501,7 @@ public class UIUtils {
 				super.paintComponent(g);
 
 				if (getText().isEmpty()) {
-					Graphics2D gHint = (Graphics2D) g.create();
-					gHint.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					gHint.setColor(Color.GRAY);
-					gHint.setFont(font);
-					Insets insets = getInsets();
-					int textY = (getHeight() - gHint.getFontMetrics().getHeight()) / 2 + gHint.getFontMetrics().getAscent();
-					gHint.drawString(hintText, insets.left, textY);
-					gHint.dispose();
+					veChuGoiY(g, hintText, getInsets(), font, getHeight(), true);
 				}
 			}
 
@@ -454,14 +531,7 @@ public class UIUtils {
 				super.paintComponent(g);
 
 				if (getPassword().length == 0) {
-					Graphics2D gHint = (Graphics2D) g.create();
-					gHint.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					gHint.setColor(Color.GRAY);
-					gHint.setFont(font);
-					Insets insets = getInsets();
-					int textY = (getHeight() - gHint.getFontMetrics().getHeight()) / 2 + gHint.getFontMetrics().getAscent();
-					gHint.drawString(hintText, insets.left, textY);
-					gHint.dispose();
+					veChuGoiY(g, hintText, getInsets(), font, getHeight(), true);
 				}
 			}
 
@@ -672,14 +742,7 @@ public class UIUtils {
 				super.paintComponent(g);
 
 				if (getText().isEmpty()) {
-					Graphics2D gHint = (Graphics2D) g.create();
-					gHint.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					gHint.setColor(COLOR_GRAY);
-					gHint.setFont(font);
-					Insets insets = getInsets();
-					int textY = (getHeight() - gHint.getFontMetrics().getHeight()) / 2 + gHint.getFontMetrics().getAscent();
-					gHint.drawString(hintText, insets.left, textY);
-					gHint.dispose();
+					veChuGoiY(g, hintText, getInsets(), font, getHeight(), true);
 				}
 			}
 

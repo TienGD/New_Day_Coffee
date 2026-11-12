@@ -99,17 +99,17 @@ public class CaTrucCuaToiPanel extends JPanel {
 
 		// 1. Mã ca trực
 		lbMaCaTruc = UIUtils.createLbThongTinCaTruc("ID Ca trực: ");
-		txtMaCaTruc = UIUtils.createTXTThongTinCaTruc();
+		txtMaCaTruc = UIUtils.createTXTThongTinCaTruc("Ví dụ: CA001");
 		Box pnMaCaTruc = UIUtils.createRowCaTruc(lbMaCaTruc, txtMaCaTruc, labelSize, inputSize);
 
 		// 2. Tên nhân viên
 		lbTenNhanVien = UIUtils.createLbThongTinCaTruc("Nhân viên: ");
-		txtTenNhanVien = UIUtils.createTXTThongTinCaTruc();
+		txtTenNhanVien = UIUtils.createTXTThongTinCaTruc("Ví dụ: Nguyễn Văn A");
 		Box pnTenNhanVien = UIUtils.createRowCaTruc(lbTenNhanVien, txtTenNhanVien, labelSize, inputSize);
 
 		// 3. Ngày trực
 		lbNgayTruc = UIUtils.createLbThongTinCaTruc("Ngày trực: ");
-		txtNgayTruc = UIUtils.createTXTThongTinCaTruc();
+		txtNgayTruc = UIUtils.createTXTThongTinCaTruc("Ví dụ: 12-11-2026");
 		Box pnNgayTruc = UIUtils.createRowCaTruc(lbNgayTruc, txtNgayTruc, labelSize, inputSize);
 
 		// 4. Ca trực (JComboBox)
@@ -124,7 +124,7 @@ public class CaTrucCuaToiPanel extends JPanel {
 
 		// 6. Số lượng
 		lbSoLuong = UIUtils.createLbThongTinCaTruc("Số lượng: ");
-		txtSoLuong = UIUtils.createTXTThongTinCaTruc();
+		txtSoLuong = UIUtils.createTXTThongTinCaTruc("Ví dụ: 2");
 		Box pnSoLuong = UIUtils.createRowCaTruc(lbSoLuong, txtSoLuong, labelSize, inputSize);
 
 		// Thêm các thành phần vào cardRight theo thứ tự

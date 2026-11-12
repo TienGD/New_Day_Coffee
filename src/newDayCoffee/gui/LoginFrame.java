@@ -42,8 +42,8 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private JLabel lblQuenMatKhau;
 	private JLabel lblShowHidePass;
 	private boolean isPasswordVisible = false;
-	private String TaiKhoanNhap = "Tài khoản";
-	private String MatKhauNhap = "Mật khẩu";
+	private String TaiKhoanNhap = "Ví dụ: ql01 hoặc nv01";
+	private String MatKhauNhap = "Ví dụ: 123456";
 
 	// Thành phần giao diện Panel Quên mật khẩu
 	private CardLayout cardLayout;

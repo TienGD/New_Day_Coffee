@@ -116,9 +116,9 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		pnCot1.setLayout(new BoxLayout(pnCot1, BoxLayout.Y_AXIS));
 		pnCot1.setOpaque(false);
 
-		txtMaNV = UIUtils.createTextField(172, 34);
-		txtTenNV = UIUtils.createTextField(172, 34);
-		txtNgaySinh = UIUtils.createTextField(172, 34);
+		txtMaNV = UIUtils.createTextField(172, 34, "Ví dụ: nv01");
+		txtTenNV = UIUtils.createTextField(172, 34, "Ví dụ: Nguyễn Văn A");
+		txtNgaySinh = UIUtils.createTextField(172, 34, "Ví dụ: 01-01-2000");
 		txtNgaySinh.setToolTipText("Định dạng dd-MM-yyyy");
 
 		pnCot1.add(UIUtils.createInputRow("Mã nhân viên:", txtMaNV, fontLabel, 96));
@@ -132,8 +132,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		pnCot2.setLayout(new BoxLayout(pnCot2, BoxLayout.Y_AXIS));
 		pnCot2.setOpaque(false);
 
-		txtSDT = UIUtils.createTextField(172, 34);
-		txtEmail = UIUtils.createTextField(172, 34);
+		txtSDT = UIUtils.createTextField(172, 34, "Ví dụ: 0901234567");
+		txtEmail = UIUtils.createTextField(172, 34, "Ví dụ: nv01@email.com");
 
 		String[] dsChucVu = {"Thu ngân", "Pha chế", "Quản lí"};
 		cboChucVu = UIUtils.createComboBox(dsChucVu, 172, 34);
@@ -208,8 +208,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		JLabel lbTitleTimKiem = UIUtils.createSearchTitle("TÌM KIẾM NHÂN VIÊN");
 		pnTitleSearch.add(lbTitleTimKiem);
 
-		txtTimMa = UIUtils.createTextField(190, 34);
-		txtTimTen = UIUtils.createTextField(190, 34);
+		txtTimMa = UIUtils.createTextField(190, 34, "Ví dụ: nv01");
+		txtTimTen = UIUtils.createTextField(190, 34, "Ví dụ: Nguyễn");
 
 		// Đặt 2 nút trên cùng 1 hàng ngang cố định, không bị rớt dòng hay cắt chữ
 		JPanel pnBtnSearchWrap = new JPanel();

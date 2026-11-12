@@ -35,8 +35,8 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 	private JButton btnXacNhan;
 	private JButton btnQuayLai;
 
-	private String EmailNhap = "Nhập email nhân viên";
-	private String MatKhauMoiNhap = "Nhập mật khẩu mới";
+	private String EmailNhap = "Ví dụ: nv01@newdaycoffee.vn";
+	private String MatKhauMoiNhap = "Ví dụ: 123456";
 	private ActionListener suKienQuayLai;
 
 	public QuenMatKhauPanel(ActionListener suKienQuayLai) {

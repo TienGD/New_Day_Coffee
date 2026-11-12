@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,9 +41,9 @@ import newDayCoffee.utils.UIUtils;
  * Màn hình bán hàng (POS).
  *
  * Panel nhận DSDoUongBUS để hiển thị thực đơn và ChiTietHoaDonBUS để quản lý giỏ hàng.
- * Mọi sự kiện đều dùng ActionListener.
+ * Các thao tác bấm nút dùng ActionListener; ô số lượng cập nhật thêm khi mất focus.
  */
-public class BanHangPOSPanel extends JPanel implements ActionListener {
+public class BanHangPOSPanel extends JPanel implements ActionListener, FocusListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
 	private JTextField txtTimKiem;
@@ -54,7 +56,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	private JButton btnThanhToan;
 	private JTextArea txtGhiChu;
 
-	private String HintTimKiem = "Tìm kiếm món";
+	private String HintTimKiem = "Ví dụ: cof01";
 	private String nhomDangLoc = "Tất cả";
 
 	// Ô số lượng trên từng thẻ món
@@ -192,9 +194,9 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		lbGhiChu.setForeground(new Color(242, 232, 220));
 		pnGhiChuContainer.add(lbGhiChu, BorderLayout.NORTH);
 
-		txtGhiChu = new JTextArea(3, 20);
-		txtGhiChu.setLineWrap(true);
-		txtGhiChu.setWrapStyleWord(true);
+		txtGhiChu = UIUtils.createTextAreaWithHint("Ví dụ: ít đá, không đường...");
+		txtGhiChu.setRows(3);
+		txtGhiChu.setColumns(20);
 		txtGhiChu.setBackground(UIUtils.COLOR_BG_INPUT);
 		txtGhiChu.setForeground(new Color(40, 24, 14));
 		txtGhiChu.setFont(new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 13));
@@ -300,6 +302,29 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 			themMon(lenh.substring(5));
 		} else if (lenh != null && lenh.startsWith("GIAM:")) {
 			botMon(lenh.substring(5));
+		} else if (nguon instanceof JTextField
+				&& ((JTextField) nguon).getClientProperty("maMon") != null) {
+			capNhatSoLuongTuO((JTextField) nguon);
+		}
+	}
+
+	@Override
+	public void focusGained(FocusEvent e) {
+		if (e.getSource() instanceof JTextField) {
+			JTextField txt = (JTextField) e.getSource();
+			if (txt.getClientProperty("maMon") != null) {
+				txt.selectAll();
+			}
+		}
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		if (e.getSource() instanceof JTextField) {
+			JTextField txt = (JTextField) e.getSource();
+			if (txt.getClientProperty("maMon") != null) {
+				capNhatSoLuongTuO(txt);
+			}
 		}
 	}
 
@@ -325,6 +350,58 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		}
 	}
 
+	/**
+	 * Cập nhật giỏ hàng theo số lượng người dùng gõ tay trên thẻ món.
+	 * Ô trống hoặc không phải số nguyên không âm sẽ được khôi phục về giá trị cũ.
+	 */
+	private void capNhatSoLuongTuO(JTextField txtSoLuong) {
+		Object maMonValue = txtSoLuong.getClientProperty("maMon");
+		if (!(maMonValue instanceof String)) {
+			return;
+		}
+		String maMon = (String) maMonValue;
+
+		ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(maMon);
+		int soLuongHienTai = (dong == null) ? 0 : dong.getSoLuong();
+
+		int soLuongMoi;
+		try {
+			soLuongMoi = Integer.parseInt(txtSoLuong.getText().trim());
+		} catch (NumberFormatException e) {
+			soLuongMoi = -1;
+		}
+
+		if (soLuongMoi < 0) {
+			txtSoLuong.setText(String.valueOf(soLuongHienTai));
+			return;
+		}
+		if (soLuongMoi == soLuongHienTai) {
+			if (!txtSoLuong.getText().trim().equals(String.valueOf(soLuongHienTai))) {
+				txtSoLuong.setText(String.valueOf(soLuongHienTai));
+			}
+			return;
+		}
+
+		if (dong == null && soLuongMoi > 0) {
+			DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+			if (doUong == null) {
+				txtSoLuong.setText("0");
+				return;
+			}
+			ChiTietHoaDonDTO chiTiet = new ChiTietHoaDonDTO();
+			chiTiet.setDoUong(doUong);
+			chiTiet.setSoLuong(soLuongMoi);
+			chiTiet.setDonGia(doUong.getDonGia());
+			chiTietHoaDonBUS.themChiTiet(chiTiet);
+		} else {
+			chiTietHoaDonBUS.capNhatSoLuong(maMon, soLuongMoi);
+		}
+		capNhatGioHang();
+		if (txtSoLuong.isFocusOwner()) {
+			txtSoLuong.setCaretPosition(txtSoLuong.getText().length());
+		}
+	}
+
 	// ==================== KHU VỰC CẬP NHẬT GIAO DIỆN ====================
 	/** Nạp lại danh sách thẻ món theo từ khóa và nhóm đang chọn. */
 	public void capNhatDanhSachMon() {
@@ -338,7 +415,11 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 					mon.getMoTa(), UIUtils.dinhDangTien(mon.getDonGia()), this);
 			Object o = card.getClientProperty("txtSoLuong");
 			if (o instanceof JTextField) {
-				oSoLuong.put(mon.getMaMon(), (JTextField) o);
+				JTextField txtSoLuong = (JTextField) o;
+				txtSoLuong.putClientProperty("maMon", mon.getMaMon());
+				txtSoLuong.addActionListener(this);
+				txtSoLuong.addFocusListener(this);
+				oSoLuong.put(mon.getMaMon(), txtSoLuong);
 			}
 			pnGridMon.add(card);
 		}
@@ -423,7 +504,12 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		}
 
 		if (mainFrame != null) {
-			mainFrame.switchCard("Thanh toán");
+			mainFrame.moThanhToan(txtGhiChu.getText());
 		}
+	}
+
+	/** Xóa ghi chú của đơn hàng sau khi đã thanh toán xong. */
+	public void xoaGhiChu() {
+		txtGhiChu.setText("");
 	}
 }
