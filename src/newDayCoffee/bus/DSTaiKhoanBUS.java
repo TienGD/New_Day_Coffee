@@ -5,13 +5,13 @@ import java.util.List;
 
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
-import newDayCoffee.utils.Validator;
 
 /**
  * Xử lý nghiệp vụ tài khoản đăng nhập.
  *
  * Lớp này chỉ quản lý cặp mã nhân viên - mật khẩu.
  * Thông tin cá nhân của nhân viên nằm ở NhanVienBUS.
+ * Việc kiểm tra dữ liệu form do giao diện thực hiện.
  */
 public class DSTaiKhoanBUS {
 
@@ -30,7 +30,7 @@ public class DSTaiKhoanBUS {
 
     /** Tìm tài khoản theo mã nhân viên (không phân biệt hoa thường). */
     public TaiKhoanDTO timTheoMa(String maNV) {
-        String ma = Validator.chuanHoa(maNV);
+        String ma = chuanHoa(maNV);
         for (TaiKhoanDTO tk : dsTaiKhoan) {
             if (tk.getMaNV().getMaNV().equalsIgnoreCase(ma)) {
                 return tk;
@@ -40,11 +40,7 @@ public class DSTaiKhoanBUS {
     }
 
     /** Kiểm tra thông tin đăng nhập. */
-    public String kiemTraDangNhap(String maNV, String matKhau) {
-        String loi = Validator.kiemTraDangNhap(maNV, matKhau);
-        if (loi != null) {
-            return loi;
-        }
+    public String xacThucDangNhap(String maNV, String matKhau) {
         TaiKhoanDTO tk = timTheoMa(maNV);
         if (tk == null || !tk.getMatKhau().equals(matKhau)) {
             return "Mã nhân viên hoặc mật khẩu không đúng.";
@@ -59,21 +55,12 @@ public class DSTaiKhoanBUS {
     // ==================== KHU VỰC THÊM / XÓA TÀI KHOẢN ====================
     /** Thêm tài khoản mới. Bỏ trống mật khẩu thì dùng mật khẩu mặc định. */
     public String themTaiKhoan(String maNV, String matKhau) {
-        String loi = Validator.kiemTraMaNV(maNV);
-        if (loi != null) {
-            return loi;
-        }
         if (timTheoMa(maNV) != null) {
             return "Tài khoản cho mã nhân viên này đã tồn tại.";
         }
 
-        String mk = Validator.rong(matKhau) ? "123456" : matKhau;
-        loi = Validator.kiemTraMatKhau(mk);
-        if (loi != null) {
-            return loi;
-        }
-
-        TaiKhoanDTO tk = new TaiKhoanDTO(new NhanVienDTO(Validator.chuanHoa(maNV)), mk);
+        String mk = chuanHoa(matKhau).isEmpty() ? "123456" : matKhau;
+        TaiKhoanDTO tk = new TaiKhoanDTO(new NhanVienDTO(chuanHoa(maNV)), mk);
         dsTaiKhoan.add(tk);
         return null;
     }
@@ -99,11 +86,11 @@ public class DSTaiKhoanBUS {
         if (tk == null) {
             return "Không tìm thấy tài khoản cần đổi mật khẩu.";
         }
-        String loi = Validator.kiemTraMatKhau(matKhauMoi);
-        if (loi != null) {
-            return loi;
-        }
         tk.setMatKhau(matKhauMoi);
         return null;
+    }
+
+    private static String chuanHoa(String giaTri) {
+        return giaTri == null ? "" : giaTri.trim();
     }
 }

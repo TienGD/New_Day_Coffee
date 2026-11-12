@@ -27,6 +27,7 @@ import javax.swing.border.EmptyBorder;
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.NhanVienBUS;
 import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Validator;
 
 public class LoginFrame extends JFrame implements ActionListener {
 
@@ -351,8 +352,35 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	// ==================== KHU VỰC XỬ LÝ ĐĂNG NHẬP ====================
 	private void xuLyDangNhap() {
-		String maNV = txtMa.getText();
-		String matKhau = new String(passMatKhau.getPassword());
+		String maNV = txtMa.getText().trim();
+		String matKhau = new String(passMatKhau.getPassword()).trim();
+
+		if (maNV.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.",
+					"Đăng nhập thất bại", JOptionPane.WARNING_MESSAGE);
+			txtMa.requestFocusInWindow();
+			return;
+		}
+		if (!maNV.matches(Validator.MA_NHAN_VIEN)) {
+			JOptionPane.showMessageDialog(this,
+					"Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).",
+					"Đăng nhập thất bại", JOptionPane.WARNING_MESSAGE);
+			txtMa.requestFocusInWindow();
+			return;
+		}
+		if (matKhau.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu.",
+					"Đăng nhập thất bại", JOptionPane.WARNING_MESSAGE);
+			passMatKhau.requestFocusInWindow();
+			return;
+		}
+		if (!matKhau.matches(Validator.MAT_KHAU)) {
+			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự.",
+					"Đăng nhập thất bại", JOptionPane.WARNING_MESSAGE);
+			passMatKhau.setText("");
+			passMatKhau.requestFocusInWindow();
+			return;
+		}
 
 		String loi = nhanVienBUS.dangNhap(maNV, matKhau);
 		if (loi != null) {
@@ -368,8 +396,34 @@ public class LoginFrame extends JFrame implements ActionListener {
 	}
 
 	private void xuLyDatLaiMatKhau() {
-		String email = txtEmailQuenMK.getText();
-		String matKhauMoi = new String(passMatKhauMoi.getPassword());
+		String email = txtEmailQuenMK.getText().trim();
+		String matKhauMoi = new String(passMatKhauMoi.getPassword()).trim();
+
+		if (email.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập email nhân viên.",
+					"Đặt lại mật khẩu thất bại", JOptionPane.WARNING_MESSAGE);
+			txtEmailQuenMK.requestFocusInWindow();
+			return;
+		}
+		if (!email.matches(Validator.EMAIL)) {
+			JOptionPane.showMessageDialog(this,
+					"Email không đúng định dạng (ví dụ ten@gmail.com).",
+					"Đặt lại mật khẩu thất bại", JOptionPane.WARNING_MESSAGE);
+			txtEmailQuenMK.requestFocusInWindow();
+			return;
+		}
+		if (matKhauMoi.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu mới.",
+					"Đặt lại mật khẩu thất bại", JOptionPane.WARNING_MESSAGE);
+			passMatKhauMoi.requestFocusInWindow();
+			return;
+		}
+		if (!matKhauMoi.matches(Validator.MAT_KHAU)) {
+			JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.",
+					"Đặt lại mật khẩu thất bại", JOptionPane.WARNING_MESSAGE);
+			passMatKhauMoi.requestFocusInWindow();
+			return;
+		}
 
 		String loi = nhanVienBUS.datLaiMatKhau(email, matKhauMoi);
 		if (loi != null) {

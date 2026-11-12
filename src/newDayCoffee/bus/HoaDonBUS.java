@@ -6,21 +6,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.utils.Auth;
-import newDayCoffee.utils.Validator;
 
 /**
  * Xử lý nghiệp vụ của một phiên bán hàng (giỏ hàng và thanh toán).
  *
  * Lớp này nhận DSHoaDonBUS để lưu hóa đơn và NhanVienBUS để lấy thông tin
- * nhân viên. Mọi kiểm tra dữ liệu đều đi qua Validator.
+ * nhân viên. Việc kiểm tra dữ liệu thanh toán do giao diện thực hiện.
  */
 public class HoaDonBUS {
 
@@ -45,7 +46,7 @@ public class HoaDonBUS {
 
     /** Tìm một dòng trong giỏ hàng theo mã món. */
     public ChiTietHoaDonDTO timTrongGio(String maMon) {
-        String ma = Validator.chuanHoa(maMon);
+        String ma = chuanHoa(maMon);
         for (ChiTietHoaDonDTO dong : gioHang) {
             if (dong.getMaMon().equalsIgnoreCase(ma)) {
                 return dong;
@@ -64,7 +65,7 @@ public class HoaDonBUS {
 
     /** Thêm một món với số lượng chỉ định. */
     public boolean themMon(DoUongDTO doUong, int soLuong) {
-        if (doUong == null || Validator.kiemTraSoLuong(soLuong) != null) {
+        if (doUong == null || soLuong <= 0) {
             return false;
         }
 
@@ -143,37 +144,23 @@ public class HoaDonBUS {
     }
 
     // ==================== KHU VỰC THANH TOÁN ====================
-    /** Kiểm tra thông tin thanh toán trước khi lập hóa đơn. */
-    public String kiemTraThanhToan(String tienKhachDuaText, String phuongThucTT) {
-        if (gioHangRong()) {
-            return "Đơn hàng chưa có món nào để thanh toán.";
-        }
-        double tienKhachDua = Validator.docSoTien(tienKhachDuaText);
-        if (tienKhachDua < 0) {
-            return "Tiền khách đưa không hợp lệ.";
-        }
-        return Validator.kiemTraThanhToan(tongTien(), tienKhachDua, phuongThucTT);
-    }
-
     /** Lập hóa đơn cho giỏ hàng hiện tại và lưu vào DSHoaDonBUS. */
-    public String thanhToan(String tienKhachDuaText, String phuongThucTT, String ghiChu) {
+    public String thanhToan(double tienKhachDua, String ghiChu) {
         hoaDonVuaTao = null;
 
-        String loi = kiemTraThanhToan(tienKhachDuaText, phuongThucTT);
-        if (loi != null) {
-            return loi;
+        if (gioHangRong()) {
+            return "Đơn hàng chưa có món nào để thanh toán.";
         }
         if (!Auth.isDangNhap()) {
             return "Vui lòng đăng nhập trước khi thanh toán.";
         }
 
-        double tienKhachDua = Validator.docSoTien(tienKhachDuaText);
         HoaDonDTO hoaDon = new HoaDonDTO();
         hoaDon.setMaHD(dsHoaDonBUS.taoMaHoaDon());
         hoaDon.setNgayLap(LocalDate.now());
         hoaDon.setMaNV(Auth.getNguoiDung());
         hoaDon.setTienKhachDua(tienKhachDua);
-        hoaDon.setGhiChu(Validator.chuanHoa(ghiChu));
+        hoaDon.setGhiChu(chuanHoa(ghiChu));
         hoaDon.setTrangThai("Đã thanh toán");
 
         // Sao chép giỏ hàng sang chi tiết hóa đơn để giỏ hàng có thể dùng tiếp
@@ -213,7 +200,7 @@ public class HoaDonBUS {
         noiDung.append("      HÓA ĐƠN THANH TOÁN\n");
         noiDung.append("------------------------------------------\n");
         noiDung.append("Mã hóa đơn : ").append(hoaDon.getMaHD()).append("\n");
-        noiDung.append("Ngày lập   : ").append(Validator.dinhDangNgay(hoaDon.getNgayLap())).append("\n");
+        noiDung.append("Ngày lập   : ").append(dinhDangNgay(hoaDon.getNgayLap())).append("\n");
         noiDung.append("Nhân viên  : ").append(tenNhanVien(hoaDon.getMaNV())).append("\n");
         noiDung.append("------------------------------------------\n");
 
@@ -232,7 +219,7 @@ public class HoaDonBUS {
         noiDung.append("Tiền thối  : ").append(dinhDangTien(tienThoi)).append("\n");
         noiDung.append("Trạng thái : ").append(hoaDon.getTrangThai()).append("\n");
 
-        if (!Validator.rong(hoaDon.getGhiChu())) {
+        if (!chuanHoa(hoaDon.getGhiChu()).isEmpty()) {
             noiDung.append("Ghi chú    : ").append(hoaDon.getGhiChu()).append("\n");
         }
 
@@ -263,7 +250,7 @@ public class HoaDonBUS {
         if (nhanVien == null) {
             return "";
         }
-        if (!Validator.rong(nhanVien.getTenNV())) {
+        if (!chuanHoa(nhanVien.getTenNV()).isEmpty()) {
             return nhanVien.getTenNV();
         }
         NhanVienDTO timThay = nhanVienBUS.timTheoMa(nhanVien.getMaNV());
@@ -276,11 +263,22 @@ public class HoaDonBUS {
     // ==================== KHU VỰC ĐỊNH DẠNG ====================
     /** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
     public static String dinhDangTien(double soTien) {
-        return Validator.dinhDangTien(soTien);
+        return String.format(Locale.US, "%,.0f", soTien).replace(',', '.') + "Đ";
     }
 
     /** Định dạng tiền để đưa lên ô nhập: 15000 -> 15000. */
     public static String dinhDangTienNhap(double soTien) {
-        return Validator.dinhDangTienNhap(soTien);
+        return String.format(Locale.US, "%,.0f", soTien).replace(",", "");
+    }
+
+    private static String dinhDangNgay(LocalDate ngay) {
+        if (ngay == null) {
+            return "";
+        }
+        return ngay.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    }
+
+    private static String chuanHoa(String giaTri) {
+        return giaTri == null ? "" : giaTri.trim();
     }
 }

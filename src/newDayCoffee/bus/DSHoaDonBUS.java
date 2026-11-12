@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
-import newDayCoffee.utils.Validator;
 
 /**
  * Xử lý nghiệp vụ trên danh sách hóa đơn.
@@ -23,6 +23,8 @@ public class DSHoaDonBUS {
 
     private static final DateTimeFormatter DINH_DANG_MA =
             DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter DINH_DANG_NGAY =
+            DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public DSHoaDonBUS() {
         dsHoaDon = new ArrayList<>();
@@ -52,7 +54,7 @@ public class DSHoaDonBUS {
     /** Trả về bản sao chi tiết của một hóa đơn. */
     public List<ChiTietHoaDonDTO> layChiTiet(String maHD) {
         List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
-        String ma = Validator.chuanHoa(maHD);
+        String ma = chuanHoa(maHD);
         for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
             if (chiTiet.getMaHD().equalsIgnoreCase(ma)) {
                 ketQua.add(chiTiet);
@@ -62,7 +64,7 @@ public class DSHoaDonBUS {
     }
 
     public HoaDonDTO timTheoMa(String maHD) {
-        String ma = Validator.chuanHoa(maHD);
+        String ma = chuanHoa(maHD);
         for (HoaDonDTO hoaDon : dsHoaDon) {
             if (hoaDon.getMaHD().equalsIgnoreCase(ma)) {
                 return hoaDon;
@@ -207,11 +209,18 @@ public class DSHoaDonBUS {
     // ==================== KHU VỰC ĐỊNH DẠNG ====================
     /** Định dạng ngày hiển thị: dd-MM-yyyy. */
     public static String dinhDangNgay(LocalDate ngay) {
-        return Validator.dinhDangNgay(ngay);
+        if (ngay == null) {
+            return "";
+        }
+        return ngay.format(DINH_DANG_NGAY);
     }
 
     /** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
     public static String dinhDangTien(double soTien) {
-        return Validator.dinhDangTien(soTien);
+        return String.format(Locale.US, "%,.0f", soTien).replace(',', '.') + "Đ";
+    }
+
+    private static String chuanHoa(String giaTri) {
+        return giaTri == null ? "" : giaTri.trim();
     }
 }

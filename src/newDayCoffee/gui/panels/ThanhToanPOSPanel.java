@@ -510,7 +510,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	}
 
 	private void dieuChinhTien(double buocTien) {
-		double hienTai = Validator.docSoTien(txtKhachDua.getText());
+		double hienTai = docSoTien(txtKhachDua.getText());
 		if (hienTai < 0) {
 			hienTai = 0;
 		}
@@ -550,7 +550,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 	private void capNhatTienThua() {
 		double tongTien = hoaDonBUS.tongTien();
-		double khachDua = Validator.docSoTien(txtKhachDua.getText());
+		double khachDua = docSoTien(txtKhachDua.getText());
 		if (khachDua < 0) {
 			txtTienThua.setText("Tiền khách đưa không hợp lệ");
 			return;
@@ -566,6 +566,23 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 
 	private String dinhDangTienKhongDonVi(double soTien) {
 		return HoaDonBUS.dinhDangTien(soTien).replace("Đ", "");
+	}
+
+	/** Đọc số tiền người dùng nhập. Chấp nhận các dạng 15000, 15.000, 15,000. */
+	private double docSoTien(String chuoiTien) {
+		String s = chuoiTien == null ? "" : chuoiTien.trim();
+		if (s.isEmpty()) {
+			return -1;
+		}
+		s = s.replace("đ", "").replace("Đ", "").replace(" ", "");
+		if (!s.matches(Validator.SO_TIEN)) {
+			return -1;
+		}
+		try {
+			return Double.parseDouble(s.replace(".", "").replace(",", ""));
+		} catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	private void inHoaDon() {
@@ -602,8 +619,43 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 	}
 
 	private void thanhToan() {
-		String loi = hoaDonBUS.thanhToan(txtKhachDua.getText(), phuongThucDangChon,
-				txtGhiChu.getText());
+		if (hoaDonBUS.gioHangRong()) {
+			JOptionPane.showMessageDialog(this, "Đơn hàng chưa có món nào để thanh toán.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		if (phuongThucDangChon == null || phuongThucDangChon.trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng chọn phương thức thanh toán.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		String tienKhachDuaText = txtKhachDua.getText().trim();
+		if (tienKhachDuaText.isEmpty() || !tienKhachDuaText.matches(Validator.SO_TIEN)) {
+			JOptionPane.showMessageDialog(this, "Tiền khách đưa không hợp lệ.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			txtKhachDua.requestFocusInWindow();
+			return;
+		}
+
+		double tienKhachDua = docSoTien(tienKhachDuaText);
+		if (tienKhachDua < 0) {
+			JOptionPane.showMessageDialog(this, "Tiền khách đưa không hợp lệ.",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			txtKhachDua.requestFocusInWindow();
+			return;
+		}
+
+		double tongTien = hoaDonBUS.tongTien();
+		if (tienKhachDua < tongTien) {
+			JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ. Còn thiếu "
+					+ HoaDonBUS.dinhDangTien(tongTien - tienKhachDua) + ".",
+					"Thông báo", JOptionPane.WARNING_MESSAGE);
+			txtKhachDua.requestFocusInWindow();
+			return;
+		}
+
+		String loi = hoaDonBUS.thanhToan(tienKhachDua, txtGhiChu.getText());
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Thông báo", JOptionPane.WARNING_MESSAGE);
 			return;

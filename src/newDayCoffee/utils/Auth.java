@@ -42,7 +42,8 @@ public class Auth {
         if (nguoiDungHienTai == null) {
             return false;
         }
-        return Validator.laMaQuanLy(nguoiDungHienTai.getMaNV())
+        String maNV = nguoiDungHienTai.getMaNV();
+        return maNV != null && maNV.trim().toLowerCase().startsWith("ql")
                 && "Quản lí".equals(nguoiDungHienTai.getChucVu());
     }
 

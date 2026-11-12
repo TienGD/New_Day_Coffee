@@ -27,6 +27,7 @@ import javax.swing.table.DefaultTableModel;
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Validator;
 
 /**
  * Màn hình Quản lý tài khoản.
@@ -285,8 +286,27 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 	}
 
 	private void themTaiKhoan() {
-		String matKhau = new String(txtMatKhau.getPassword());
-		String loi = dsTaiKhoanBUS.themTaiKhoan(txtMaNV.getText(), matKhau);
+		String maNV = txtMaNV.getText().trim();
+		if (maNV.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.",
+					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		if (!maNV.matches(Validator.MA_NHAN_VIEN)) {
+			JOptionPane.showMessageDialog(this,
+					"Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).",
+					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		String matKhau = new String(txtMatKhau.getPassword()).trim();
+		if (!matKhau.isEmpty() && !matKhau.matches(Validator.MAT_KHAU)) {
+			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự.",
+					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		String loi = dsTaiKhoanBUS.themTaiKhoan(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -298,7 +318,19 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 
 	private void suaTaiKhoan() {
 		String maNV = layMaDangChon();
-		String matKhau = new String(txtMatKhau.getPassword());
+		if (maNV.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần sửa.",
+					"Không thể sửa tài khoản", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		String matKhau = new String(txtMatKhau.getPassword()).trim();
+		if (!matKhau.matches(Validator.MAT_KHAU)) {
+			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự.",
+					"Không thể sửa tài khoản", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
 		String loi = dsTaiKhoanBUS.doiMatKhau(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể sửa tài khoản", JOptionPane.ERROR_MESSAGE);

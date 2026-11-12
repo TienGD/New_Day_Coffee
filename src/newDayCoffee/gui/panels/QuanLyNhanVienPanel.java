@@ -10,6 +10,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.List;
 
 import javax.swing.Box;
@@ -32,6 +36,7 @@ import javax.swing.table.DefaultTableModel;
 import newDayCoffee.bus.NhanVienBUS;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Validator;
 
 public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListSelectionListener {
 
@@ -349,10 +354,16 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	}
 
 	private void themNhanVien() {
-		NhanVienDTO nhanVien = taoNhanVienTuForm();
-		String loi = nhanVienBUS.themNhanVien(nhanVien);
+		String loi = kiemTraDuLieuNhanVien();
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		NhanVienDTO nhanVien = taoNhanVienTuForm();
+		String ketQua = nhanVienBUS.themNhanVien(nhanVien);
+		if (ketQua != null) {
+			JOptionPane.showMessageDialog(this, ketQua, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		JOptionPane.showMessageDialog(this, "Đã thêm nhân viên. Mật khẩu mặc định: 123456",
@@ -361,14 +372,105 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	}
 
 	private void suaNhanVien() {
-		NhanVienDTO nhanVien = taoNhanVienTuForm();
-		String loi = nhanVienBUS.suaNhanVien(nhanVien);
+		String loi = kiemTraDuLieuNhanVien();
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể sửa nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+
+		NhanVienDTO nhanVien = taoNhanVienTuForm();
+		String ketQua = nhanVienBUS.suaNhanVien(nhanVien);
+		if (ketQua != null) {
+			JOptionPane.showMessageDialog(this, ketQua, "Không thể sửa nhân viên", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		JOptionPane.showMessageDialog(this, "Đã cập nhật nhân viên.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
 		capNhatBang();
+	}
+
+	/** Kiểm tra dữ liệu form nhân viên trước khi thêm hoặc sửa. */
+	private String kiemTraDuLieuNhanVien() {
+		String maNV = txtMaNV.getText().trim();
+		if (maNV.isEmpty()) {
+			return "Vui lòng nhập mã nhân viên.";
+		}
+		if (!maNV.matches(Validator.MA_NHAN_VIEN)) {
+			return "Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).";
+		}
+
+		String tenNV = txtTenNV.getText().trim();
+		if (tenNV.isEmpty()) {
+			return "Vui lòng nhập tên nhân viên.";
+		}
+		if (tenNV.length() < 2 || tenNV.length() > 50) {
+			return "Tên nhân viên phải có từ 2 đến 50 ký tự.";
+		}
+		if (tenNV.matches(".*\\d.*")) {
+			return "Tên nhân viên không được chứa chữ số.";
+		}
+		String[] dsTu = tenNV.split(" ");
+		for (int i = 0; i < dsTu.length; i++) {
+			if (dsTu[i].isEmpty() || !Character.isUpperCase(dsTu[i].charAt(0))) {
+				return "Tên nhân viên phải viết hoa chữ cái đầu mỗi từ và cách nhau bằng một khoảng trắng.";
+			}
+		}
+
+		String ngaySinhText = txtNgaySinh.getText().trim();
+		if (!ngaySinhText.matches(Validator.NGAY_SINH)) {
+			return "Ngày sinh không hợp lệ (định dạng dd-MM-yyyy).";
+		}
+		LocalDate ngaySinh = docNgay(ngaySinhText);
+		if (ngaySinh == null) {
+			return "Ngày sinh không hợp lệ (định dạng dd-MM-yyyy).";
+		}
+		if (ngaySinh.isAfter(LocalDate.now())) {
+			return "Ngày sinh không được lớn hơn ngày hiện tại.";
+		}
+		if (ngaySinh.getYear() < 1900) {
+			return "Năm sinh phải từ 1900 trở lại đây.";
+		}
+
+		String sdt = txtSDT.getText().trim().replace(" ", "").replace("-", "");
+		if (sdt.isEmpty()) {
+			return "Vui lòng nhập số điện thoại.";
+		}
+		if (!sdt.matches(Validator.SO_DIEN_THOAI)) {
+			return "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng 0.";
+		}
+
+		String email = txtEmail.getText().trim();
+		if (!email.isEmpty() && !email.matches(Validator.EMAIL)) {
+			return "Email không đúng định dạng (ví dụ ten@gmail.com).";
+		}
+
+		String ma = maNV.toLowerCase();
+		String chucVu = layChucVu();
+		if (ma.startsWith("ql") && !chucVu.equals("Quản lí")) {
+			return "Mã nhân viên bắt đầu bằng ql phải có chức vụ Quản lí.";
+		}
+		if (ma.startsWith("nv") && chucVu.equals("Quản lí")) {
+			return "Mã nhân viên bắt đầu bằng nv không được có chức vụ Quản lí.";
+		}
+		return null;
+	}
+
+	/** Đọc ngày sinh với các định dạng dd-MM-yyyy, dd/MM/yyyy, yyyy-MM-dd. */
+	private LocalDate docNgay(String chuoiNgay) {
+		String s = chuoiNgay == null ? "" : chuoiNgay.trim();
+		if (s.isEmpty()) {
+			return null;
+		}
+		String[] dsDinhDang = {"d-M-uuuu", "d/M/uuuu", "uuuu-M-d"};
+		for (int i = 0; i < dsDinhDang.length; i++) {
+			try {
+				DateTimeFormatter dinhDang = DateTimeFormatter.ofPattern(dsDinhDang[i])
+						.withResolverStyle(ResolverStyle.STRICT);
+				return LocalDate.parse(s, dinhDang);
+			} catch (DateTimeParseException e) {
+				// Thử định dạng tiếp theo
+			}
+		}
+		return null;
 	}
 
 	private void xoaNhanVien() {
@@ -420,8 +522,9 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	}
 
 	private NhanVienDTO taoNhanVienTuForm() {
+		LocalDate ngaySinh = docNgay(txtNgaySinh.getText());
 		return nhanVienBUS.taoNhanVienTuForm(txtMaNV.getText(), txtTenNV.getText(),
-				txtNgaySinh.getText(), txtSDT.getText(), txtEmail.getText(),
+				ngaySinh, txtSDT.getText(), txtEmail.getText(),
 				layChucVu(), layGioiTinh());
 	}
 

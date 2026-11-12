@@ -5,13 +5,13 @@ import java.util.List;
 
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.utils.Auth;
-import newDayCoffee.utils.Validator;
 
 /**
  * Xử lý nghiệp vụ trên danh sách đồ uống.
  *
  * Dữ liệu hiện được lưu trong bộ nhớ. Khi DAO hoàn thiện chỉ cần thay
  * phần luuVaoCSDL() là có thể nối cơ sở dữ liệu.
+ * Việc kiểm tra dữ liệu form do giao diện thực hiện.
  */
 public class DSDoUongBUS {
 
@@ -31,7 +31,7 @@ public class DSDoUongBUS {
     }
 
     public DoUongDTO timTheoMa(String maMon) {
-        String ma = Validator.chuanHoa(maMon);
+        String ma = chuanHoa(maMon);
         for (DoUongDTO du : dsDoUong) {
             if (du.getMaMon().equalsIgnoreCase(ma)) {
                 return du;
@@ -45,7 +45,7 @@ public class DSDoUongBUS {
         if (du == null) {
             return "Khác";
         }
-        String ma = Validator.chuanHoa(du.getMaMon()).toLowerCase();
+        String ma = chuanHoa(du.getMaMon()).toLowerCase();
         if (ma.startsWith("cof")) {
             return "Cà phê";
         }
@@ -90,7 +90,7 @@ public class DSDoUongBUS {
      * 3. Khớp một phần mã hoặc tên món.
      */
     private List<DoUongDTO> locTheoTuKhoa(String tuKhoa, String nhom) {
-        String khoa = Validator.chuanHoa(tuKhoa).toLowerCase();
+        String khoa = chuanHoa(tuKhoa).toLowerCase();
         String nhomChuan = chuanHoaNhom(nhom);
         List<DoUongDTO> ketQua = new ArrayList<>();
 
@@ -115,7 +115,7 @@ public class DSDoUongBUS {
         if (!tienTo.isEmpty()) {
             for (DoUongDTO du : dsDoUong) {
                 boolean dungNhom = nhomChuan.equals("Tất cả") || layNhom(du).equals(nhomChuan);
-                if (dungNhom && Validator.chuanHoa(du.getMaMon()).toLowerCase().startsWith(tienTo)) {
+                if (dungNhom && chuanHoa(du.getMaMon()).toLowerCase().startsWith(tienTo)) {
                     ketQua.add(du);
                 }
             }
@@ -124,8 +124,8 @@ public class DSDoUongBUS {
 
         for (DoUongDTO du : dsDoUong) {
             boolean dungNhom = nhomChuan.equals("Tất cả") || layNhom(du).equals(nhomChuan);
-            boolean dungMa = Validator.chuanHoa(du.getMaMon()).toLowerCase().contains(khoa);
-            boolean dungTen = Validator.chuanHoa(du.getTenMon()).toLowerCase().contains(khoa);
+            boolean dungMa = chuanHoa(du.getMaMon()).toLowerCase().contains(khoa);
+            boolean dungTen = chuanHoa(du.getTenMon()).toLowerCase().contains(khoa);
             if (dungNhom && (dungMa || dungTen)) {
                 ketQua.add(du);
             }
@@ -145,7 +145,7 @@ public class DSDoUongBUS {
     }
 
     private String chuanHoaNhom(String nhom) {
-        String n = Validator.chuanHoa(nhom);
+        String n = chuanHoa(nhom);
         if (n.isEmpty() || n.equalsIgnoreCase("Tất cả")) {
             return "Tất cả";
         }
@@ -159,44 +159,33 @@ public class DSDoUongBUS {
     }
 
     // ==================== KHU VỰC THÊM / SỬA / XÓA ====================
-    /** Thêm món mới sau khi kiểm tra dữ liệu và mã trùng. */
-    public String themDoUong(String maMon, String tenMon, String donGiaText, String moTa) {
+    /** Thêm món mới sau khi kiểm tra mã trùng. */
+    public String themDoUong(String maMon, String tenMon, double donGia, String moTa) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm món.";
-        }
-        String loi = doUongBUS.kiemTraThongTin(maMon, tenMon, donGiaText);
-        if (loi != null) {
-            return loi;
         }
         if (timTheoMa(maMon) != null) {
             return "Mã món đã tồn tại.";
         }
 
-        DoUongDTO du = doUongBUS.taoDoUong(maMon, tenMon, donGiaText, moTa);
-        if (du == null) {
-            return "Không thể tạo món mới.";
-        }
+        DoUongDTO du = doUongBUS.taoDoUong(maMon, tenMon, donGia, moTa);
         dsDoUong.add(du);
         return null;
     }
 
     /** Cập nhật tên, giá và mô tả của món đã có. */
-    public String suaDoUong(String maMon, String tenMon, String donGiaText, String moTa) {
+    public String suaDoUong(String maMon, String tenMon, double donGia, String moTa) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền sửa món.";
-        }
-        String loi = doUongBUS.kiemTraThongTin(maMon, tenMon, donGiaText);
-        if (loi != null) {
-            return loi;
         }
 
         DoUongDTO du = timTheoMa(maMon);
         if (du == null) {
             return "Không tìm thấy món cần sửa.";
         }
-        du.setTenMon(Validator.chuanHoa(tenMon));
-        du.setDonGia(Validator.docSoTien(donGiaText));
-        du.setMoTa(Validator.chuanHoa(moTa));
+        du.setTenMon(chuanHoa(tenMon));
+        du.setDonGia(donGia);
+        du.setMoTa(chuanHoa(moTa));
         return null;
     }
 
@@ -204,9 +193,6 @@ public class DSDoUongBUS {
     public String xoaDoUong(String maMon) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền xóa món.";
-        }
-        if (doUongBUS.kiemTraMaMon(maMon) != null) {
-            return "Vui lòng nhập mã món cần xóa.";
         }
         DoUongDTO du = timTheoMa(maMon);
         if (du == null) {
@@ -219,5 +205,9 @@ public class DSDoUongBUS {
     /** Lưu danh sách vào CSDL. Hiện dữ liệu vẫn nằm trong bộ nhớ. */
     public boolean luuVaoCSDL() {
         return true;
+    }
+
+    private static String chuanHoa(String giaTri) {
+        return giaTri == null ? "" : giaTri.trim();
     }
 }

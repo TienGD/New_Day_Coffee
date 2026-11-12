@@ -178,7 +178,7 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		if (o.equals(btnXacNhan)) {
-			String email = Validator.chuanHoa(txtEmail.getText());
+			String email = txtEmail.getText().trim();
 			String matKhauMoi = new String(passMatKhauMoi.getPassword()).trim();
 
 			if (email.isEmpty()) {
@@ -186,9 +186,8 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 				txtEmail.requestFocus();
 				return;
 			}
-			String loiEmail = Validator.kiemTraEmail(email);
-			if (loiEmail != null) {
-				JOptionPane.showMessageDialog(this, loiEmail, "Thông báo", JOptionPane.WARNING_MESSAGE);
+			if (!email.matches(Validator.EMAIL)) {
+				JOptionPane.showMessageDialog(this, "Email không đúng định dạng (ví dụ ten@gmail.com).", "Thông báo", JOptionPane.WARNING_MESSAGE);
 				txtEmail.requestFocus();
 				return;
 			}
@@ -197,7 +196,7 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 				passMatKhauMoi.requestFocus();
 				return;
 			}
-			if (matKhauMoi.length() < 6) {
+			if (!matKhauMoi.matches(Validator.MAT_KHAU)) {
 				JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.", "Thông báo", JOptionPane.WARNING_MESSAGE);
 				passMatKhauMoi.requestFocus();
 				return;

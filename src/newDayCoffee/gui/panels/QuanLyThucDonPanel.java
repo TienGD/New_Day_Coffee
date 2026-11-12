@@ -28,12 +28,13 @@ import newDayCoffee.bus.DSDoUongBUS;
 import newDayCoffee.bus.DoUongBUS;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Validator;
 
 /**
  * Màn hình quản lý thực đơn.
  *
- * Panel nhận DSDoUongBUS để thêm / sửa / xóa món. Việc kiểm tra dữ liệu và
- * quyền quản lí nằm trong tầng BUS, giao diện chỉ hiển thị thông báo trả về.
+ * Panel nhận DSDoUongBUS để thêm / sửa / xóa món. Việc kiểm tra dữ liệu form
+ * được thực hiện tại đây khi xử lý sự kiện; quyền quản lí nằm trong tầng BUS.
  */
 public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSelectionListener {
 
@@ -321,10 +322,18 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 	}
 
 	private void themMon() {
-		String loi = dsDoUongBUS.themDoUong(txtMaMon.getText(), txtTenMon.getText(),
-				txtDonGia.getText(), txtMoTa.getText());
+		String loi = kiemTraDuLieuMon();
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm món", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		String maMon = txtMaMon.getText().trim();
+		String tenMon = txtTenMon.getText().trim();
+		double donGia = docSoTien(txtDonGia.getText());
+		String ketQua = dsDoUongBUS.themDoUong(maMon, tenMon, donGia, txtMoTa.getText());
+		if (ketQua != null) {
+			JOptionPane.showMessageDialog(this, ketQua, "Không thể thêm món", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		JOptionPane.showMessageDialog(this, "Đã thêm món mới.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -333,14 +342,69 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 	}
 
 	private void suaMon() {
-		String loi = dsDoUongBUS.suaDoUong(txtMaMon.getText(), txtTenMon.getText(),
-				txtDonGia.getText(), txtMoTa.getText());
+		String loi = kiemTraDuLieuMon();
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể sửa món", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+
+		String maMon = txtMaMon.getText().trim();
+		String tenMon = txtTenMon.getText().trim();
+		double donGia = docSoTien(txtDonGia.getText());
+		String ketQua = dsDoUongBUS.suaDoUong(maMon, tenMon, donGia, txtMoTa.getText());
+		if (ketQua != null) {
+			JOptionPane.showMessageDialog(this, ketQua, "Không thể sửa món", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		JOptionPane.showMessageDialog(this, "Đã cập nhật món.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
 		capNhatBang();
+	}
+
+	/** Kiểm tra dữ liệu form thực đơn trước khi thêm hoặc sửa. */
+	private String kiemTraDuLieuMon() {
+		String maMon = txtMaMon.getText().trim();
+		if (maMon.isEmpty()) {
+			return "Vui lòng nhập mã món.";
+		}
+		if (!maMon.matches(Validator.MA_MON)) {
+			return "Mã món phải có đúng 5 ký tự, dạng cofXX, teaXX, milXX hoặc bakXX (ví dụ cof01).";
+		}
+
+		String tenMon = txtTenMon.getText().trim();
+		if (tenMon.isEmpty()) {
+			return "Vui lòng nhập tên món.";
+		}
+		if (tenMon.length() < 2 || tenMon.length() > 50) {
+			return "Tên món phải có từ 2 đến 50 ký tự.";
+		}
+
+		String donGiaText = txtDonGia.getText().trim();
+		if (donGiaText.isEmpty() || !donGiaText.matches(Validator.SO_TIEN)) {
+			return "Giá bán không hợp lệ.";
+		}
+		double donGia = docSoTien(donGiaText);
+		if (donGia <= 0) {
+			return "Giá bán phải lớn hơn 0.";
+		}
+		if (donGia > 10000000) {
+			return "Giá bán không được vượt quá 10.000.000Đ.";
+		}
+		return null;
+	}
+
+	/** Đọc số tiền người dùng nhập. Chấp nhận các dạng 15000, 15.000, 15,000. */
+	private double docSoTien(String chuoiTien) {
+		String s = chuoiTien == null ? "" : chuoiTien.trim();
+		s = s.replace("đ", "").replace("Đ", "").replace(" ", "");
+		if (!s.matches(Validator.SO_TIEN)) {
+			return -1;
+		}
+		try {
+			s = s.replace(".", "").replace(",", "");
+			return Double.parseDouble(s);
+		} catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	private void xoaMon() {
