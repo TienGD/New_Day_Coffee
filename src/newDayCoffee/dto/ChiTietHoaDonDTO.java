@@ -62,6 +62,10 @@ public class ChiTietHoaDonDTO {
         return doUong.getTenMon();
     }
 
+    public String getMoTa() {
+        return doUong.getMoTa();
+    }
+
     public int getSoLuong() {
         return soLuong;
     }

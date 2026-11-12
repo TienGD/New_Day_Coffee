@@ -209,9 +209,9 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 		pnOrderTop.add(pnGhiChuContainer, BorderLayout.CENTER);
 		pnRightCol.add(pnOrderTop, BorderLayout.NORTH);
 
-		// Bảng danh sách món đặt
-		String[] cotBang = {"STT", "Tên món", "SL", "Đơn giá", "Thành tiền", "Ghi chú"};
-		modelDonHang = new DefaultTableModel(cotBang, 0) {
+		// Bảng danh sách món đặt (chỉ đọc, không cho sửa trực tiếp trên bảng)
+		String[] tenCotDonHang = {"STT", "Tên món", "SL", "Đơn giá", "Thành tiền", "Mô tả"};
+		modelDonHang = new DefaultTableModel(tenCotDonHang, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 				return false;
@@ -221,12 +221,12 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 		tblDonHang = new JTable(modelDonHang);
 		JScrollPane scrollBang = UIUtils.createTableScrollPane(tblDonHang);
 		UIUtils.centerTableCells(tblDonHang);
-		tblDonHang.getColumnModel().getColumn(0).setPreferredWidth(42);
-		tblDonHang.getColumnModel().getColumn(1).setPreferredWidth(92);
-		tblDonHang.getColumnModel().getColumn(2).setPreferredWidth(36);
-		tblDonHang.getColumnModel().getColumn(3).setPreferredWidth(70);
-		tblDonHang.getColumnModel().getColumn(4).setPreferredWidth(82);
-		tblDonHang.getColumnModel().getColumn(5).setPreferredWidth(68);
+		tblDonHang.getColumnModel().getColumn(0).setPreferredWidth(34);
+		tblDonHang.getColumnModel().getColumn(1).setPreferredWidth(84);
+		tblDonHang.getColumnModel().getColumn(2).setPreferredWidth(30);
+		tblDonHang.getColumnModel().getColumn(3).setPreferredWidth(62);
+		tblDonHang.getColumnModel().getColumn(4).setPreferredWidth(74);
+		tblDonHang.getColumnModel().getColumn(5).setPreferredWidth(106);
 
 		pnRightCol.add(scrollBang, BorderLayout.CENTER);
 
@@ -437,13 +437,14 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 		List<ChiTietHoaDonDTO> gioHang = chiTietHoaDonBUS.layGioHang();
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
+			String moTa = dong.getMoTa();
 			modelDonHang.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
 				String.valueOf(dong.getSoLuong()),
 				UIUtils.dinhDangTien(dong.getDonGia()),
 				UIUtils.dinhDangTien(dong.getThanhTien()),
-				""
+				moTa == null ? "" : moTa
 			});
 			maMonTrongBang.add(dong.getMaMon());
 		}
