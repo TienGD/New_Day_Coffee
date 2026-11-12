@@ -395,11 +395,12 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener {
 		pnKeypadRight.add(pnGridPhim, gbcKey);
 
 		// Hàng nút In hóa đơn & Thanh toán
-		JPanel pnActionButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 0));
+		JPanel pnActionButtons = new JPanel(new GridLayout(1, 2, 14, 0));
 		pnActionButtons.setOpaque(false);
+		pnActionButtons.setBorder(new EmptyBorder(0, 8, 0, 20));
 
-		btnInHoaDon = UIUtils.taoNutPhang("In hóa đơn", mauXamNhat, new Color(42, 24, 14), fontDam, new Dimension(145, 48));
-		btnThanhToan = UIUtils.taoNutPhang("Thanh toán", mauXanhLaDam, Color.WHITE, fontDam, new Dimension(160, 48));
+		btnInHoaDon = UIUtils.taoNutPhang("In hóa đơn", mauXamNhat, new Color(42, 24, 14), fontDam, new Dimension(0, 48));
+		btnThanhToan = UIUtils.taoNutPhang("Thanh toán", mauXanhLaDam, Color.WHITE, fontDam, new Dimension(0, 48));
 
 		pnActionButtons.add(btnInHoaDon);
 		pnActionButtons.add(btnThanhToan);
