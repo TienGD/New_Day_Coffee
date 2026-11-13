@@ -16,6 +16,9 @@ public class Validator {
     public static final String MAT_KHAU = "^.{6,}$";
     public static final String SO_TIEN = "^\\d[\\d.,]*$";
     public static final String NGAY_SINH = "^\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}$|^\\d{4}-\\d{1,2}-\\d{1,2}$";
+    public static final String MA_CA_TRUC = "^CA[0-9]{2}$";
+    public static final String NGAY_TRUC = "^[0-9]{2}-[0-9]{2}-[0-9]{4}$";
+    public static final String SO_LUONG_CA_TRUC = "^[0-9]+$";
 
     private Validator() {
         // Lớp tiện ích, không cho phép khởi tạo

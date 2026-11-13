@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -16,9 +17,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.utils.UIUtils;
+import newDayCoffee.utils.Auth;
+import newDayCoffee.bus.DSCaTrucBUS;
+import newDayCoffee.dto.CaTrucDTO;
+import newDayCoffee.dto.ChiTietCaTrucDTO;
 
 public class CaTrucCuaToiPanel extends JPanel {
 
@@ -35,20 +42,29 @@ public class CaTrucCuaToiPanel extends JPanel {
 	private JTextField txtNgayTruc;
 	private JLabel lbCaTrucField;
 	private JComboBox<String> cbCaTruc;
-	private JLabel lbTrangThai;
-	private JComboBox<String> cbTrangThai;
 	private JLabel lbSoLuong;
 	private JTextField txtSoLuong;
 
+	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
+	private DSCaTrucBUS dsCaTrucBUS;
+
 	public CaTrucCuaToiPanel() {
 		taoGiaoDien();
+		khoaTruongThongTin();
+	}
+
+	public CaTrucCuaToiPanel(DSCaTrucBUS dsCaTrucBUS) {
+		this();
+		this.dsCaTrucBUS = dsCaTrucBUS;
+		ganSuKien();
+		capNhatDuLieu();
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
 	private void taoGiaoDien() {
 		setLayout(new BorderLayout());
 
-		// Panel chính chứa 2 cột (Danh sách bên trái rộng hơn để đủ 6 cột bảng, Thông tin bên phải)
+		// Panel chính chứa 2 cột (Danh sách bên trái rộng hơn, Thông tin bên phải)
 		JPanel pnMain = new JPanel(new GridBagLayout());
 		pnMain.setBackground(UIUtils.COLOR_BACKGROUND);
 		pnMain.setBorder(new EmptyBorder(22, 22, 22, 22));
@@ -65,7 +81,7 @@ public class CaTrucCuaToiPanel extends JPanel {
 		lbDanhSachCaTruc = UIUtils.createTitleLabel("DANH SÁCH CA TRỰC");
 		cardLeft.add(lbDanhSachCaTruc, BorderLayout.NORTH);
 
-		String[] headerTable = {"Mã ca trực", "Nhân viên", "Ca trực", "Ngày trực", "Số lượng", "Trạng thái"};
+		String[] headerTable = {"Mã ca trực", "Nhân viên", "Ca trực", "Ngày trực", "Số lượng"};
 		model = new DefaultTableModel(headerTable, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -76,13 +92,13 @@ public class CaTrucCuaToiPanel extends JPanel {
 		tbCaTruc.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 		tbCaTruc.setFillsViewportHeight(true);
 		JScrollPane panelCaTruc = UIUtils.createTableScrollPane(tbCaTruc);
-		UIUtils.centerTableCells(tbCaTruc, 0, 2, 3, 4, 5);
+		UIUtils.centerTableCells(tbCaTruc, 0, 2, 3, 4);
 
-		// Căn độ rộng từng cột để tiêu đề không bao giờ bị cắt "..."
-		int[] colWidths = {95, 115, 85, 95, 82, 105};
+		// Căn độ rộng tương ứng với 5 cột hiển thị.
+		int[] colWidths = {90, 110, 85, 90, 75};
 		for (int i = 0; i < colWidths.length; i++) {
 			tbCaTruc.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
-			tbCaTruc.getColumnModel().getColumn(i).setMinWidth(75);
+			tbCaTruc.getColumnModel().getColumn(i).setMinWidth(65);
 		}
 
 		cardLeft.add(panelCaTruc, BorderLayout.CENTER);
@@ -99,7 +115,7 @@ public class CaTrucCuaToiPanel extends JPanel {
 
 		// 1. Mã ca trực
 		lbMaCaTruc = UIUtils.createLbThongTinCaTruc("ID Ca trực: ");
-		txtMaCaTruc = UIUtils.createTXTThongTinCaTruc("Ví dụ: CA001");
+		txtMaCaTruc = UIUtils.createTXTThongTinCaTruc("Ví dụ: CA01");
 		Box pnMaCaTruc = UIUtils.createRowCaTruc(lbMaCaTruc, txtMaCaTruc, labelSize, inputSize);
 
 		// 2. Tên nhân viên
@@ -117,14 +133,9 @@ public class CaTrucCuaToiPanel extends JPanel {
 		cbCaTruc = UIUtils.createComboBoxThongTinCaTruc(new String[]{"Ca sáng (6:00 - 11:00)", "Ca chiều (12:00 - 17:00)"});
 		Box pnCaTruc = UIUtils.createRowCaTruc(lbCaTrucField, cbCaTruc, labelSize, inputSize);
 
-		// 5. Trạng thái (JComboBox)
-		lbTrangThai = UIUtils.createLbThongTinCaTruc("Trạng thái: ");
-		cbTrangThai = UIUtils.createComboBoxThongTinCaTruc(new String[]{"Đã hoàn thành", "Vắng có phép", "Vắng không có phép"});
-		Box pnTrangThai = UIUtils.createRowCaTruc(lbTrangThai, cbTrangThai, labelSize, inputSize);
-
-		// 6. Số lượng
+		// 5. Số lượng
 		lbSoLuong = UIUtils.createLbThongTinCaTruc("Số lượng: ");
-		txtSoLuong = UIUtils.createTXTThongTinCaTruc("Ví dụ: 2");
+		txtSoLuong = UIUtils.createTXTThongTinCaTruc("Ví dụ: 3");
 		Box pnSoLuong = UIUtils.createRowCaTruc(lbSoLuong, txtSoLuong, labelSize, inputSize);
 
 		// Thêm các thành phần vào cardRight theo thứ tự
@@ -141,13 +152,11 @@ public class CaTrucCuaToiPanel extends JPanel {
 		cardRight.add(Box.createVerticalStrut(15));
 		cardRight.add(pnSoLuong);
 		cardRight.add(Box.createVerticalStrut(15));
-		cardRight.add(pnTrangThai);
-		cardRight.add(Box.createVerticalStrut(20));
 
 		// Đẩy toàn bộ nội dung cột phải lên trên
 		cardRight.add(Box.createVerticalGlue());
 
-		// Đưa 2 cột vào panel chính với tỉ lệ 58% bảng - 42% form
+		// Đưa 2 cột vào panel chính với tỉ lệ 58% bảng, 42% form
 		gbc.gridx = 0;
 		gbc.weightx = 0.58;
 		gbc.insets = new Insets(0, 0, 0, 18);
@@ -159,5 +168,86 @@ public class CaTrucCuaToiPanel extends JPanel {
 		pnMain.add(cardRight, gbc);
 
 		add(pnMain, BorderLayout.CENTER);
+	}
+
+	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
+	/** Chỉ xem thông tin, không nhận nhập liệu hay focus tại các ô thông tin. */
+	private void khoaTruongThongTin() {
+		txtMaCaTruc.setEditable(false);
+		txtTenNhanVien.setEditable(false);
+		txtNgayTruc.setEditable(false);
+		txtSoLuong.setEditable(false);
+		txtMaCaTruc.setFocusable(false);
+		txtTenNhanVien.setFocusable(false);
+		txtNgayTruc.setFocusable(false);
+		txtSoLuong.setFocusable(false);
+		cbCaTruc.setEnabled(false);
+	}
+
+	private void ganSuKien() {
+		txtMaCaTruc.setEditable(false);
+		txtTenNhanVien.setEditable(false);
+		txtNgayTruc.setEditable(false);
+		txtSoLuong.setEditable(false);
+		cbCaTruc.setEnabled(false);
+		tbCaTruc.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (!e.getValueIsAdjusting()) {
+					hienThiCaTrucDangChon();
+				}
+			}
+		});
+	}
+
+	// ==================== KHU VỰC CẬP NHẬT GIAO DIỆN ====================
+	/** Chỉ hiển thị các ca có phân công nhân viên đang đăng nhập. */
+	public void capNhatDuLieu() {
+		model.setRowCount(0);
+		xoaThongTin();
+		if (dsCaTrucBUS == null || !Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
+			return;
+		}
+		String maNV = Auth.getNguoiDung().getMaNV();
+		for (CaTrucDTO caTruc : dsCaTrucBUS.layCaTrucTheoNhanVien(maNV)) {
+			model.addRow(new Object[]{
+				caTruc.getMaCaTruc(),
+				dsCaTrucBUS.layTenNhanVien(caTruc.getMaCaTruc()),
+				caTruc.getTenCaTruc(),
+				UIUtils.dinhDangNgay(caTruc.getNgayTruc()),
+				soLuongNhanVien(caTruc.getMaCaTruc())
+			});
+		}
+	}
+
+	private void hienThiCaTrucDangChon() {
+		int dong = tbCaTruc.getSelectedRow();
+		if (dong < 0 || dsCaTrucBUS == null || !Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
+			return;
+		}
+		dong = tbCaTruc.convertRowIndexToModel(dong);
+		CaTrucDTO caTruc = dsCaTrucBUS.timTheoMa(String.valueOf(model.getValueAt(dong, 0)));
+		if (caTruc == null) {
+			return;
+		}
+		txtMaCaTruc.setText(caTruc.getMaCaTruc());
+		txtTenNhanVien.setText(dsCaTrucBUS.layTenNhanVien(caTruc.getMaCaTruc()));
+		txtNgayTruc.setText(UIUtils.dinhDangNgay(caTruc.getNgayTruc()));
+		cbCaTruc.setSelectedItem(caTruc.getTenCaTruc());
+		txtSoLuong.setText(String.valueOf(soLuongNhanVien(caTruc.getMaCaTruc())));
+	}
+
+	/** Chi tiết cá nhân giữ số lượng của ca, không cần đọc phân công người khác. */
+	private int soLuongNhanVien(String maCaTruc) {
+		List<ChiTietCaTrucDTO> chiTiet = dsCaTrucBUS.layChiTiet(maCaTruc);
+		return chiTiet.isEmpty() ? 0 : chiTiet.get(0).getSoLuong();
+	}
+
+	private void xoaThongTin() {
+		txtMaCaTruc.setText("");
+		txtTenNhanVien.setText("");
+		txtNgayTruc.setText("");
+		txtSoLuong.setText("");
+		cbCaTruc.setSelectedIndex(-1);
 	}
 }

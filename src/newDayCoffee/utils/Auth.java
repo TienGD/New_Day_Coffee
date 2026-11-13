@@ -56,20 +56,27 @@ public class Auth {
             return true;
         }
         switch (tenManHinh) {
-            case "Thực đơn":
-            case "Nhân viên":
-            case "Ca trực":
-            case "Danh sách hóa đơn":
-            case "Tài khoản":
-                return laQuanLy();
-            case "Bán hàng":
-            case "Thanh toán":
-            case "Ca trực của tôi":
-                // shortcut: Chua kiem tra ca lam; bo sung khi co nghiep vu xac nhan ca.
-                return !laQuanLy();
-            default:
-                return false;
-        }
+     // Các màn hình chỉ dành riêng cho Quản lý
+        case "Thực đơn":
+        case "Nhân viên":
+        case "Ca trực":
+        case "Danh sách hóa đơn":
+        case "Tài khoản":
+            return laQuanLy();
+            
+        // Các màn hình dành cho Nhân viên (không phải Quản lý)
+        case "Ca trực của tôi":
+            // shortcut: Chua kiem tra ca lam; bo sung khi co nghiep vu xac nhan ca.
+            return !laQuanLy();
+            
+        // Màn hình cả Quản lý và Nhân viên đều có thể truy cập
+        case "Bán hàng":
+        case "Thanh toán":
+            return true;
+            
+        default:
+            return false;
+    }
     }
 
     public static String getTenHienThi() {
