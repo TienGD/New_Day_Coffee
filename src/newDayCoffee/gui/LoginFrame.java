@@ -13,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -27,6 +29,9 @@ import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.bus.DSCaTrucBUS;
+import newDayCoffee.dto.CaTrucDTO;
+import newDayCoffee.dto.ChiTietCaTrucDTO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
@@ -75,6 +80,14 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	/** Tạo DTO mẫu tại giao diện rồi chuyển cho BUS lưu trữ. */
 	private void taoDuLieuMau() {
+		taoDuLieuMau(DSNhanVienBUS);
+	}
+
+	/** Tạo 3 lịch trực mẫu cùng 3 nhân viên, chỉ nạp khi bắt đầu phiên ứng dụng. */
+	public static void taoDuLieuMau(DSNhanVienBUS DSNhanVienBUS) {
+		if (DSNhanVienBUS == null || DSNhanVienBUS.laySoLuongNhanVien() > 0) {
+			return;
+		}
 		NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
 				LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
 				"Quản lí", "Nam", "");
@@ -84,7 +97,43 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 		TaiKhoanDTO taiKhoanQuanLy = new TaiKhoanDTO(quanLy, "123456");
 		TaiKhoanDTO taiKhoanThuNgan = new TaiKhoanDTO(thuNgan, "123456");
-		DSNhanVienBUS.napDuLieuMau(quanLy, thuNgan, taiKhoanQuanLy, taiKhoanThuNgan);
+		NhanVienDTO phaChe = new NhanVienDTO("nv02", "Nguyễn Văn An",
+				LocalDate.of(2000, 5, 15), "0901234569", "nv02@newdaycoffee.vn",
+				"Pha chế", "Nam", "");
+		NhanVienDTO nhanVien = new NhanVienDTO("nv03", "Lê Thị Mai",
+				LocalDate.of(2001, 8, 20), "0901234570", "nv03@newdaycoffee.vn",
+				"Thu ngân", "Nữ", "");
+		List<NhanVienDTO> dsNhanVienMau = new ArrayList<>();
+		dsNhanVienMau.add(quanLy);
+		dsNhanVienMau.add(thuNgan);
+		dsNhanVienMau.add(phaChe);
+		dsNhanVienMau.add(nhanVien);
+		List<TaiKhoanDTO> dsTaiKhoanMau = new ArrayList<>();
+		dsTaiKhoanMau.add(taiKhoanQuanLy);
+		dsTaiKhoanMau.add(taiKhoanThuNgan);
+		dsTaiKhoanMau.add(new TaiKhoanDTO(phaChe, "123456"));
+		dsTaiKhoanMau.add(new TaiKhoanDTO(nhanVien, "123456"));
+		if (!DSNhanVienBUS.napDuLieuMau(dsNhanVienMau, dsTaiKhoanMau)) {
+			return;
+		}
+
+		List<CaTrucDTO> dsCaMau = new ArrayList<>();
+		List<ChiTietCaTrucDTO> dsChiTietMau = new ArrayList<>();
+		String[] dsMaCa = {"CA01", "CA02", "CA03"};
+		String[] dsTenCa = {DSCaTrucBUS.CA_SANG, DSCaTrucBUS.CA_CHIEU, DSCaTrucBUS.CA_SANG};
+		for (int i = 0; i < dsMaCa.length; i++) {
+			CaTrucDTO caTruc = new CaTrucDTO(dsMaCa[i]);
+			caTruc.setTenCaTruc(dsTenCa[i]);
+			caTruc.setNgayTruc(i < 2 ? LocalDate.now() : LocalDate.now().plusDays(1));
+			dsCaMau.add(caTruc);
+			for (int j = 1; j < dsNhanVienMau.size(); j++) {
+				dsChiTietMau.add(new ChiTietCaTrucDTO(caTruc, dsNhanVienMau.get(j), 3));
+			}
+		}
+		String loi = DSNhanVienBUS.layDSCaTrucBUS().napDuLieuMau(dsCaMau, dsChiTietMau);
+		if (loi != null) {
+			throw new IllegalStateException(loi);
+		}
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================

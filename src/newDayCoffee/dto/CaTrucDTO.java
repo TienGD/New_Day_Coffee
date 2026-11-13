@@ -9,20 +9,18 @@ public class CaTrucDTO {
 	private NhanVienDTO tenNhanVien;
 	private NhanVienDTO maNhanVien;
 	private LocalDate ngayTruc;
-	private String trangThai;
 	
 	public CaTrucDTO(String maCaTruc) {
 		this.maCaTruc = maCaTruc;
 	}
 	
 	public CaTrucDTO(String maCaTruc, String tenCaTruc, NhanVienDTO tenNhanVien, NhanVienDTO maNhanVien,
-			LocalDate ngayTruc, String trangThai) {
+			LocalDate ngayTruc) {
 		this.maCaTruc = maCaTruc;
 		this.tenCaTruc = tenCaTruc;
 		this.tenNhanVien = tenNhanVien;
 		this.maNhanVien = maNhanVien;
 		this.ngayTruc = ngayTruc;
-		this.trangThai = trangThai;
 	}
 	public String getMaCaTruc() {
 		return maCaTruc;
@@ -53,12 +51,6 @@ public class CaTrucDTO {
 	}
 	public void setNgayTruc(LocalDate ngayTruc) {
 		this.ngayTruc = ngayTruc;
-	}
-	public String getTrangThai() {
-		return trangThai;
-	}
-	public void setTrangThai(String trangThai) {
-		this.trangThai = trangThai;
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.bus.DSCaTrucBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.CaTrucCuaToiPanel;
 import newDayCoffee.gui.panels.CaTrucPanel;
@@ -78,6 +79,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private final HoaDonBUS hoaDonBUS;
+	private final DSCaTrucBUS dsCaTrucBUS;
 
 	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
@@ -86,6 +88,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS();
 		this.dsHoaDonBUS = new DSHoaDonBUS(chiTietHoaDonBUS);
 		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, chiTietHoaDonBUS);
+		this.dsCaTrucBUS = DSNhanVienBUS.layDSCaTrucBUS();
 		khoiTaoGiaoDien();
 	}
 
@@ -276,11 +279,11 @@ public class MainFrame extends JFrame implements ActionListener {
 			pnContainerCard.add(thanhToanPanel, "Thanh toán");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Ca trực")) {
-			CaTrucPanel = new CaTrucPanel();
+			CaTrucPanel = new CaTrucPanel(DSNhanVienBUS, dsCaTrucBUS);
 			pnContainerCard.add(CaTrucPanel, "Ca trực");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
-			CaTrucCuaToiPanel = new CaTrucCuaToiPanel();
+			CaTrucCuaToiPanel = new CaTrucCuaToiPanel(dsCaTrucBUS);
 			pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Danh sách hóa đơn")) {
@@ -368,9 +371,11 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (tenManHinh.equals("Ca trực")) {
 			btnCaTruc.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("CA TRỰC");
+			CaTrucPanel.capNhatDuLieu();
 		} else if (tenManHinh.equals("Ca trực của tôi")) {
 			btnCaTrucCuaToi.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("CA TRỰC CỦA TÔI");
+			CaTrucCuaToiPanel.capNhatDuLieu();
 		} else if (tenManHinh.equals("Danh sách hóa đơn")) {
 			btnHoaDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("HÓA ĐƠN");

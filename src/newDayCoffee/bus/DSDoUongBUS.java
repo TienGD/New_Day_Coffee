@@ -17,6 +17,16 @@ public class DSDoUongBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<DoUongDTO> dsDoUong;
+    private boolean daNapDuLieuMau;
+
+    /** Nạp dữ liệu khởi tạo một lần, không phục hồi món mẫu đã bị xóa. */
+    public void napDuLieuMau(List<DoUongDTO> dsMau) {
+        if (daNapDuLieuMau || dsMau == null) return;
+        for (DoUongDTO mon : dsMau) {
+            if (mon != null && timTheoMa(mon.getMaMon()) == null) dsDoUong.add(mon);
+        }
+        daNapDuLieuMau = true;
+    }
 
     public DSDoUongBUS() {
         dsDoUong = new ArrayList<>();

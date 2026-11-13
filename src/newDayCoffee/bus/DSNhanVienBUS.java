@@ -18,10 +18,12 @@ public class DSNhanVienBUS {
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<NhanVienDTO> dsNhanVien;
     private final DSTaiKhoanBUS taiKhoanBUS;
+    private final DSCaTrucBUS dsCaTrucBUS;
 
     public DSNhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
+        this.dsCaTrucBUS = new DSCaTrucBUS(this);
     }
 
     // ==================== KHU VỰC ĐĂNG NHẬP / ĐĂNG XUẤT ====================
@@ -52,6 +54,11 @@ public class DSNhanVienBUS {
     }
 
     // ==================== KHU VỰC ĐỌC DỮ LIỆU ====================
+    /** Giữ lịch trực dùng chung khi đăng xuất rồi đăng nhập tài khoản khác. */
+    public DSCaTrucBUS layDSCaTrucBUS() {
+        return dsCaTrucBUS;
+    }
+
     /** Trả về bản sao danh sách để giao diện không sửa dữ liệu gốc. */
     public List<NhanVienDTO> layDanhSachNhanVien() {
         return new ArrayList<>(dsNhanVien);
@@ -193,6 +200,34 @@ public class DSNhanVienBUS {
     }
 
     // ==================== KHU VỰC DỮ LIỆU MẪU (TẠM THỜI) ====================
+    /** Nạp danh sách nhân viên mẫu cùng tài khoản khi dữ liệu còn trống. */
+    public boolean napDuLieuMau(List<NhanVienDTO> dsNhanVienMau, List<TaiKhoanDTO> dsTaiKhoanMau) {
+        if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0
+                || dsNhanVienMau == null || dsTaiKhoanMau == null
+                || dsNhanVienMau.isEmpty() || dsNhanVienMau.size() != dsTaiKhoanMau.size()) {
+            return false;
+        }
+        List<String> dsMaDaCo = new ArrayList<>();
+        for (int i = 0; i < dsNhanVienMau.size(); i++) {
+            NhanVienDTO nhanVien = dsNhanVienMau.get(i);
+            TaiKhoanDTO taiKhoan = dsTaiKhoanMau.get(i);
+            if (nhanVien == null || taiKhoan == null || taiKhoan.getMaNV() == null) {
+                return false;
+            }
+            String maNV = chuanHoa(nhanVien.getMaNV()).toLowerCase();
+            if (maNV.isEmpty() || dsMaDaCo.contains(maNV)
+                    || !maNV.equals(chuanHoa(taiKhoan.getMaNV().getMaNV()).toLowerCase())) {
+                return false;
+            }
+            dsMaDaCo.add(maNV);
+        }
+        dsNhanVien.addAll(dsNhanVienMau);
+        for (TaiKhoanDTO taiKhoan : dsTaiKhoanMau) {
+            taiKhoanBUS.themTaiKhoan(taiKhoan);
+        }
+        return true;
+    }
+
     /**
      * Nạp 2 nhân viên mẫu cùng tài khoản của họ để test đăng nhập.
      * DTO do giao diện tạo và truyền vào, BUS chỉ lưu dữ liệu.
