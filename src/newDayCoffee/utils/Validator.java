@@ -13,7 +13,7 @@ public class Validator {
     public static final String MA_MON = "(?i)^(cof|tea|mil|bak)\\d{2}$";
     public static final String SO_DIEN_THOAI = "^0\\d{9}$";
     public static final String EMAIL = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-    public static final String MAT_KHAU = "^.{6,}$";
+    public static final String MAT_KHAU = "^.{6,32}$";
     public static final String SO_TIEN = "^\\d[\\d.,]*$";
     public static final String NGAY_SINH = "^\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}$|^\\d{4}-\\d{1,2}-\\d{1,2}$";
     public static final String MA_CA_TRUC = "^CA[0-9]{2}$";

@@ -55,6 +55,7 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 	private JButton btnXoa;
 	private JButton btnSua;
 	private JButton btnLuu;
+	private JButton btnLamMoiForm;
 
 	// Tìm kiếm bên phải (chỉ tìm theo mã)
 	private JTextField txtTimMa;
@@ -126,6 +127,7 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		btnXoa  = UIUtils.createButton("Xóa", UIUtils.COLOR_BTN_XOA, 78, 34);
 		btnSua  = UIUtils.createButton("Sửa", UIUtils.COLOR_BTN_SUA, 78, 34);
 		btnLuu  = UIUtils.createButton("Lưu", UIUtils.COLOR_BTN_LUU, 78, 34);
+		btnLamMoiForm = UIUtils.createButton("Làm mới", UIUtils.COLOR_BTN_LAM_MOI, 90, 34);
 
 		pnHangNut.add(btnThem);
 		pnHangNut.add(Box.createHorizontalStrut(14));
@@ -134,6 +136,8 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		pnHangNut.add(btnSua);
 		pnHangNut.add(Box.createHorizontalStrut(14));
 		pnHangNut.add(btnLuu);
+		pnHangNut.add(Box.createHorizontalStrut(14));
+		pnHangNut.add(btnLamMoiForm);
 
 		pnThongTin.add(pnTitleThongTin);
 		pnThongTin.add(Box.createVerticalStrut(16));
@@ -218,6 +222,7 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		btnXoa.addActionListener(this);
 		btnSua.addActionListener(this);
 		btnLuu.addActionListener(this);
+		btnLamMoiForm.addActionListener(this);
 		btnTimKiem.addActionListener(this);
 		btnLamMoi.addActionListener(this);
 		txtTimMa.addActionListener(this);
@@ -241,6 +246,8 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 			capNhatBang();
 		} else if (nguon == btnLamMoi) {
 			lamMoi();
+		} else if (nguon == btnLamMoiForm) {
+			xoaForm();
 		}
 	}
 
@@ -291,18 +298,20 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		if (maNV.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMaNV.requestFocus();
 			return;
 		}
 		if (!maNV.matches(Validator.MA_NHAN_VIEN)) {
 			JOptionPane.showMessageDialog(this,
 					"Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMaNV.requestFocus();
 			return;
 		}
 
 		String matKhau = new String(txtMatKhau.getPassword()).trim();
 		if (!matKhau.isEmpty() && !matKhau.matches(Validator.MAT_KHAU)) {
-			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự.",
+			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự và tối đa 32 ký tự.",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
 			return;
 		}

@@ -75,7 +75,6 @@ public class UIUtils {
 	// ==================== BẢNG FONT CHỮ CHUẨN ====================
 	public static final String FONT_FAMILY = "Segoe UI";
 	public static final Font titleFont = new Font(FONT_FAMILY, Font.BOLD, 22);
-	public static final Font lbFontThongTinCaTruc = new Font(FONT_FAMILY, Font.BOLD, 15);
 	public static final Font FONT_TITLE_PANEL = new Font(FONT_FAMILY, Font.BOLD, 16);
 	public static final Font FONT_TITLE_SEARCH = new Font(FONT_FAMILY, Font.BOLD, 15);
 	public static final Font FONT_LABEL = new Font(FONT_FAMILY, Font.PLAIN, 13);
@@ -102,119 +101,6 @@ public class UIUtils {
 			card.setBorder(lineBorder);
 		}
 		return card;
-	}
-
-	// ==================== CÁC PHƯƠNG THỨC CHO CA TRỰC ====================
-	public static JLabel createTitleLabel(String text) {
-		JLabel label = new JLabel(text, JLabel.LEFT);
-		label.setFont(new Font(FONT_FAMILY, Font.BOLD, 19));
-		label.setForeground(COLOR_ACCENT_GOLD);
-		label.setAlignmentX(Component.LEFT_ALIGNMENT);
-		return label;
-	}
-
-	public static JLabel createLbThongTinCaTruc(String text) {
-		JLabel label = new JLabel(text);
-		label.setFont(lbFontThongTinCaTruc);
-		label.setForeground(COLOR_WHITE);
-		return label;
-	}
-
-	public static JTextField createTXTThongTinCaTruc() {
-		return createTXTThongTinCaTruc(null);
-	}
-
-	public static JTextField createTXTThongTinCaTruc(String goiY) {
-		JTextField txt = new JTextField() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				if (getText().isEmpty()) {
-					veChuGoiY(g, goiY, getInsets(), getFont(), getHeight(), true);
-				}
-			}
-		};
-		txt.setOpaque(true);
-		txt.setBackground(COLOR_BG_INPUT);
-		txt.setFont(new Font(FONT_FAMILY, Font.PLAIN, 14));
-		txt.setForeground(COLOR_TEXT_DARK);
-		txt.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(COLOR_INPUT_BORDER, 1),
-			new EmptyBorder(5, 10, 5, 10)
-		));
-		txt.setPreferredSize(new Dimension(250, 36));
-		return txt;
-	}
-
-	public static JComboBox<String> createComboBoxThongTinCaTruc(String[] items) {
-		JComboBox<String> comboBox = new JComboBox<>(items);
-		Dimension size = new Dimension(290, 36);
-		comboBox.setPreferredSize(size);
-		comboBox.setMaximumSize(size);
-		comboBox.setMinimumSize(size);
-
-		comboBox.setFont(new Font(FONT_FAMILY, Font.PLAIN, 14));
-		comboBox.setBackground(COLOR_BG_INPUT);
-		comboBox.setForeground(COLOR_TEXT_DARK);
-
-		comboBox.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(COLOR_INPUT_BORDER, 1),
-			BorderFactory.createEmptyBorder(2, 6, 2, 6)
-		));
-		return comboBox;
-	}
-
-	public static JButton createJbuttonThongTinCaTruc(String ten, String maMau) {
-		JButton btn = new JButton(ten);
-		Dimension size = new Dimension(115, 38);
-		btn.setPreferredSize(size);
-		btn.setMaximumSize(size);
-		btn.setMinimumSize(size);
-		btn.setBackground(Color.decode(maMau));
-		btn.setForeground(COLOR_WHITE);
-		btn.setFont(new Font(FONT_FAMILY, Font.BOLD, 14));
-		btn.setFocusPainted(false);
-		btn.setBorderPainted(false);
-		btn.setOpaque(true);
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		return btn;
-	}
-
-	/**
-	 * Tạo một dòng nhập liệu trong form Ca trực (Nhãn + Ô nhập).
-	 */
-	public static Box createRowCaTruc(JLabel lb, Component comp, Dimension labelSize, Dimension inputSize) {
-		Box row = Box.createHorizontalBox();
-		row.setAlignmentX(Component.LEFT_ALIGNMENT);
-		lb.setPreferredSize(labelSize);
-		lb.setMinimumSize(labelSize);
-		lb.setMaximumSize(labelSize);
-
-		comp.setPreferredSize(inputSize);
-		comp.setMaximumSize(inputSize);
-		comp.setMinimumSize(inputSize);
-
-		row.add(lb);
-		row.add(comp);
-		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-		return row;
-	}
-
-	/**
-	 * Tạo viền khung có padding dùng cho các khối danh sách / thông tin.
-	 */
-	public static Border createSectionBorder(int top, int left, int bottom, int right) {
-		return BorderFactory.createCompoundBorder(
-			BorderFactory.createTitledBorder(
-				BorderFactory.createLineBorder(COLOR_BORDER_LINE, 1),
-				"",
-				TitledBorder.DEFAULT_JUSTIFICATION,
-				TitledBorder.DEFAULT_POSITION,
-				null,
-				COLOR_BORDER_LINE
-			),
-			new EmptyBorder(top, left, bottom, right)
-		);
 	}
 
 	// ==================== CÁC PHƯƠNG THỨC TÁI SỬ DỤNG CHUNG ====================
@@ -765,8 +651,6 @@ public class UIUtils {
 				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g2.setColor(getBackground());
 				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.setColor(COLOR_ACCENT_GOLD);
-				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
 				g2.dispose();
 				super.paintComponent(g);
 			}
@@ -932,6 +816,7 @@ public class UIUtils {
 		};
 		cardMon.setOpaque(false);
 		cardMon.putClientProperty("txtSoLuong", txtSoLuong);
+		cardMon.putClientProperty("btnTru", btnTru);
 		cardMon.add(pnInfo);
 
 		return cardMon;

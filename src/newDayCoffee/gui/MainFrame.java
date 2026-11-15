@@ -25,10 +25,7 @@ import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
-import newDayCoffee.bus.DSCaTrucBUS;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
-import newDayCoffee.gui.panels.CaTrucCuaToiPanel;
-import newDayCoffee.gui.panels.CaTrucPanel;
 import newDayCoffee.gui.panels.HoaDonPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
 import newDayCoffee.gui.panels.QuanLyThucDonPanel;
@@ -57,8 +54,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	private JButton btnThucDon;
 	private JButton btnNhanVien;
 	private JButton btnHoaDon;
-	private JButton btnCaTruc;
-	private JButton btnCaTrucCuaToi;
 	private JButton btnTaiKhoan;
 
 	// Các panel chức năng
@@ -67,8 +62,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	private QuanLyThucDonPanel quanLyThucDonPanel;
 	private QuanLyNhanVienPanel quanLyNhanVienPanel;
 	private ThanhToanPOSPanel thanhToanPanel;
-	private CaTrucPanel CaTrucPanel;
-	private CaTrucCuaToiPanel CaTrucCuaToiPanel;
 	private HoaDonPanel HoaDonPanel;
 	private TaiKhoanPanel TaiKhoanPanel;
 
@@ -79,7 +72,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private final HoaDonBUS hoaDonBUS;
-	private final DSCaTrucBUS dsCaTrucBUS;
 
 	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
 		this.taiKhoanBUS = taiKhoanBUS;
@@ -88,7 +80,6 @@ public class MainFrame extends JFrame implements ActionListener {
 		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS();
 		this.dsHoaDonBUS = new DSHoaDonBUS(chiTietHoaDonBUS);
 		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, chiTietHoaDonBUS);
-		this.dsCaTrucBUS = DSNhanVienBUS.layDSCaTrucBUS();
 		khoiTaoGiaoDien();
 	}
 
@@ -158,18 +149,6 @@ public class MainFrame extends JFrame implements ActionListener {
 		btnNhanVien = UIUtils.taoNutMenu("Nhân viên", fontMenu, this);
 		if (Auth.coQuyenTruyCapManHinh("Nhân viên")) {
 			pnMenu.add(btnNhanVien);
-			pnMenu.add(Box.createVerticalStrut(8));
-		}
-
-		btnCaTruc = UIUtils.taoNutMenu("Ca trực", fontMenu, this);
-		if (Auth.coQuyenTruyCapManHinh("Ca trực")) {
-			pnMenu.add(btnCaTruc);
-			pnMenu.add(Box.createVerticalStrut(8));
-		}
-
-		btnCaTrucCuaToi = UIUtils.taoNutMenu("Ca trực của tôi", fontMenu, this);
-		if (Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
-			pnMenu.add(btnCaTrucCuaToi);
 			pnMenu.add(Box.createVerticalStrut(8));
 		}
 
@@ -278,14 +257,6 @@ public class MainFrame extends JFrame implements ActionListener {
 			thanhToanPanel = new ThanhToanPOSPanel(this, chiTietHoaDonBUS, hoaDonBUS, dsHoaDonBUS);
 			pnContainerCard.add(thanhToanPanel, "Thanh toán");
 		}
-		if (Auth.coQuyenTruyCapManHinh("Ca trực")) {
-			CaTrucPanel = new CaTrucPanel(DSNhanVienBUS, dsCaTrucBUS);
-			pnContainerCard.add(CaTrucPanel, "Ca trực");
-		}
-		if (Auth.coQuyenTruyCapManHinh("Ca trực của tôi")) {
-			CaTrucCuaToiPanel = new CaTrucCuaToiPanel(dsCaTrucBUS);
-			pnContainerCard.add(CaTrucCuaToiPanel, "Ca trực của tôi");
-		}
 		if (Auth.coQuyenTruyCapManHinh("Danh sách hóa đơn")) {
 			HoaDonPanel = new HoaDonPanel(dsHoaDonBUS);
 			pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
@@ -313,10 +284,6 @@ public class MainFrame extends JFrame implements ActionListener {
 			switchCard("Thực đơn");
 		} else if (o.equals(btnNhanVien)) {
 			switchCard("Nhân viên");
-		} else if (o.equals(btnCaTruc)) {
-			switchCard("Ca trực");
-		} else if (o.equals(btnCaTrucCuaToi)) {
-			switchCard("Ca trực của tôi");
 		} else if (o.equals(btnHoaDon)) {
 			switchCard("Danh sách hóa đơn");
 		} else if (o.equals(btnTaiKhoan)) {
@@ -349,7 +316,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		}
 		cardLayout.show(pnContainerCard, tenManHinh);
 		UIUtils.resetMauMenu(btnTongQuan, btnBanHang, btnThucDon, btnNhanVien,
-				btnCaTruc, btnCaTrucCuaToi, btnHoaDon, btnTaiKhoan);
+				btnHoaDon, btnTaiKhoan);
 
 		if (tenManHinh.equals("Tổng quan")) {
 			btnTongQuan.setForeground(Color.BLACK);
@@ -368,14 +335,6 @@ public class MainFrame extends JFrame implements ActionListener {
 			btnNhanVien.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("NHÂN VIÊN");
 			quanLyNhanVienPanel.capNhatBang();
-		} else if (tenManHinh.equals("Ca trực")) {
-			btnCaTruc.setForeground(Color.BLACK);
-			lbHeaderTieuDe.setText("CA TRỰC");
-			CaTrucPanel.capNhatDuLieu();
-		} else if (tenManHinh.equals("Ca trực của tôi")) {
-			btnCaTrucCuaToi.setForeground(Color.BLACK);
-			lbHeaderTieuDe.setText("CA TRỰC CỦA TÔI");
-			CaTrucCuaToiPanel.capNhatDuLieu();
 		} else if (tenManHinh.equals("Danh sách hóa đơn")) {
 			btnHoaDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("HÓA ĐƠN");

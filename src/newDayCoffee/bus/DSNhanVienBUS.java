@@ -18,16 +18,13 @@ public class DSNhanVienBUS {
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<NhanVienDTO> dsNhanVien;
     private final DSTaiKhoanBUS taiKhoanBUS;
-    private final DSCaTrucBUS dsCaTrucBUS;
 
     public DSNhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
         this.taiKhoanBUS = taiKhoanBUS;
         this.dsNhanVien = new ArrayList<>();
-        this.dsCaTrucBUS = new DSCaTrucBUS(this);
     }
 
     // ==================== KHU VỰC ĐĂNG NHẬP / ĐĂNG XUẤT ====================
-    /** Kiểm tra tài khoản, nếu đúng thì lưu nhân viên vào Auth. */
     public String dangNhap(String maNV, String matKhau) {
         String loi = taiKhoanBUS.xacThucDangNhap(maNV, matKhau);
         if (loi != null) {
@@ -54,11 +51,6 @@ public class DSNhanVienBUS {
     }
 
     // ==================== KHU VỰC ĐỌC DỮ LIỆU ====================
-    /** Giữ lịch trực dùng chung khi đăng xuất rồi đăng nhập tài khoản khác. */
-    public DSCaTrucBUS layDSCaTrucBUS() {
-        return dsCaTrucBUS;
-    }
-
     /** Trả về bản sao danh sách để giao diện không sửa dữ liệu gốc. */
     public List<NhanVienDTO> layDanhSachNhanVien() {
         return new ArrayList<>(dsNhanVien);

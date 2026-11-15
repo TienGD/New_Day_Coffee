@@ -29,9 +29,6 @@ import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
-import newDayCoffee.bus.DSCaTrucBUS;
-import newDayCoffee.dto.CaTrucDTO;
-import newDayCoffee.dto.ChiTietCaTrucDTO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
@@ -83,7 +80,9 @@ public class LoginFrame extends JFrame implements ActionListener {
 		taoDuLieuMau(DSNhanVienBUS);
 	}
 
-	/** Tạo 3 lịch trực mẫu cùng 3 nhân viên, chỉ nạp khi bắt đầu phiên ứng dụng. */
+	/** Tạo 2 nhân viên mẫu cùng tài khoản của họ để test đăng nhập.
+	 * DTO do giao diện tạo và truyền vào, BUS chỉ lưu dữ liệu.
+	 */
 	public static void taoDuLieuMau(DSNhanVienBUS DSNhanVienBUS) {
 		if (DSNhanVienBUS == null || DSNhanVienBUS.laySoLuongNhanVien() > 0) {
 			return;
@@ -94,6 +93,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 		NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
 				LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
 				"Thu ngân", "Nữ", "");
+		
 
 		TaiKhoanDTO taiKhoanQuanLy = new TaiKhoanDTO(quanLy, "123456");
 		TaiKhoanDTO taiKhoanThuNgan = new TaiKhoanDTO(thuNgan, "123456");
@@ -108,32 +108,13 @@ public class LoginFrame extends JFrame implements ActionListener {
 		dsNhanVienMau.add(thuNgan);
 		dsNhanVienMau.add(phaChe);
 		dsNhanVienMau.add(nhanVien);
+		
 		List<TaiKhoanDTO> dsTaiKhoanMau = new ArrayList<>();
 		dsTaiKhoanMau.add(taiKhoanQuanLy);
 		dsTaiKhoanMau.add(taiKhoanThuNgan);
 		dsTaiKhoanMau.add(new TaiKhoanDTO(phaChe, "123456"));
 		dsTaiKhoanMau.add(new TaiKhoanDTO(nhanVien, "123456"));
-		if (!DSNhanVienBUS.napDuLieuMau(dsNhanVienMau, dsTaiKhoanMau)) {
-			return;
-		}
-
-		List<CaTrucDTO> dsCaMau = new ArrayList<>();
-		List<ChiTietCaTrucDTO> dsChiTietMau = new ArrayList<>();
-		String[] dsMaCa = {"CA01", "CA02", "CA03"};
-		String[] dsTenCa = {DSCaTrucBUS.CA_SANG, DSCaTrucBUS.CA_CHIEU, DSCaTrucBUS.CA_SANG};
-		for (int i = 0; i < dsMaCa.length; i++) {
-			CaTrucDTO caTruc = new CaTrucDTO(dsMaCa[i]);
-			caTruc.setTenCaTruc(dsTenCa[i]);
-			caTruc.setNgayTruc(i < 2 ? LocalDate.now() : LocalDate.now().plusDays(1));
-			dsCaMau.add(caTruc);
-			for (int j = 1; j < dsNhanVienMau.size(); j++) {
-				dsChiTietMau.add(new ChiTietCaTrucDTO(caTruc, dsNhanVienMau.get(j), 3));
-			}
-		}
-		String loi = DSNhanVienBUS.layDSCaTrucBUS().napDuLieuMau(dsCaMau, dsChiTietMau);
-		if (loi != null) {
-			throw new IllegalStateException(loi);
-		}
+		DSNhanVienBUS.napDuLieuMau(dsNhanVienMau, dsTaiKhoanMau);
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
