@@ -2,6 +2,7 @@ package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -26,6 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
@@ -61,6 +64,8 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 
 	// Ô số lượng trên từng thẻ món
 	private final Map<String, JTextField> oSoLuong = new HashMap<>();
+	// Nút giảm số lượng trên từng thẻ món
+	private final Map<String, JButton> nutGiam = new HashMap<>();
 	// Thứ tự mã món tương ứng với từng dòng trong bảng đơn hàng
 	private final List<String> maMonTrongBang = new ArrayList<>();
 	// Nút lọc theo nhóm món
@@ -416,6 +421,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 	public void capNhatDanhSachMon() {
 		pnGridMon.removeAll();
 		oSoLuong.clear();
+		nutGiam.clear();
 
 		List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
 		for (int i = 0; i < dsMon.size(); i++) {
@@ -429,6 +435,10 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 				txtSoLuong.addActionListener(this);
 				txtSoLuong.addFocusListener(this);
 				oSoLuong.put(mon.getMaMon(), txtSoLuong);
+			}
+			Object oBtnTru = card.getClientProperty("btnTru");
+			if (oBtnTru instanceof JButton) {
+				nutGiam.put(mon.getMaMon(), (JButton) oBtnTru);
 			}
 			pnGridMon.add(card);
 		}
@@ -466,10 +476,20 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 	private void capNhatSoLuongTrenThe() {
 		for (Map.Entry<String, JTextField> muc : oSoLuong.entrySet()) {
 			ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(muc.getKey());
-			if (dong == null) {
-				muc.getValue().setText("0");
-			} else {
-				muc.getValue().setText(String.valueOf(dong.getSoLuong()));
+			int soLuong = (dong == null) ? 0 : dong.getSoLuong();
+			muc.getValue().setText(String.valueOf(soLuong));
+
+			JButton btnTru = nutGiam.get(muc.getKey());
+			if (btnTru != null) {
+				boolean coTheGiam = soLuong > 0;
+				btnTru.setEnabled(coTheGiam);
+				if (coTheGiam) {
+					btnTru.setBackground(UIUtils.COLOR_HEADER);
+					btnTru.setCursor(new Cursor(Cursor.HAND_CURSOR));
+				} else {
+					btnTru.setBackground(new Color(115, 88, 75));
+					btnTru.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+				}
 			}
 		}
 	}
@@ -522,4 +542,6 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 	public void xoaGhiChu() {
 		txtGhiChu.setText("");
 	}
+
+	
 }

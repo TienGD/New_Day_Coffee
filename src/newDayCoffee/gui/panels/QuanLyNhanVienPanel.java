@@ -57,6 +57,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	private JButton btnXoa;
 	private JButton btnSua;
 	private JButton btnLuu;
+	private JButton btnLamMoiForm;
 
 	private JTextField txtTimMa;
 	private JTextField txtTimTen;
@@ -180,6 +181,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		btnSua.setMaximumSize(btnActionSize);
 		btnLuu  = UIUtils.createButton("Lưu", UIUtils.COLOR_BTN_LUU, 72, 34);
 		btnLuu.setMaximumSize(btnActionSize);
+		btnLamMoiForm = UIUtils.createButton("Làm mới", UIUtils.COLOR_BTN_LAM_MOI, 86, 34);
+		btnLamMoiForm.setMaximumSize(new Dimension(86, 34));
 
 		pnHangCuoiForm.add(lbGioiTinh);
 		pnHangCuoiForm.add(radNam);
@@ -195,6 +198,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		pnHangCuoiForm.add(btnSua);
 		pnHangCuoiForm.add(Box.createHorizontalStrut(10));
 		pnHangCuoiForm.add(btnLuu);
+		pnHangCuoiForm.add(Box.createHorizontalStrut(10));
+		pnHangCuoiForm.add(btnLamMoiForm);
 		pnHangCuoiForm.add(Box.createHorizontalGlue());
 
 		pnThongTinNV.add(pnHangCuoiForm);
@@ -275,6 +280,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		btnXoa.addActionListener(this);
 		btnSua.addActionListener(this);
 		btnLuu.addActionListener(this);
+		btnLamMoiForm.addActionListener(this);
 		btnTimKiem.addActionListener(this);
 		btnLamMoi.addActionListener(this);
 		txtTimMa.addActionListener(this);
@@ -297,6 +303,8 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			luuDuLieu();
 		} else if (nguon == btnLamMoi) {
 			lamMoi();
+		} else if (nguon == btnLamMoiForm) {
+			xoaForm();
 		} else if (nguon == btnTimKiem || nguon == txtTimMa || nguon == txtTimTen) {
 			capNhatBang();
 		}
