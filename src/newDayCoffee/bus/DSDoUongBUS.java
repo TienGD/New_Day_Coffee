@@ -19,6 +19,28 @@ public class DSDoUongBUS {
     private final List<DoUongDTO> dsDoUong;
     private boolean daNapDuLieuMau;
 
+    /** Cho biết thực đơn đã được nạp dữ liệu khởi tạo hay chưa. */
+    public boolean daNapDuLieu() {
+        return daNapDuLieuMau || !dsDoUong.isEmpty();
+    }
+
+    /** Nạp thực đơn ưu tiên từ CSDL khi danh sách hiện đang trống. */
+    public boolean napDuLieuTuCSDL(List<DoUongDTO> dsTuDB) {
+        if (daNapDuLieuMau || !dsDoUong.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
+            return false;
+        }
+        for (DoUongDTO mon : dsTuDB) {
+            if (mon != null && !chuanHoa(mon.getMaMon()).isEmpty() && timTheoMa(mon.getMaMon()) == null) {
+                dsDoUong.add(mon);
+            }
+        }
+        if (dsDoUong.isEmpty()) {
+            return false;
+        }
+        daNapDuLieuMau = true;
+        return true;
+    }
+
     /** Nạp dữ liệu khởi tạo một lần, không phục hồi món mẫu đã bị xóa. */
     public void napDuLieuMau(List<DoUongDTO> dsMau) {
         if (daNapDuLieuMau || dsMau == null) return;

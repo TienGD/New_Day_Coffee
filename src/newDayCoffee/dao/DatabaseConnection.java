@@ -1,3 +1,4 @@
+
 package newDayCoffee.dao;
 
 import java.io.IOException;
@@ -7,49 +8,52 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-/**
- * Quản lý kết nối cơ sở dữ liệu MySQL.
- *
- * Đọc thông tin kết nối từ file resources/database.properties.
- * Dùng getConnection() để lấy kết nối; đóng kết nối sau mỗi thao tác.
- */
 public class DatabaseConnection {
-
-    private static final String PROPERTIES_FILE = "/database.properties";
 
     private static String url;
     private static String user;
     private static String password;
+    private static SQLException initError;
 
     static {
-        try (InputStream input = DatabaseConnection.class.getResourceAsStream(PROPERTIES_FILE)) {
+        Properties properties = new Properties();
+        try (InputStream input = DatabaseConnection.class.getResourceAsStream("/database.properties")) {
             if (input == null) {
-                throw new ExceptionInInitializerError(
-                    "Không tìm thấy file cấu hình: " + PROPERTIES_FILE);
+                initError = new SQLException("Không tìm thấy file /database.properties");
+            } else {
+                properties.load(input);
+                String driver = properties.getProperty("db.driver");
+                String loadedUrl = properties.getProperty("db.url");
+                String loadedUser = properties.getProperty("db.user");
+                String loadedPassword = properties.getProperty("db.password");
+
+                if (isBlank(driver) || isBlank(loadedUrl) || isBlank(loadedUser) || isBlank(loadedPassword)) {
+                    initError = new SQLException("Cấu hình database.properties thiếu thông tin bắt buộc.");
+                } else {
+                    Class.forName(driver.trim());
+                    url = loadedUrl.trim();
+                    user = loadedUser.trim();
+                    password = loadedPassword.trim();
+                }
             }
-            Properties props = new Properties();
-            props.load(input);
-
-            String driver = props.getProperty("db.driver");
-            url      = props.getProperty("db.url");
-            user     = props.getProperty("db.user");
-            password = props.getProperty("db.password");
-
-            Class.forName(driver);
-        } catch (IOException | ClassNotFoundException e) {
-            throw new ExceptionInInitializerError(e);
+        } catch (IOException e) {
+            initError = new SQLException("Lỗi đọc file cấu hình database.properties", e);
+        } catch (ClassNotFoundException e) {
+            initError = new SQLException("Không tìm thấy JDBC Driver", e);
         }
     }
 
     private DatabaseConnection() {
-        // Lớp tiện ích, không cho phép khởi tạo
     }
 
-    /**
-     * Trả về một kết nối mới tới cơ sở dữ liệu.
-     * Người gọi có trách nhiệm đóng kết nối sau khi dùng xong.
-     */
     public static Connection getConnection() throws SQLException {
+        if (initError != null) {
+            throw new SQLException(initError.getMessage(), initError);
+        }
         return DriverManager.getConnection(url, user, password);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

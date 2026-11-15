@@ -8,6 +8,8 @@ import java.util.Map;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
+import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.dto.ThongKeMonDTO;
 
 /**
  * Xử lý nghiệp vụ trên danh sách hóa đơn.
@@ -82,6 +84,27 @@ public class DSHoaDonBUS {
     }
 
     // ==================== KHU VỰC THÊM HÓA ĐƠN ====================
+    /** Nạp danh sách hóa đơn đọc từ CSDL khi bộ nhớ đang trống. */
+    public boolean napDuLieuTuCSDL(List<HoaDonDTO> dsTuDB, DSNhanVienBUS dsNhanVienBUS) {
+        if (!dsHoaDon.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
+            return false;
+        }
+        for (HoaDonDTO hoaDon : dsTuDB) {
+            if (hoaDon == null || chuanHoa(hoaDon.getMaHD()).isEmpty()
+                    || timTheoMa(hoaDon.getMaHD()) != null) {
+                continue;
+            }
+            if (dsNhanVienBUS != null && hoaDon.getMaNV() != null) {
+                NhanVienDTO nvBus = dsNhanVienBUS.timTheoMa(hoaDon.getMaNV().getMaNV());
+                if (nvBus != null) {
+                    hoaDon.setMaNV(nvBus);
+                }
+            }
+            dsHoaDon.add(hoaDon);
+        }
+        return !dsHoaDon.isEmpty();
+    }
+
     /** Lưu một hóa đơn mới cùng chi tiết đang nằm trong giỏ hàng. */
     public boolean themHoaDon(HoaDonDTO hoaDon) {
         if (hoaDon == null || timTheoMa(hoaDon.getMaHD()) != null) {
@@ -156,6 +179,11 @@ public class DSHoaDonBUS {
             }
         }
         return ketQua;
+    }
+
+    /** Danh sách thống kê số lượng từng món bán được trong ngày hôm nay (kèm mã món). */
+    public List<ThongKeMonDTO> layDanhSachThongKeMonHomNay() {
+        return chiTietHoaDonBUS.thongKeMonTheoMa(layMaHoaDonHomNay());
     }
 
     /** Mã các hóa đơn được lập trong ngày hôm nay. */

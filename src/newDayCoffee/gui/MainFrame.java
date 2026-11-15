@@ -10,6 +10,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -25,6 +26,13 @@ import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.bus.NhanVienTaiKhoanBUS;
+import newDayCoffee.dao.ChiTietHoaDonDAO;
+import newDayCoffee.dao.DoUongDAO;
+import newDayCoffee.dao.HoaDonDAO;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.dto.DoUongDTO;
+import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.HoaDonPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
@@ -68,19 +76,50 @@ public class MainFrame extends JFrame implements ActionListener {
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSTaiKhoanBUS taiKhoanBUS;
 	private final DSNhanVienBUS DSNhanVienBUS;
+	private final NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS;
 	private final DSDoUongBUS dsDoUongBUS;
 	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private final HoaDonBUS hoaDonBUS;
 
 	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
-		this.taiKhoanBUS = taiKhoanBUS;
-		this.DSNhanVienBUS = DSNhanVienBUS;
+		this(taiKhoanBUS, DSNhanVienBUS, null);
+	}
+
+	public MainFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS,
+			NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
+		DSTaiKhoanBUS resolvedTk = (taiKhoanBUS != null)
+				? taiKhoanBUS
+				: (nhanVienTaiKhoanBUS != null ? nhanVienTaiKhoanBUS.getDsTaiKhoanBUS() : new DSTaiKhoanBUS());
+		DSNhanVienBUS resolvedNv = (DSNhanVienBUS != null)
+				? DSNhanVienBUS
+				: (nhanVienTaiKhoanBUS != null ? nhanVienTaiKhoanBUS.getDsNhanVienBUS() : new DSNhanVienBUS());
+		this.taiKhoanBUS = resolvedTk;
+		this.DSNhanVienBUS = resolvedNv;
+		this.nhanVienTaiKhoanBUS = nhanVienTaiKhoanBUS != null
+				? nhanVienTaiKhoanBUS
+				: new NhanVienTaiKhoanBUS(this.DSNhanVienBUS, this.taiKhoanBUS);
 		this.dsDoUongBUS = new DSDoUongBUS();
 		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS();
 		this.dsHoaDonBUS = new DSHoaDonBUS(chiTietHoaDonBUS);
 		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, chiTietHoaDonBUS);
+		napDuLieuTuCSDL();
 		khoiTaoGiaoDien();
+	}
+
+	/** Ưu tiên nạp thực đơn và hóa đơn từ CSDL nếu đang có kết nối. */
+	private void napDuLieuTuCSDL() {
+		if (!dsDoUongBUS.daNapDuLieu()) {
+			List<DoUongDTO> dsDoUongDB = new DoUongDAO().getAll();
+			dsDoUongBUS.napDuLieuTuCSDL(dsDoUongDB);
+		}
+		if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
+			List<HoaDonDTO> dsHoaDonDB = new HoaDonDAO().getAll();
+			if (dsHoaDonBUS.napDuLieuTuCSDL(dsHoaDonDB, this.DSNhanVienBUS)) {
+				List<ChiTietHoaDonDTO> dsChiTietDB = new ChiTietHoaDonDAO().getAll();
+				chiTietHoaDonBUS.napDuLieuTuCSDL(dsChiTietDB, dsHoaDonBUS, dsDoUongBUS);
+			}
+		}
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -250,7 +289,7 @@ public class MainFrame extends JFrame implements ActionListener {
 			pnContainerCard.add(quanLyThucDonPanel, "Thực đơn");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Nhân viên")) {
-			quanLyNhanVienPanel = new QuanLyNhanVienPanel(DSNhanVienBUS);
+			quanLyNhanVienPanel = new QuanLyNhanVienPanel(DSNhanVienBUS, nhanVienTaiKhoanBUS);
 			pnContainerCard.add(quanLyNhanVienPanel, "Nhân viên");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Thanh toán")) {
@@ -262,7 +301,7 @@ public class MainFrame extends JFrame implements ActionListener {
 			pnContainerCard.add(HoaDonPanel, "Danh sách hóa đơn");
 		}
 		if (Auth.coQuyenTruyCapManHinh("Tài khoản")) {
-			TaiKhoanPanel = new TaiKhoanPanel(taiKhoanBUS);
+			TaiKhoanPanel = new TaiKhoanPanel(taiKhoanBUS, nhanVienTaiKhoanBUS);
 			pnContainerCard.add(TaiKhoanPanel, "Tài khoản");
 		}
 
@@ -289,8 +328,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (o.equals(btnTaiKhoan)) {
 			switchCard("Tài khoản");
 		} else if (o.equals(btnDangXuat)) {
-			DSNhanVienBUS.dangXuat();
-			new LoginFrame(taiKhoanBUS, DSNhanVienBUS).setVisible(true);
+			nhanVienTaiKhoanBUS.dangXuat();
+			new LoginFrame(taiKhoanBUS, DSNhanVienBUS, nhanVienTaiKhoanBUS).setVisible(true);
 			this.dispose();
 		}
 	}
@@ -330,11 +369,13 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (tenManHinh.equals("Thực đơn")) {
 			btnThucDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("THỰC ĐƠN QUÁN");
-			quanLyThucDonPanel.capNhatBang();
+			quanLyThucDonPanel.capNhatBang(false);
+			quanLyThucDonPanel.focusMacDinh();
 		} else if (tenManHinh.equals("Nhân viên")) {
 			btnNhanVien.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("NHÂN VIÊN");
-			quanLyNhanVienPanel.capNhatBang();
+			quanLyNhanVienPanel.capNhatBang(false);
+			quanLyNhanVienPanel.focusMacDinh();
 		} else if (tenManHinh.equals("Danh sách hóa đơn")) {
 			btnHoaDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("HÓA ĐƠN");
@@ -346,6 +387,8 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (tenManHinh.equals("Tài khoản")) {
 			btnTaiKhoan.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("TÀI KHOẢN");
+			TaiKhoanPanel.capNhatBang(false);
+			TaiKhoanPanel.focusMacDinh();
 		}
 	}
 }

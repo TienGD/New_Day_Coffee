@@ -12,7 +12,9 @@ import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.time.LocalDate;
@@ -24,6 +26,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -34,12 +37,14 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.JTextComponent;
 
 public class UIUtils {
 
@@ -104,6 +109,39 @@ public class UIUtils {
 	}
 
 	// ==================== CÁC PHƯƠNG THỨC TÁI SỬ DỤNG CHUNG ====================
+
+	public static JLabel createTitleLabel(String text) {
+		JLabel label = new JLabel(text, JLabel.LEFT);
+		label.setFont(new Font(FONT_FAMILY, Font.BOLD, 19));
+		label.setForeground(COLOR_ACCENT_GOLD);
+		label.setAlignmentX(Component.LEFT_ALIGNMENT);
+		return label;
+	}
+
+	public static void focusKhiHienThi(Component target, JComponent container) {
+		if (target == null || container == null) {
+			return;
+		}
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				if (!container.isShowing() || !target.isShowing()
+						|| !target.isEnabled() || !target.isFocusable()) {
+					return;
+				}
+				if (target instanceof JTextComponent && !((JTextComponent) target).isEditable()) {
+					return;
+				}
+				Window cuaSo = SwingUtilities.getWindowAncestor(container);
+				Window cuaSoDangHoatDong = KeyboardFocusManager
+						.getCurrentKeyboardFocusManager().getActiveWindow();
+				if (cuaSo == null || cuaSoDangHoatDong != cuaSo) {
+					return;
+				}
+				target.requestFocusInWindow();
+			}
+		});
+	}
 
 	public static JLabel createTitlePanel(String text) {
 		JLabel label = new JLabel(text);

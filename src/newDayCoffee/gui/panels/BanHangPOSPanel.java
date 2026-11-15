@@ -35,6 +35,7 @@ import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
+import newDayCoffee.dao.DoUongDAO;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.gui.MainFrame;
@@ -82,14 +83,18 @@ public class BanHangPOSPanel extends JPanel implements ActionListener, FocusList
 		this.dsDoUongBUS = dsDoUongBUS;
 		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
 
-		List<DoUongDTO> dsMau = new ArrayList<>();
-		dsMau.add(new DoUongDTO("cof01", "Cà phê đen đá", 25000, "Cà phê phin, đá"));
-		dsMau.add(new DoUongDTO("cof02", "Cà phê sữa đá", 30000, "Cà phê phin, sữa đặc, đá"));
-		dsMau.add(new DoUongDTO("tea01", "Trà đào cam sả", 40000, "Trà đào, cam tươi, sả"));
-		dsMau.add(new DoUongDTO("tea02", "Trà vải", 35000, "Trà lài, vải, đá"));
-		dsMau.add(new DoUongDTO("mil01", "Trà sữa truyền thống", 35000, "Trà đen, sữa, trân châu"));
-		dsMau.add(new DoUongDTO("mil02", "Trà sữa matcha", 45000, "Matcha, sữa, trân châu"));
-		dsDoUongBUS.napDuLieuMau(dsMau);
+		if (!dsDoUongBUS.daNapDuLieu()) {
+			if (!dsDoUongBUS.napDuLieuTuCSDL(new DoUongDAO().getAll())) {
+				List<DoUongDTO> dsMau = new ArrayList<>();
+				dsMau.add(new DoUongDTO("cof01", "Cà phê đen đá", 25000, "Cà phê phin, đá"));
+				dsMau.add(new DoUongDTO("cof02", "Cà phê sữa đá", 30000, "Cà phê phin, sữa đặc, đá"));
+				dsMau.add(new DoUongDTO("tea01", "Trà đào cam sả", 40000, "Trà đào, cam tươi, sả"));
+				dsMau.add(new DoUongDTO("tea02", "Trà vải", 35000, "Trà lài, vải, đá"));
+				dsMau.add(new DoUongDTO("mil01", "Trà sữa truyền thống", 35000, "Trà đen, sữa, trân châu"));
+				dsMau.add(new DoUongDTO("mil02", "Trà sữa matcha", 45000, "Matcha, sữa, trân châu"));
+				dsDoUongBUS.napDuLieuMau(dsMau);
+			}
+		}
 
 		khoiTaoGiaoDien();
 		ganSuKien();

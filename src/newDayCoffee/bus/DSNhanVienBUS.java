@@ -4,45 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import newDayCoffee.dto.NhanVienDTO;
-import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.Auth;
 
 /**
- * Xử lý nghiệp vụ nhân viên và đăng nhập.
+ * Xử lý nghiệp vụ trên danh sách nhân viên.
  *
- * Lớp này quản lý dữ liệu nhân viên, gọi DSTaiKhoanBUS để quản lý tài khoản
- * và Auth để lưu / xóa phiên đăng nhập. Việc kiểm tra dữ liệu form do giao diện thực hiện.
+ * Lớp này chỉ quản lý dữ liệu nhân viên (độc lập với DSTaiKhoanBUS).
+ * Việc điều phối nghiệp vụ liên quan cả nhân viên và tài khoản nằm ở NhanVienTaiKhoanBUS.
  */
 public class DSNhanVienBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<NhanVienDTO> dsNhanVien;
-    private final DSTaiKhoanBUS taiKhoanBUS;
 
-    public DSNhanVienBUS(DSTaiKhoanBUS taiKhoanBUS) {
-        this.taiKhoanBUS = taiKhoanBUS;
+    public DSNhanVienBUS() {
         this.dsNhanVien = new ArrayList<>();
-    }
-
-    // ==================== KHU VỰC ĐĂNG NHẬP / ĐĂNG XUẤT ====================
-    public String dangNhap(String maNV, String matKhau) {
-        String loi = taiKhoanBUS.xacThucDangNhap(maNV, matKhau);
-        if (loi != null) {
-            return loi;
-        }
-
-        NhanVienDTO nhanVien = timTheoMa(maNV);
-        if (nhanVien == null) {
-            return "Không tìm thấy thông tin nhân viên.";
-        }
-
-        Auth.dangNhap(nhanVien);
-        return null;
-    }
-
-    /** Kết thúc phiên đăng nhập hiện tại. */
-    public void dangXuat() {
-        Auth.dangXuat();
     }
 
     /** Kiểm tra người đang đăng nhập có phải quản lí hay không. */
@@ -58,8 +34,24 @@ public class DSNhanVienBUS {
 
     public NhanVienDTO timTheoMa(String maNV) {
         String ma = chuanHoa(maNV);
+        if (ma.isEmpty()) {
+            return null;
+        }
         for (NhanVienDTO nv : dsNhanVien) {
-            if (nv.getMaNV().equalsIgnoreCase(ma)) {
+            if (chuanHoa(nv.getMaNV()).equalsIgnoreCase(ma)) {
+                return nv;
+            }
+        }
+        return null;
+    }
+
+    public NhanVienDTO timTheoEmail(String email) {
+        String thuDienTu = chuanHoa(email);
+        if (thuDienTu.isEmpty()) {
+            return null;
+        }
+        for (NhanVienDTO nv : dsNhanVien) {
+            if (chuanHoa(nv.getEmail()).equalsIgnoreCase(thuDienTu)) {
                 return nv;
             }
         }
@@ -89,39 +81,28 @@ public class DSNhanVienBUS {
     }
 
     // ==================== KHU VỰC THÊM / SỬA / XÓA ====================
-    /** Thêm nhân viên mới và tài khoản đi kèm. DTO do giao diện tạo và truyền vào. */
-    public String themNhanVien(NhanVienDTO nv, TaiKhoanDTO tk) {
+    /** Thêm nhân viên mới. DTO do giao diện tạo và truyền vào. */
+    public String themNhanVien(NhanVienDTO nv) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm nhân viên.";
         }
-        if (nv == null || tk == null || tk.getMaNV() == null) {
+        if (nv == null || chuanHoa(nv.getMaNV()).isEmpty()) {
             return "Thông tin nhân viên không hợp lệ.";
-        }
-        if (!chuanHoa(tk.getMaNV().getMaNV()).equalsIgnoreCase(chuanHoa(nv.getMaNV()))) {
-            return "Tài khoản không khớp với mã nhân viên.";
         }
         if (timTheoMa(nv.getMaNV()) != null) {
             return "Mã nhân viên đã tồn tại.";
         }
-        if (taiKhoanBUS.timTheoMa(nv.getMaNV()) != null) {
-            return "Tài khoản cho mã nhân viên này đã tồn tại.";
-        }
 
         dsNhanVien.add(nv);
-        String loiTaiKhoan = taiKhoanBUS.themTaiKhoan(tk);
-        if (loiTaiKhoan != null) {
-            dsNhanVien.remove(nv);
-            return loiTaiKhoan;
-        }
         return null;
     }
 
-    /** Cập nhật thông tin nhân viên. Mã nhân viên không được đổi khi sửa. */
+    /** Cập nhật thông tin trực tiếp trên đối tượng nhân viên cũ (giữ nguyên vị trí & tham chiếu). */
     public String suaNhanVien(NhanVienDTO nv) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền sửa nhân viên.";
         }
-        if (nv == null) {
+        if (nv == null || chuanHoa(nv.getMaNV()).isEmpty()) {
             return "Thông tin nhân viên không hợp lệ.";
         }
 
@@ -130,18 +111,22 @@ public class DSNhanVienBUS {
             return "Không tìm thấy nhân viên cần sửa.";
         }
 
-        dsNhanVien.remove(cu);
-        dsNhanVien.add(nv);
+        cu.setTenNV(nv.getTenNV());
+        cu.setNgaySinh(nv.getNgaySinh());
+        cu.setSdt(nv.getSdt());
+        cu.setEmail(nv.getEmail());
+        cu.setChucVu(nv.getChucVu());
+        cu.setGioiTinh(nv.getGioiTinh());
 
         // Cập nhật lại phiên nếu đang sửa chính người đăng nhập
         if (Auth.getNguoiDung() != null
-                && Auth.getNguoiDung().getMaNV().equalsIgnoreCase(nv.getMaNV())) {
-            Auth.dangNhap(nv);
+                && chuanHoa(Auth.getNguoiDung().getMaNV()).equalsIgnoreCase(chuanHoa(cu.getMaNV()))) {
+            Auth.dangNhap(cu);
         }
         return null;
     }
 
-    /** Xóa nhân viên và tài khoản. Không cho xóa tài khoản đang đăng nhập. */
+    /** Xóa nhân viên khỏi danh sách. Không xóa dây chuyền tài khoản. */
     public String xoaNhanVien(String maNV) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền xóa nhân viên.";
@@ -152,24 +137,12 @@ public class DSNhanVienBUS {
             return "Không tìm thấy nhân viên cần xóa.";
         }
         if (Auth.getNguoiDung() != null
-                && Auth.getNguoiDung().getMaNV().equalsIgnoreCase(nv.getMaNV())) {
-            return "Không thể xóa tài khoản đang đăng nhập.";
+                && chuanHoa(Auth.getNguoiDung().getMaNV()).equalsIgnoreCase(chuanHoa(nv.getMaNV()))) {
+            return "Không thể xóa nhân viên đang đăng nhập.";
         }
 
         dsNhanVien.remove(nv);
-        taiKhoanBUS.xoaTaiKhoan(nv.getMaNV());
         return null;
-    }
-
-    // ==================== KHU VỰC ĐẶT LẠI MẬT KHẨU ====================
-    /** Đặt lại mật khẩu theo email nhân viên. */
-    public String datLaiMatKhau(String email, String matKhauMoi) {
-        String thuDienTu = chuanHoa(email);
-        NhanVienDTO nv = timTheoEmail(thuDienTu);
-        if (nv == null) {
-            return "Không tìm thấy nhân viên với email này.";
-        }
-        return taiKhoanBUS.doiMatKhau(nv.getMaNV(), matKhauMoi);
     }
 
     /** Lưu danh sách vào CSDL. Hiện dữ liệu vẫn nằm trong bộ nhớ. */
@@ -177,66 +150,28 @@ public class DSNhanVienBUS {
         return true;
     }
 
-    private NhanVienDTO timTheoEmail(String email) {
-        String thuDienTu = chuanHoa(email);
-        for (NhanVienDTO nv : dsNhanVien) {
-            if (nv.getEmail().equalsIgnoreCase(thuDienTu)) {
-                return nv;
-            }
-        }
-        return null;
-    }
-
     private static String chuanHoa(String giaTri) {
         return giaTri == null ? "" : giaTri.trim();
     }
 
     // ==================== KHU VỰC DỮ LIỆU MẪU (TẠM THỜI) ====================
-    /** Nạp danh sách nhân viên mẫu cùng tài khoản khi dữ liệu còn trống. */
-    public boolean napDuLieuMau(List<NhanVienDTO> dsNhanVienMau, List<TaiKhoanDTO> dsTaiKhoanMau) {
-        if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0
-                || dsNhanVienMau == null || dsTaiKhoanMau == null
-                || dsNhanVienMau.isEmpty() || dsNhanVienMau.size() != dsTaiKhoanMau.size()) {
+    /** Nạp danh sách nhân viên mẫu khi dữ liệu còn trống. */
+    public boolean napDuLieuMau(List<NhanVienDTO> dsNhanVienMau) {
+        if (laySoLuongNhanVien() > 0 || dsNhanVienMau == null || dsNhanVienMau.isEmpty()) {
             return false;
         }
         List<String> dsMaDaCo = new ArrayList<>();
-        for (int i = 0; i < dsNhanVienMau.size(); i++) {
-            NhanVienDTO nhanVien = dsNhanVienMau.get(i);
-            TaiKhoanDTO taiKhoan = dsTaiKhoanMau.get(i);
-            if (nhanVien == null || taiKhoan == null || taiKhoan.getMaNV() == null) {
+        for (NhanVienDTO nhanVien : dsNhanVienMau) {
+            if (nhanVien == null) {
                 return false;
             }
             String maNV = chuanHoa(nhanVien.getMaNV()).toLowerCase();
-            if (maNV.isEmpty() || dsMaDaCo.contains(maNV)
-                    || !maNV.equals(chuanHoa(taiKhoan.getMaNV().getMaNV()).toLowerCase())) {
+            if (maNV.isEmpty() || dsMaDaCo.contains(maNV)) {
                 return false;
             }
             dsMaDaCo.add(maNV);
         }
         dsNhanVien.addAll(dsNhanVienMau);
-        for (TaiKhoanDTO taiKhoan : dsTaiKhoanMau) {
-            taiKhoanBUS.themTaiKhoan(taiKhoan);
-        }
         return true;
-    }
-
-    /**
-     * Nạp 2 nhân viên mẫu cùng tài khoản của họ để test đăng nhập.
-     * DTO do giao diện tạo và truyền vào, BUS chỉ lưu dữ liệu.
-     */
-    public void napDuLieuMau(NhanVienDTO quanLy, NhanVienDTO thuNgan,
-            TaiKhoanDTO taiKhoanQuanLy, TaiKhoanDTO taiKhoanThuNgan) {
-        if (laySoLuongNhanVien() > 0 || taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
-            return;
-        }
-        if (quanLy == null || thuNgan == null
-                || taiKhoanQuanLy == null || taiKhoanThuNgan == null) {
-            return;
-        }
-
-        dsNhanVien.add(quanLy);
-        dsNhanVien.add(thuNgan);
-        taiKhoanBUS.themTaiKhoan(taiKhoanQuanLy);
-        taiKhoanBUS.themTaiKhoan(taiKhoanThuNgan);
     }
 }

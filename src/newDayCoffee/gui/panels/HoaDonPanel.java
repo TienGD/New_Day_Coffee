@@ -98,10 +98,14 @@ public class HoaDonPanel extends JPanel {
 		tb.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent e) {
-				int col = tb.columnAtPoint(e.getPoint());
-				int row = tb.rowAtPoint(e.getPoint());
-				if (col == 0 && row >= 0) {
-					moChiTietHoaDon(row);
+				int viewCol = tb.columnAtPoint(e.getPoint());
+				int viewRow = tb.rowAtPoint(e.getPoint());
+				if (viewCol >= 0 && viewRow >= 0) {
+					int modelCol = tb.convertColumnIndexToModel(viewCol);
+					int modelRow = tb.convertRowIndexToModel(viewRow);
+					if (modelCol == 0 && modelRow >= 0) {
+						moChiTietHoaDon(modelRow);
+					}
 				}
 			}
 		});
@@ -110,8 +114,9 @@ public class HoaDonPanel extends JPanel {
 		tb.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
 			@Override
 			public void mouseMoved(java.awt.event.MouseEvent e) {
-				int col = tb.columnAtPoint(e.getPoint());
-				if (col == 0) {
+				int viewCol = tb.columnAtPoint(e.getPoint());
+				int modelCol = viewCol >= 0 ? tb.convertColumnIndexToModel(viewCol) : -1;
+				if (modelCol == 0) {
 					tb.setCursor(new Cursor(Cursor.HAND_CURSOR));
 				} else {
 					tb.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
@@ -145,15 +150,17 @@ public class HoaDonPanel extends JPanel {
 
 			NhanVienDTO nhanVien = hoaDon.getMaNV();
 			String tenNV = nhanVien == null ? "" : nhanVien.getTenNV();
+			String trangThai = hoaDon.getTrangThai() == null ? "" : hoaDon.getTrangThai();
 			double tongTien = dsHoaDonBUS.tongTienHoaDon(hoaDon);
 
 			// Lưu đối tượng HoaDonDTO vào cột ẩn clientProperty qua mảng Object
 			model.addRow(new Object[]{
-				hoaDon,                                  // cột 0: lưu DTO, renderer vẽ icon
-				hoaDon.getMaHD(),                        // cột 1: Mã HD
+				hoaDon,                                    // cột 0: lưu DTO, renderer vẽ icon
+				hoaDon.getMaHD(),                          // cột 1: Mã HD
 				UIUtils.dinhDangNgay(hoaDon.getNgayLap()), // cột 2: Ngày lập
-				tenNV,                                   // cột 3: Nhân viên
-				UIUtils.dinhDangTien(tongTien)           // cột 4: Thành tiền
+				tenNV,                                     // cột 3: Nhân viên
+				trangThai,                                 // cột 4: Trạng thái
+				UIUtils.dinhDangTien(tongTien)             // cột 5: Thành tiền
 			});
 			soHoaDon++;
 		}
@@ -230,6 +237,36 @@ public class HoaDonPanel extends JPanel {
 			}
 			pnIcon.setToolTipText("Xem chi tiết hóa đơn");
 			return pnIcon;
+		}
+	}
+
+	// ==================== INNER CLASS: RENDERER TRẠNG THÁI ====================
+
+	/** Căn giữa và giữ màu xen kẽ/chọn cho cột Trạng thái hóa đơn. */
+	private static class TrangThaiRenderer extends DefaultTableCellRenderer {
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value,
+				boolean isSelected, boolean hasFocus, int row, int column) {
+			String trangThai = value == null ? "" : value.toString().trim();
+			super.getTableCellRendererComponent(table, trangThai, isSelected, hasFocus, row, column);
+			setHorizontalAlignment(JLabel.CENTER);
+
+			if (isSelected) {
+				setBackground(UIUtils.COLOR_TABLE_SELECTION);
+				setForeground(Color.BLACK);
+			} else {
+				setBackground(row % 2 == 0 ? UIUtils.COLOR_TABLE_BG : UIUtils.COLOR_TABLE_ALT_ROW);
+				if ("Đã thanh toán".equalsIgnoreCase(trangThai)) {
+					setForeground(UIUtils.COLOR_BTN_LUU);
+				} else if (trangThai.toLowerCase().contains("hủy")) {
+					setForeground(UIUtils.COLOR_BTN_XOA);
+				} else {
+					setForeground(table.getForeground());
+				}
+			}
+			setFont(UIUtils.FONT_LABEL_BOLD);
+			return this;
 		}
 	}
 }

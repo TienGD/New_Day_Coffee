@@ -5,41 +5,34 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSHoaDonBUS;
+import newDayCoffee.dto.ThongKeMonDTO;
 import newDayCoffee.utils.UIUtils;
 
 /**
- * Màn hình tổng quan: doanh thu, số đơn, món bán chạy và danh sách cần chú ý.
+ * Màn hình tổng quan: doanh thu, số đơn, món bán chạy nhất và bảng thống kê món bán hôm nay.
  *
- * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán
- * nghiệp vụ. Các nút sắp xếp / thêm chú ý được xử lý bằng ActionListener.
+ * Panel chỉ hiển thị dữ liệu do DSHoaDonBUS cung cấp, không tự tính toán nghiệp vụ.
  */
 public class TongQuanPanel extends JPanel implements ActionListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
-	private JLabel lbTitle;
-
 	// 4 thẻ thống kê
 	private JLabel lbDoanhThu;
 	private JLabel lbSoDon;
@@ -49,18 +42,12 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 	// Bảng món bán chạy
 	private JTable tblMonBanChay;
 	private DefaultTableModel modelMonBanChay;
-
-	// Danh sách cần chú ý
-	private DefaultListModel<String> modelChuY;
-	private JList<String> listChuY;
-
-	private JButton btnBanChay;
-	private JButton btnBanCham;
-	private JButton btnThemChuY;
+	private JButton btnSapXepBanChay;
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSHoaDonBUS dsHoaDonBUS;
-	private boolean sapXepGiam = true;
+	private boolean sapXepGiam = false;
+	private List<ThongKeMonDTO> dsMonHienTai = new ArrayList<>();
 
 	public TongQuanPanel(DSHoaDonBUS dsHoaDonBUS) {
 		this.dsHoaDonBUS = dsHoaDonBUS;
@@ -107,14 +94,7 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		pnTop.add(pnCards, BorderLayout.CENTER);
 		pnMainContent.add(pnTop, BorderLayout.NORTH);
 
-		// PHẦN DƯỚI: MÓN BÁN CHẠY & CẦN CHÚ Ý
-		JPanel pnBottom = new JPanel(new GridBagLayout());
-		pnBottom.setOpaque(false);
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.weighty = 1.0;
-
-		// 3.1 KHUNG MÓN BÁN CHẠY HÔM NAY (BÊN TRÁI)
+		// PHẦN DƯỚI: KHUNG MÓN BÁN CHẠY HÔM NAY (CHIẾM TOÀN BỘ CHIỀU NGANG)
 		JPanel pnBestSellers = UIUtils.taoPanelNenNau();
 		pnBestSellers.setLayout(new BorderLayout(0, 15));
 		pnBestSellers.setBorder(new EmptyBorder(20, 25, 22, 25));
@@ -152,91 +132,32 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 
 		pnBestSellers.add(scrollMonBanChay, BorderLayout.CENTER);
 
-		// NÚT SẮP XẾP
-		JPanel pnBtnSort = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+		// NÚT SẮP XẾP TOGGLE
+		JPanel pnBtnSort = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 6));
 		pnBtnSort.setOpaque(false);
 
-		btnBanChay = UIUtils.taoNutNenNau("Bán chạy ▲", fontDam);
-		btnBanCham = UIUtils.taoNutNenNau("Bán chậm ▼", fontDam);
+		btnSapXepBanChay = UIUtils.taoNutNenNau("Sắp xếp món theo món bán chạy", fontDam);
+		btnSapXepBanChay.setPreferredSize(new Dimension(285, 36));
+		capNhatTrangThaiNutSapXep();
 
-		pnBtnSort.add(btnBanChay);
-		pnBtnSort.add(btnBanCham);
+		pnBtnSort.add(btnSapXepBanChay);
 		pnBestSellers.add(pnBtnSort, BorderLayout.SOUTH);
 
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.weightx = 0.68;
-		gbc.insets = new Insets(0, 0, 0, 22);
-		pnBottom.add(pnBestSellers, gbc);
-
-		// 3.2 KHUNG CẦN CHÚ Ý (BÊN PHẢI)
-		JPanel pnAttention = UIUtils.taoPanelNenNau();
-		pnAttention.setLayout(new BorderLayout(0, 18));
-		pnAttention.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-		JLabel lbAttentionTitle = new JLabel("Cần chú ý");
-		lbAttentionTitle.setFont(fontDam);
-		lbAttentionTitle.setForeground(UIUtils.COLOR_ACCENT_GOLD);
-		pnAttention.add(lbAttentionTitle, BorderLayout.NORTH);
-
-		modelChuY = new DefaultListModel<>();
-
-		listChuY = new JList<>(modelChuY);
-		listChuY.setFont(UIUtils.FONT_LABEL);
-		listChuY.setForeground(Color.WHITE);
-		listChuY.setBackground(UIUtils.COLOR_DARK_ROAST);
-		listChuY.setSelectionBackground(new Color(125, 80, 45));
-		listChuY.setSelectionForeground(Color.WHITE);
-		listChuY.setFixedCellHeight(44);
-		listChuY.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		listChuY.setBorder(new EmptyBorder(5, 10, 5, 10));
-
-		JScrollPane scrollChuY = new JScrollPane(listChuY);
-		scrollChuY.setOpaque(false);
-		scrollChuY.getViewport().setOpaque(false);
-		scrollChuY.setBorder(null);
-
-		pnAttention.add(scrollChuY, BorderLayout.CENTER);
-
-		// NÚT THÊM CHÚ Ý
-		JPanel pnBtnWrapThemChuY = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 6));
-		pnBtnWrapThemChuY.setOpaque(false);
-
-		btnThemChuY = UIUtils.taoNutNenNau("+ Thêm chú ý", fontDam);
-		btnThemChuY.setPreferredSize(new Dimension(145, 34));
-
-		pnBtnWrapThemChuY.add(btnThemChuY);
-		pnAttention.add(pnBtnWrapThemChuY, BorderLayout.SOUTH);
-
-		gbc.gridx = 1;
-		gbc.gridy = 0;
-		gbc.weightx = 0.32;
-		gbc.insets = new Insets(0, 0, 0, 0);
-		pnBottom.add(pnAttention, gbc);
-
-		pnMainContent.add(pnBottom, BorderLayout.CENTER);
+		pnMainContent.add(pnBestSellers, BorderLayout.CENTER);
 		add(pnMainContent, BorderLayout.CENTER);
 	}
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
 	private void ganSuKien() {
-		btnBanChay.addActionListener(this);
-		btnBanCham.addActionListener(this);
-		btnThemChuY.addActionListener(this);
+		btnSapXepBanChay.addActionListener(this);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Object nguon = e.getSource();
-
-		if (nguon == btnBanChay) {
-			sapXepGiam = true;
+		if (e.getSource() == btnSapXepBanChay) {
+			sapXepGiam = !sapXepGiam;
+			capNhatTrangThaiNutSapXep();
 			capNhatBangMonBanChay();
-		} else if (nguon == btnBanCham) {
-			sapXepGiam = false;
-			capNhatBangMonBanChay();
-		} else if (nguon == btnThemChuY) {
-			themChuY();
 		}
 	}
 
@@ -247,39 +168,65 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		lbSoDon.setText(dsHoaDonBUS.soDonHomNay() + " đơn");
 		lbSoMon.setText(dsHoaDonBUS.soLuongMonHomNay() + " món");
 
-		List<Map.Entry<String, Integer>> dsBanChay = dsHoaDonBUS.layMonBanChay(true);
-		if (dsBanChay.isEmpty()) {
+		dsMonHienTai = dsHoaDonBUS.layDanhSachThongKeMonHomNay();
+		if (dsMonHienTai.isEmpty()) {
 			lbMonBanChayNhat.setText("Chưa có");
 		} else {
-			lbMonBanChayNhat.setText(dsBanChay.get(0).getKey());
+			List<ThongKeMonDTO> dsGiam = sapXepDanhSach(dsMonHienTai, true);
+			lbMonBanChayNhat.setText(dsGiam.get(0).getTenMon());
 		}
 
+		capNhatTrangThaiNutSapXep();
 		capNhatBangMonBanChay();
 	}
 
-	/** Nạp lại bảng món bán chạy theo thứ tự đang chọn. */
+	/** Nạp lại bảng món bán chạy bằng cách sắp xếp bản sao dsMonHienTai. */
 	private void capNhatBangMonBanChay() {
-		List<Map.Entry<String, Integer>> dsMon = dsHoaDonBUS.layMonBanChay(sapXepGiam);
+		List<ThongKeMonDTO> dsSapXep = sapXepDanhSach(dsMonHienTai, sapXepGiam);
 
 		modelMonBanChay.setRowCount(0);
-		for (int i = 0; i < dsMon.size(); i++) {
-			Map.Entry<String, Integer> mon = dsMon.get(i);
-			modelMonBanChay.addRow(new Object[]{mon.getKey(), mon.getValue()});
+		for (ThongKeMonDTO mon : dsSapXep) {
+			modelMonBanChay.addRow(new Object[]{mon.getTenMon(), mon.getSoLuong()});
 		}
 	}
 
-	private void themChuY() {
-		String noiDung = JOptionPane.showInputDialog(this, "Nhập nội dung cần chú ý:", "Thêm chú ý",
-				JOptionPane.INFORMATION_MESSAGE);
-		if (noiDung == null) {
-			return;
+	private void capNhatTrangThaiNutSapXep() {
+		if (sapXepGiam) {
+			btnSapXepBanChay.setBackground(new Color(235, 158, 52));
+			btnSapXepBanChay.setForeground(new Color(38, 18, 8));
+		} else {
+			btnSapXepBanChay.setBackground(UIUtils.COLOR_DARK_ROAST);
+			btnSapXepBanChay.setForeground(UIUtils.COLOR_WHITE);
 		}
-		noiDung = noiDung.trim();
-		if (noiDung.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Nội dung chú ý không được để trống.",
-					"Thông báo", JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-		modelChuY.addElement("(i)  " + noiDung);
+		btnSapXepBanChay.repaint();
+	}
+
+	private static List<ThongKeMonDTO> sapXepDanhSach(List<ThongKeMonDTO> nguon, final boolean giamDan) {
+		List<ThongKeMonDTO> banSao = nguon == null ? new ArrayList<>() : new ArrayList<>(nguon);
+		Collections.sort(banSao, new Comparator<ThongKeMonDTO>() {
+			@Override
+			public int compare(ThongKeMonDTO a, ThongKeMonDTO b) {
+				int cmp = giamDan
+						? Integer.compare(b.getSoLuong(), a.getSoLuong())
+						: Integer.compare(a.getSoLuong(), b.getSoLuong());
+				if (cmp != 0) {
+					return cmp;
+				}
+				String maA = a.getMaMon() == null ? "" : a.getMaMon();
+				String maB = b.getMaMon() == null ? "" : b.getMaMon();
+				cmp = maA.compareToIgnoreCase(maB);
+				if (cmp != 0) {
+					return cmp;
+				}
+				cmp = maA.compareTo(maB);
+				if (cmp != 0) {
+					return cmp;
+				}
+				String tenA = a.getTenMon() == null ? "" : a.getTenMon();
+				String tenB = b.getTenMon() == null ? "" : b.getTenMon();
+				return tenA.compareToIgnoreCase(tenB);
+			}
+		});
+		return banSao;
 	}
 }

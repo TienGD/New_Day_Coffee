@@ -29,6 +29,9 @@ import javax.swing.border.EmptyBorder;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.bus.NhanVienTaiKhoanBUS;
+import newDayCoffee.dao.NhanVienDAO;
+import newDayCoffee.dao.TaiKhoanDAO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
@@ -59,14 +62,29 @@ public class LoginFrame extends JFrame implements ActionListener {
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSTaiKhoanBUS taiKhoanBUS;
 	private final DSNhanVienBUS DSNhanVienBUS;
+	private final NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS;
 
 	public LoginFrame() {
-		this(new DSTaiKhoanBUS(), null);
+		this(new DSTaiKhoanBUS(), new DSNhanVienBUS(), null);
 	}
 
 	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS) {
-		this.taiKhoanBUS = taiKhoanBUS;
-		this.DSNhanVienBUS = (DSNhanVienBUS == null) ? new DSNhanVienBUS(taiKhoanBUS) : DSNhanVienBUS;
+		this(taiKhoanBUS, DSNhanVienBUS, null);
+	}
+
+	public LoginFrame(DSTaiKhoanBUS taiKhoanBUS, DSNhanVienBUS DSNhanVienBUS,
+			NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
+		DSTaiKhoanBUS resolvedTk = (taiKhoanBUS != null)
+				? taiKhoanBUS
+				: (nhanVienTaiKhoanBUS != null ? nhanVienTaiKhoanBUS.getDsTaiKhoanBUS() : new DSTaiKhoanBUS());
+		DSNhanVienBUS resolvedNv = (DSNhanVienBUS != null)
+				? DSNhanVienBUS
+				: (nhanVienTaiKhoanBUS != null ? nhanVienTaiKhoanBUS.getDsNhanVienBUS() : new DSNhanVienBUS());
+		this.taiKhoanBUS = resolvedTk;
+		this.DSNhanVienBUS = resolvedNv;
+		this.nhanVienTaiKhoanBUS = (nhanVienTaiKhoanBUS == null)
+				? new NhanVienTaiKhoanBUS(this.DSNhanVienBUS, this.taiKhoanBUS)
+				: nhanVienTaiKhoanBUS;
 
 		// Tạo tài khoản mẫu ql01 / nv01 để đăng nhập thử
 		taoDuLieuMau();
@@ -77,14 +95,19 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 	/** Tạo DTO mẫu tại giao diện rồi chuyển cho BUS lưu trữ. */
 	private void taoDuLieuMau() {
-		taoDuLieuMau(DSNhanVienBUS);
+		taoDuLieuMau(DSNhanVienBUS, taiKhoanBUS);
 	}
 
-	/** Tạo 2 nhân viên mẫu cùng tài khoản của họ để test đăng nhập.
-	 * DTO do giao diện tạo và truyền vào, BUS chỉ lưu dữ liệu.
+	/** Tạo nhân viên mẫu cùng tài khoản của họ để test đăng nhập (fallback khi CSDL chưa có dữ liệu).
+	 * Ưu tiên nạp từ CSDL trước; nếu CSDL trống hoặc lỗi kết nối mới dùng dữ liệu mẫu.
 	 */
-	public static void taoDuLieuMau(DSNhanVienBUS DSNhanVienBUS) {
-		if (DSNhanVienBUS == null || DSNhanVienBUS.laySoLuongNhanVien() > 0) {
+	public static void taoDuLieuMau(DSNhanVienBUS DSNhanVienBUS, DSTaiKhoanBUS taiKhoanBUS) {
+		if (DSNhanVienBUS == null || taiKhoanBUS == null
+				|| DSNhanVienBUS.laySoLuongNhanVien() > 0
+				|| taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
+			return;
+		}
+		if (napDuLieuTuCSDL(DSNhanVienBUS, taiKhoanBUS)) {
 			return;
 		}
 		NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
@@ -114,7 +137,44 @@ public class LoginFrame extends JFrame implements ActionListener {
 		dsTaiKhoanMau.add(taiKhoanThuNgan);
 		dsTaiKhoanMau.add(new TaiKhoanDTO(phaChe, "123456"));
 		dsTaiKhoanMau.add(new TaiKhoanDTO(nhanVien, "123456"));
-		DSNhanVienBUS.napDuLieuMau(dsNhanVienMau, dsTaiKhoanMau);
+		DSNhanVienBUS.napDuLieuMau(dsNhanVienMau);
+		taiKhoanBUS.napDuLieuMau(dsTaiKhoanMau);
+	}
+
+	private static boolean napDuLieuTuCSDL(DSNhanVienBUS dsNhanVienBUS, DSTaiKhoanBUS dsTaiKhoanBUS) {
+		List<NhanVienDTO> dsNhanVienDB = new NhanVienDAO().getAll();
+		if (dsNhanVienDB == null || dsNhanVienDB.isEmpty()) {
+			return false;
+		}
+		List<TaiKhoanDTO> dsTaiKhoanDB = new TaiKhoanDAO().getAll();
+		if (!coTaiKhoanHopLeTrongCSDL(dsNhanVienDB, dsTaiKhoanDB)) {
+			return false;
+		}
+		if (!dsNhanVienBUS.napDuLieuMau(dsNhanVienDB)) {
+			return false;
+		}
+		return dsTaiKhoanBUS.napDuLieuTuCSDL(dsTaiKhoanDB, dsNhanVienBUS);
+	}
+
+	private static boolean coTaiKhoanHopLeTrongCSDL(List<NhanVienDTO> dsNhanVienDB, List<TaiKhoanDTO> dsTaiKhoanDB) {
+		if (dsNhanVienDB == null || dsNhanVienDB.isEmpty() || dsTaiKhoanDB == null || dsTaiKhoanDB.isEmpty()) {
+			return false;
+		}
+		for (TaiKhoanDTO tk : dsTaiKhoanDB) {
+			if (tk == null || tk.getMaNV() == null || tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
+				continue;
+			}
+			String maNV = tk.getMaNV().getMaNV() == null ? "" : tk.getMaNV().getMaNV().trim();
+			if (maNV.isEmpty()) {
+				continue;
+			}
+			for (NhanVienDTO nv : dsNhanVienDB) {
+				if (nv != null && nv.getMaNV() != null && nv.getMaNV().trim().equalsIgnoreCase(maNV)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -429,7 +489,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		String loi = DSNhanVienBUS.dangNhap(maNV, matKhau);
+		String loi = nhanVienTaiKhoanBUS.dangNhap(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Đăng nhập thất bại", JOptionPane.ERROR_MESSAGE);
 			passMatKhau.setText("");
@@ -437,7 +497,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		MainFrame mainFrame = new MainFrame(taiKhoanBUS, DSNhanVienBUS);
+		MainFrame mainFrame = new MainFrame(taiKhoanBUS, DSNhanVienBUS, nhanVienTaiKhoanBUS);
 		mainFrame.setVisible(true);
 		this.dispose();
 	}
@@ -472,7 +532,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 			return;
 		}
 
-		String loi = DSNhanVienBUS.datLaiMatKhau(email, matKhauMoi);
+		String loi = nhanVienTaiKhoanBUS.datLaiMatKhau(email, matKhauMoi);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Đặt lại mật khẩu thất bại", JOptionPane.ERROR_MESSAGE);
 			return;

@@ -10,6 +10,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -34,8 +36,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSNhanVienBUS;
+import newDayCoffee.bus.NhanVienTaiKhoanBUS;
 import newDayCoffee.dto.NhanVienDTO;
-import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
 
@@ -69,12 +71,18 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSNhanVienBUS DSNhanVienBUS;
+	private final NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS;
 
 	public QuanLyNhanVienPanel(DSNhanVienBUS DSNhanVienBUS) {
+		this(DSNhanVienBUS, null);
+	}
+
+	public QuanLyNhanVienPanel(DSNhanVienBUS DSNhanVienBUS, NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
 		this.DSNhanVienBUS = DSNhanVienBUS;
+		this.nhanVienTaiKhoanBUS = nhanVienTaiKhoanBUS;
 		khoiTaoGiaoDien();
 		ganSuKien();
-		capNhatBang();
+		capNhatBang(false);
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -287,6 +295,18 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		txtTimTen.addActionListener(this);
 
 		tblNhanVien.getSelectionModel().addListSelectionListener(this);
+
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				focusMacDinh();
+			}
+		});
+	}
+
+	/** Đặt focus mặc định vào ô Mã nhân viên nếu đang ở trạng thái hợp lệ để nhập mới. */
+	public void focusMacDinh() {
+		UIUtils.focusKhiHienThi(txtMaNV, this);
 	}
 
 	@Override
@@ -339,6 +359,11 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại bảng theo mã / tên đang nhập. */
 	public void capNhatBang() {
+		capNhatBang(true);
+	}
+
+	/** Nạp lại bảng theo mã / tên đang nhập; có thể tắt thông báo khi chuyển tab. */
+	public void capNhatBang(boolean hienThongBao) {
 		List<NhanVienDTO> dsNhanVien = DSNhanVienBUS.timKiem(txtTimMa.getText(), txtTimTen.getText());
 
 		modelNhanVien.setRowCount(0);
@@ -355,7 +380,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			});
 		}
 
-		if (dsNhanVien.isEmpty()
+		if (hienThongBao && dsNhanVien.isEmpty()
 				&& !(txtTimMa.getText().trim().isEmpty() && txtTimTen.getText().trim().isEmpty())) {
 			JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên.",
 					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
@@ -370,13 +395,12 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 		}
 
 		NhanVienDTO nhanVien = taoNhanVienTuForm();
-		TaiKhoanDTO taiKhoan = new TaiKhoanDTO(nhanVien, "123456");
-		String ketQua = DSNhanVienBUS.themNhanVien(nhanVien, taiKhoan);
+		String ketQua = DSNhanVienBUS.themNhanVien(nhanVien);
 		if (ketQua != null) {
 			JOptionPane.showMessageDialog(this, ketQua, "Không thể thêm nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		JOptionPane.showMessageDialog(this, "Đã thêm nhân viên. Mật khẩu mặc định: 123456",
+		JOptionPane.showMessageDialog(this, "Đã thêm nhân viên.",
 				"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		lamMoi();
 	}
@@ -505,7 +529,9 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 			return;
 		}
 
-		String loi = DSNhanVienBUS.xoaNhanVien(maNV);
+		String loi = (nhanVienTaiKhoanBUS != null)
+				? nhanVienTaiKhoanBUS.xoaNhanVien(maNV)
+				: DSNhanVienBUS.xoaNhanVien(maNV);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể xóa nhân viên", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -533,7 +559,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	private NhanVienDTO taoNhanVienTuForm() {
 		LocalDate ngaySinh = docNgay(txtNgaySinh.getText());
-		return new NhanVienDTO(txtMaNV.getText().trim(), txtTenNV.getText().trim(),
+		return new NhanVienDTO(txtMaNV.getText().trim().toLowerCase(), txtTenNV.getText().trim(),
 				ngaySinh, txtSDT.getText().trim(), txtEmail.getText().trim(),
 				layChucVu(), layGioiTinh(), "");
 	}

@@ -8,6 +8,8 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.List;
 
 import javax.swing.Box;
@@ -225,6 +227,18 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		}
 
 		tblThucDon.getSelectionModel().addListSelectionListener(this);
+
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				focusMacDinh();
+			}
+		});
+	}
+
+	/** Đặt focus mặc định vào ô Mã món nếu đang ở trạng thái hợp lệ để nhập mới. */
+	public void focusMacDinh() {
+		UIUtils.focusKhiHienThi(txtMaMon, this);
 	}
 
 	@Override
@@ -280,6 +294,11 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại bảng theo từ khóa và nhóm đang chọn. */
 	public void capNhatBang() {
+		capNhatBang(true);
+	}
+
+	/** Nạp lại bảng theo từ khóa và nhóm đang chọn; có thể tắt thông báo khi chuyển tab. */
+	public void capNhatBang(boolean hienThongBao) {
 		String tuKhoa = txtTimKiem.getText();
 		List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(tuKhoa, nhomDangLoc);
 
@@ -294,7 +313,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 			});
 		}
 
-		if (dsMon.isEmpty() && !tuKhoa.trim().isEmpty()) {
+		if (hienThongBao && dsMon.isEmpty() && !tuKhoa.trim().isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
 					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
 		}

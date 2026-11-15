@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
+import newDayCoffee.dto.ThongKeMonDTO;
 
 /**
  * Xử lý nghiệp vụ trên chi tiết hóa đơn.
@@ -203,6 +205,41 @@ public class ChiTietHoaDonBUS {
         return ketQua;
     }
 
+    /**
+     * Tổng hợp số lượng bán ra của từng món theo mã món trong các hóa đơn được truyền vào.
+     * Giữ mã món để tầng hiển thị tie-break khi trùng số lượng.
+     */
+    public List<ThongKeMonDTO> thongKeMonTheoMa(List<String> dsMaHD) {
+        Map<String, ThongKeMonDTO> ketQua = new LinkedHashMap<>();
+
+        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
+            if (!thuocHoaDon(chiTiet, dsMaHD)) {
+                continue;
+            }
+
+            String maMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getMaMon());
+            String tenMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getTenMon());
+            if (tenMon.isEmpty()) {
+                tenMon = maMon;
+            }
+            String khoa = maMon.toLowerCase();
+            if (khoa.isEmpty()) {
+                khoa = tenMon.toLowerCase();
+            }
+
+            ThongKeMonDTO thongKe = ketQua.get(khoa);
+            if (thongKe == null) {
+                ketQua.put(khoa, new ThongKeMonDTO(maMon, tenMon, chiTiet.getSoLuong()));
+            } else {
+                thongKe.setSoLuong(thongKe.getSoLuong() + chiTiet.getSoLuong());
+                if (thongKe.getTenMon().isEmpty() && !tenMon.isEmpty()) {
+                    thongKe.setTenMon(tenMon);
+                }
+            }
+        }
+        return new ArrayList<>(ketQua.values());
+    }
+
     /** Gán hóa đơn cho các dòng chi tiết khi lưu hóa đơn. */
     public void ganHoaDon(HoaDonDTO hoaDon, List<ChiTietHoaDonDTO> dsChiTietMoi) {
         if (hoaDon == null || dsChiTietMoi == null) {
@@ -211,6 +248,54 @@ public class ChiTietHoaDonBUS {
         for (ChiTietHoaDonDTO chiTiet : dsChiTietMoi) {
             chiTiet.setHoaDon(hoaDon);
         }
+    }
+
+    /** Nạp chi tiết hóa đơn đọc từ CSDL (không đưa dòng thiếu mã hóa đơn vào giỏ hàng). */
+    public int napDuLieuTuCSDL(List<ChiTietHoaDonDTO> dsTuDB,
+            DSHoaDonBUS dsHoaDonBUS, DSDoUongBUS dsDoUongBUS) {
+        if (dsTuDB == null || dsTuDB.isEmpty()) {
+            return 0;
+        }
+        List<String> khoaDaCo = new ArrayList<>();
+        for (ChiTietHoaDonDTO ct : dsChiTiet) {
+            String maHD = layMaHD(ct);
+            String maMon = ct.getDoUong() == null ? "" : chuanHoa(ct.getMaMon());
+            if (!maHD.isEmpty() && !maMon.isEmpty()) {
+                khoaDaCo.add(maHD.toLowerCase() + "\0" + maMon.toLowerCase());
+            }
+        }
+        int daThem = 0;
+        for (ChiTietHoaDonDTO ct : dsTuDB) {
+            if (ct == null || ct.getSoLuong() <= 0 || ct.getDoUong() == null) {
+                continue;
+            }
+            String maHD = layMaHD(ct);
+            String maMon = chuanHoa(ct.getMaMon());
+            if (maHD.isEmpty() || maMon.isEmpty()) {
+                continue;
+            }
+            String khoa = maHD.toLowerCase() + "\0" + maMon.toLowerCase();
+            if (khoaDaCo.contains(khoa)) {
+                continue;
+            }
+            if (dsHoaDonBUS != null) {
+                HoaDonDTO hdBus = dsHoaDonBUS.timTheoMa(maHD);
+                if (hdBus == null) {
+                    continue;
+                }
+                ct.setHoaDon(hdBus);
+            }
+            if (dsDoUongBUS != null) {
+                DoUongDTO duBus = dsDoUongBUS.timTheoMa(maMon);
+                if (duBus != null) {
+                    ct.setDoUong(duBus);
+                }
+            }
+            khoaDaCo.add(khoa);
+            dsChiTiet.add(ct);
+            daThem++;
+        }
+        return daThem;
     }
 
     // ==================== KHU VỰC HỖ TRỢ ====================

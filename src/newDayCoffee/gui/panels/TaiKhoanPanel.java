@@ -8,6 +8,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,7 +27,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSTaiKhoanBUS;
-import newDayCoffee.dto.NhanVienDTO;
+import newDayCoffee.bus.NhanVienTaiKhoanBUS;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
@@ -68,12 +70,25 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSTaiKhoanBUS dsTaiKhoanBUS;
+	private final NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS;
+
+	public TaiKhoanPanel(NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
+		this(nhanVienTaiKhoanBUS != null ? nhanVienTaiKhoanBUS.getDsTaiKhoanBUS() : new DSTaiKhoanBUS(),
+				nhanVienTaiKhoanBUS);
+	}
 
 	public TaiKhoanPanel(DSTaiKhoanBUS dsTaiKhoanBUS) {
-		this.dsTaiKhoanBUS = dsTaiKhoanBUS;
+		this(dsTaiKhoanBUS, new NhanVienTaiKhoanBUS(null, dsTaiKhoanBUS));
+	}
+
+	public TaiKhoanPanel(DSTaiKhoanBUS dsTaiKhoanBUS, NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
+		this.dsTaiKhoanBUS = dsTaiKhoanBUS != null ? dsTaiKhoanBUS : new DSTaiKhoanBUS();
+		this.nhanVienTaiKhoanBUS = nhanVienTaiKhoanBUS != null
+				? nhanVienTaiKhoanBUS
+				: new NhanVienTaiKhoanBUS(null, this.dsTaiKhoanBUS);
 		khoiTaoGiaoDien();
 		ganSuKien();
-		capNhatBang();
+		capNhatBang(false);
 	}
 
 	// ==================== KHU VỰC KHỞI TẠO GIAO DIỆN ====================
@@ -228,6 +243,16 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		txtTimMa.addActionListener(this);
 
 		tblTaiKhoan.getSelectionModel().addListSelectionListener(this);
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				focusMacDinh();
+			}
+		});
+	}
+
+	public void focusMacDinh() {
+		UIUtils.focusKhiHienThi(txtMaNV, this);
 	}
 
 	@Override
@@ -269,6 +294,11 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 	/** Nạp lại bảng tài khoản theo mã đang tìm. */
 	public void capNhatBang() {
+		capNhatBang(true);
+	}
+
+	/** Nạp lại bảng tài khoản; cho phép tắt hộp thoại thông báo khi tự đồng bộ lúc chuyển màn. */
+	public void capNhatBang(boolean hienThongBao) {
 		modelTaiKhoan.setRowCount(0);
 
 		String maTim = txtTimMa.getText().trim();
@@ -282,8 +312,10 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		} else {
 			TaiKhoanDTO taiKhoan = dsTaiKhoanBUS.timTheoMa(maTim);
 			if (taiKhoan == null) {
-				JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản.",
-						"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+				if (hienThongBao) {
+					JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản.",
+							"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+				}
 				return;
 			}
 			modelTaiKhoan.addRow(new Object[]{
@@ -298,33 +330,50 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		if (maNV.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
-			txtMaNV.requestFocus();
+			txtMaNV.requestFocusInWindow();
 			return;
 		}
 		if (!maNV.matches(Validator.MA_NHAN_VIEN)) {
 			JOptionPane.showMessageDialog(this,
 					"Mã nhân viên phải có đúng 4 ký tự, dạng nvXX hoặc qlXX (ví dụ nv01).",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
-			txtMaNV.requestFocus();
+			txtMaNV.requestFocusInWindow();
+			return;
+		}
+		if (nhanVienTaiKhoanBUS.timNhanVien(maNV) == null) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên với mã này.",
+					"Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
+			txtMaNV.requestFocusInWindow();
+			return;
+		}
+		if (nhanVienTaiKhoanBUS.nhanVienDaCoTaiKhoan(maNV)) {
+			JOptionPane.showMessageDialog(this, "Tài khoản cho mã nhân viên này đã tồn tại.",
+					"Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
+			txtMaNV.requestFocusInWindow();
 			return;
 		}
 
 		String matKhau = new String(txtMatKhau.getPassword()).trim();
-		if (!matKhau.isEmpty() && !matKhau.matches(Validator.MAT_KHAU)) {
+		if (matKhau.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu.",
+					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMatKhau.requestFocusInWindow();
+			return;
+		}
+		if (!matKhau.matches(Validator.MAT_KHAU)) {
 			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự và tối đa 32 ký tự.",
 					"Không thể thêm tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMatKhau.requestFocusInWindow();
 			return;
 		}
 
-		TaiKhoanDTO taiKhoan = new TaiKhoanDTO(new NhanVienDTO(maNV), matKhau);
-		String loi = dsTaiKhoanBUS.themTaiKhoan(taiKhoan);
+		String loi = nhanVienTaiKhoanBUS.themTaiKhoan(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể thêm tài khoản", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		JOptionPane.showMessageDialog(this, "Đã thêm tài khoản.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-		xoaForm();
-		capNhatBang();
+		lamMoi();
 	}
 
 	private void suaTaiKhoan() {
@@ -336,19 +385,26 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 		}
 
 		String matKhau = new String(txtMatKhau.getPassword()).trim();
-		if (!matKhau.matches(Validator.MAT_KHAU)) {
-			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự.",
+		if (matKhau.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu.",
 					"Không thể sửa tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMatKhau.requestFocusInWindow();
+			return;
+		}
+		if (!matKhau.matches(Validator.MAT_KHAU)) {
+			JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự và tối đa 32 ký tự.",
+					"Không thể sửa tài khoản", JOptionPane.WARNING_MESSAGE);
+			txtMatKhau.requestFocusInWindow();
 			return;
 		}
 
-		String loi = dsTaiKhoanBUS.doiMatKhau(maNV, matKhau);
+		String loi = nhanVienTaiKhoanBUS.suaTaiKhoan(maNV, matKhau);
 		if (loi != null) {
 			JOptionPane.showMessageDialog(this, loi, "Không thể sửa tài khoản", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		JOptionPane.showMessageDialog(this, "Đã cập nhật mật khẩu.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-		capNhatBang();
+		capNhatBang(false);
 	}
 
 	private void xoaTaiKhoan() {
@@ -365,14 +421,14 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 			return;
 		}
 
-		if (!dsTaiKhoanBUS.xoaTaiKhoan(maNV)) {
-			JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản cần xóa.",
+		String loi = nhanVienTaiKhoanBUS.xoaTaiKhoan(maNV);
+		if (loi != null) {
+			JOptionPane.showMessageDialog(this, loi,
 					"Không thể xóa tài khoản", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		JOptionPane.showMessageDialog(this, "Đã xóa tài khoản.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-		xoaForm();
-		capNhatBang();
+		lamMoi();
 	}
 
 	private void luuDuLieu() {
