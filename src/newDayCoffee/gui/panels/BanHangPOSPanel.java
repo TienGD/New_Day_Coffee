@@ -2,30 +2,25 @@ package newDayCoffee.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -33,32 +28,28 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import newDayCoffee.bus.ChiTietHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
-import newDayCoffee.bus.DoUongBUS;
-import newDayCoffee.bus.HoaDonBUS;
+import newDayCoffee.dao.DoUongDAO;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
-import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.gui.MainFrame;
-import newDayCoffee.utils.Auth;
+import newDayCoffee.utils.UIUtils;
 
 /**
  * Màn hình bán hàng (POS).
  *
- * Panel nhận DSDoUongBUS để hiển thị thực đơn và HoaDonBUS để quản lý giỏ hàng,
- * thanh toán, in hóa đơn. Mọi sự kiện đều dùng ActionListener, không dùng lambda.
+ * Panel nhận DSDoUongBUS để hiển thị thực đơn và ChiTietHoaDonBUS để quản lý giỏ hàng.
+ * Các thao tác bấm nút dùng ActionListener; ô số lượng cập nhật thêm khi mất focus.
  */
-public class BanHangPOSPanel extends JPanel implements ActionListener {
+public class BanHangPOSPanel extends JPanel implements ActionListener, FocusListener {
 
 	// ==================== KHU VỰC THÀNH PHẦN GIAO DIỆN ====================
-	private JLabel lbHeaderTitle;
-	private JLabel lbNhanVien;
 	private JTextField txtTimKiem;
 	private JButton btnTimKiem;
 	private JPanel pnGridMon;
@@ -67,29 +58,43 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	private JLabel lbTongTienGiaTri;
 	private JButton btnXoa;
 	private JButton btnThanhToan;
+	private JTextArea txtGhiChu;
 
-	private String HintTimKiem = "Tìm kiếm món";
+	private String HintTimKiem = "Ví dụ: cof01";
 	private String nhomDangLoc = "Tất cả";
 
-	// Lưu nhãn số lượng trên từng thẻ món để cập nhật nhanh
-	private final Map<String, JLabel> nhanSoLuong = new HashMap<>();
+	// Ô số lượng trên từng thẻ món
+	private final Map<String, JTextField> oSoLuong = new HashMap<>();
+	// Nút giảm số lượng trên từng thẻ món
+	private final Map<String, JButton> nutGiam = new HashMap<>();
 	// Thứ tự mã món tương ứng với từng dòng trong bảng đơn hàng
 	private final List<String> maMonTrongBang = new ArrayList<>();
 	// Nút lọc theo nhóm món
 	private final Map<JButton, String> nhomCuaNutLoc = new HashMap<>();
-	// Nút tăng / giảm trên thẻ món
-	private final Map<JButton, String> maMonCuaNutCong = new HashMap<>();
-	private final Map<JButton, String> maMonCuaNutTru = new HashMap<>();
 
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
-	private final DSDoUongBUS dsDoUongBUS;
-	private final HoaDonBUS hoaDonBUS;
 	private final MainFrame mainFrame;
+	private final DSDoUongBUS dsDoUongBUS;
+	private final ChiTietHoaDonBUS chiTietHoaDonBUS;
 
-	public BanHangPOSPanel(MainFrame mainFrame,DSDoUongBUS dsDoUongBUS, HoaDonBUS hoaDonBUS) {
+	public BanHangPOSPanel(MainFrame mainFrame, DSDoUongBUS dsDoUongBUS,
+			ChiTietHoaDonBUS chiTietHoaDonBUS) {
 		this.mainFrame = mainFrame;
 		this.dsDoUongBUS = dsDoUongBUS;
-		this.hoaDonBUS = hoaDonBUS;
+		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
+
+		if (!dsDoUongBUS.daNapDuLieu()) {
+			if (!dsDoUongBUS.napDuLieuTuCSDL(new DoUongDAO().getAll())) {
+				List<DoUongDTO> dsMau = new ArrayList<>();
+				dsMau.add(new DoUongDTO("cof01", "Cà phê đen đá", 25000, "Cà phê phin, đá"));
+				dsMau.add(new DoUongDTO("cof02", "Cà phê sữa đá", 30000, "Cà phê phin, sữa đặc, đá"));
+				dsMau.add(new DoUongDTO("tea01", "Trà đào cam sả", 40000, "Trà đào, cam tươi, sả"));
+				dsMau.add(new DoUongDTO("tea02", "Trà vải", 35000, "Trà lài, vải, đá"));
+				dsMau.add(new DoUongDTO("mil01", "Trà sữa truyền thống", 35000, "Trà đen, sữa, trân châu"));
+				dsMau.add(new DoUongDTO("mil02", "Trà sữa matcha", 45000, "Matcha, sữa, trân châu"));
+				dsDoUongBUS.napDuLieuMau(dsMau);
+			}
+		}
 
 		khoiTaoGiaoDien();
 		ganSuKien();
@@ -100,123 +105,76 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC GIAO DIỆN ====================
 	private void khoiTaoGiaoDien() {
 		setLayout(new BorderLayout());
-		setOpaque(false);
+		setBackground(UIUtils.COLOR_BACKGROUND);
 
-		Font fontTieuDe = new Font("Arial", Font.BOLD, 22);
-		Font fontDam = new Font("Arial", Font.BOLD, 15);
-		Font fontThuong = new Font("Arial", Font.PLAIN, 13);
-
-		// HEADER PHÍA TRÊN
-		JPanel pnHeader = new JPanel(new BorderLayout());
-		pnHeader.setBackground(new Color(139, 69, 19));
-		pnHeader.setPreferredSize(new Dimension(0, 75));
-		pnHeader.setBorder(new EmptyBorder(0, 30, 0, 30));
-
-		lbHeaderTitle = new JLabel("BÁN HÀNG");
-		lbHeaderTitle.setFont(fontTieuDe);
-		lbHeaderTitle.setForeground(Color.WHITE);
-		pnHeader.add(lbHeaderTitle, BorderLayout.WEST);
-
-		JPanel pnBadges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 18));
-		pnBadges.setOpaque(false);
-
-		// Nhãn thông tin Ca kết
-		JPanel badgeCaKet = taoBadgeHeader(155);
-		JLabel lbCaKet = new JLabel("Ca kết đang mở");
-		lbCaKet.setFont(fontThuong);
-		lbCaKet.setForeground(Color.WHITE);
-		badgeCaKet.add(lbCaKet);
-
-		// Nhãn thông tin người đang đăng nhập
-		JPanel badgeNhanVien = taoBadgeHeader(240);
-		lbNhanVien = new JLabel(taoNhanNguoiDung());
-		lbNhanVien.setFont(fontThuong);
-		lbNhanVien.setForeground(Color.WHITE);
-		badgeNhanVien.add(lbNhanVien);
-
-		pnBadges.add(badgeCaKet);
-		pnBadges.add(badgeNhanVien);
-		pnHeader.add(pnBadges, BorderLayout.EAST);
-
-		add(pnHeader, BorderLayout.NORTH);
+		Font fontDam = new Font(UIUtils.FONT_FAMILY, Font.BOLD, 16);
+		Font fontThuong = UIUtils.FONT_LABEL;
 
 		// NỘI DUNG CHÍNH (CHIA 2 CỘT: DANH SÁCH MÓN & THÔNG TIN ĐƠN HÀNG)
 		JPanel pnMainContent = new JPanel(new GridBagLayout());
 		pnMainContent.setOpaque(false);
-		pnMainContent.setBorder(new EmptyBorder(15, 25, 20, 25));
+		pnMainContent.setBorder(new EmptyBorder(18, 24, 22, 24));
+		pnMainContent.setBackground(UIUtils.COLOR_BACKGROUND);
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.weighty = 1.0;
 
 		// ==================== CỘT TRÁI: DANH SÁCH CÁC MÓN ====================
-		JPanel pnLeftCol = new JPanel(new BorderLayout(0, 12));
-		pnLeftCol.setOpaque(false);
+		JPanel pnLeftCol = UIUtils.createCardPanel(UIUtils.COLOR_CARD_SURFACE, 18, new Insets(16, 18, 16, 18));
+		pnLeftCol.setLayout(new BorderLayout(0, 14));
 
 		JPanel pnTopFilter = new JPanel(new BorderLayout(0, 10));
 		pnTopFilter.setOpaque(false);
+		pnTopFilter.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(228, 176, 114, 55)),
+			new EmptyBorder(0, 0, 12, 0)
+		));
 
 		JLabel lbDanhSachMon = new JLabel("Danh sách các món");
-		lbDanhSachMon.setFont(new Font("Arial", Font.BOLD, 18));
-		lbDanhSachMon.setForeground(new Color(139, 69, 19));
+		lbDanhSachMon.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 18));
+		lbDanhSachMon.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 		pnTopFilter.add(lbDanhSachMon, BorderLayout.NORTH);
 
-		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		JPanel pnFilterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 		pnFilterBar.setOpaque(false);
 
-		// Ô tìm kiếm món bo góc
-		txtTimKiem = new JTextField() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(186, 145, 114));
-				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.setColor(new Color(139, 69, 19));
-				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.dispose();
-
-				super.paintComponent(g);
-
-				if (getText().isEmpty()) {
-					Graphics2D gHint = (Graphics2D) g.create();
-					gHint.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					gHint.setColor(Color.WHITE);
-					gHint.setFont(fontThuong);
-					Insets insets = getInsets();
-					int textY = (getHeight() - gHint.getFontMetrics().getHeight()) / 2 + gHint.getFontMetrics().getAscent();
-					gHint.drawString(HintTimKiem, insets.left, textY);
-					gHint.dispose();
-				}
-			}
-		};
-		txtTimKiem.setOpaque(false);
-		txtTimKiem.setForeground(Color.WHITE);
-		txtTimKiem.setPreferredSize(new Dimension(180, 34));
-		txtTimKiem.setBorder(new EmptyBorder(5, 12, 5, 12));
+		// Ô tìm kiếm món bo góc (tái sử dụng từ UIUtils)
+		txtTimKiem = UIUtils.taoOTimKiemPOS(HintTimKiem, fontThuong, 132, 34);
 		pnFilterBar.add(txtTimKiem);
 
-		btnTimKiem = taoNutLoc("Tìm", 60, fontThuong);
+		btnTimKiem = UIUtils.taoNutLocPOS("Tìm", 50, UIUtils.FONT_LABEL_BOLD);
+		btnTimKiem.setBackground(UIUtils.COLOR_BTN_TIM);
 		pnFilterBar.add(btnTimKiem);
 
-		// Các nút lọc loại món
-		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa", "Bánh"};
+		// Các nút lọc loại món (bấm vào nút nào nút đó sẽ sáng nổi bật lên)
+		String[] dsLoai = {"Tất cả", "Cà phê", "Trà", "Trà sữa"};
+		JButton nutMacDinh = null;
 		for (int i = 0; i < dsLoai.length; i++) {
-			JButton btnLoai = taoNutLoc(dsLoai[i], 78, fontThuong);
+			JButton btnLoai = UIUtils.taoNutLocPOS(dsLoai[i], 65, UIUtils.FONT_LABEL_BOLD);
 			nhomCuaNutLoc.put(btnLoai, dsLoai[i]);
-			btnLoai.addActionListener(this);
+			if ("Tất cả".equals(dsLoai[i])) {
+				nutMacDinh = btnLoai;
+			}
 			pnFilterBar.add(btnLoai);
+		}
+		if (nutMacDinh != null) {
+			UIUtils.capNhatTrangThaiNutLocPOS(nutMacDinh, nhomCuaNutLoc.keySet());
 		}
 
 		pnTopFilter.add(pnFilterBar, BorderLayout.CENTER);
 		pnLeftCol.add(pnTopFilter, BorderLayout.NORTH);
 
 		// Lưới danh sách thẻ món - được nạp động từ DSDoUongBUS
-		pnGridMon = new JPanel(new GridLayout(0, 3, 18, 18));
+		pnGridMon = new JPanel(new GridLayout(0, 3, 16, 16));
 		pnGridMon.setOpaque(false);
-		pnGridMon.setBorder(new EmptyBorder(5, 5, 5, 5));
+		pnGridMon.setBorder(new EmptyBorder(4, 4, 4, 4));
 
-		JScrollPane scrollMon = new JScrollPane(pnGridMon);
+		JPanel pnGridWrapper = new JPanel(new BorderLayout());
+		pnGridWrapper.setOpaque(false);
+		pnGridWrapper.add(pnGridMon, BorderLayout.NORTH);
+
+		JScrollPane scrollMon = new JScrollPane(pnGridWrapper);
 		scrollMon.setOpaque(false);
 		scrollMon.getViewport().setOpaque(false);
 		scrollMon.setBorder(null);
@@ -226,31 +184,53 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.weightx = 0.62;
-		gbc.insets = new Insets(0, 0, 0, 20);
+		gbc.weightx = 0.61;
+		gbc.insets = new Insets(0, 0, 0, 18);
 		pnMainContent.add(pnLeftCol, gbc);
 
 		// ==================== CỘT PHẢI: THÔNG TIN ĐƠN HÀNG ====================
-		JPanel pnRightCol = new JPanel(new BorderLayout(0, 12));
-		pnRightCol.setBackground(new Color(172, 130, 98));
-		pnRightCol.setBorder(BorderFactory.createCompoundBorder(
-			new LineBorder(new Color(120, 75, 40), 1),
-			new EmptyBorder(15, 18, 18, 18)
-		));
+		JPanel pnRightCol = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 18, new Insets(16, 18, 18, 18));
+		pnRightCol.setLayout(new BorderLayout(0, 12));
 
-		JPanel pnOrderTop = new JPanel(new BorderLayout(0, 8));
+		JPanel pnOrderTop = new JPanel(new BorderLayout(0, 10));
 		pnOrderTop.setOpaque(false);
 
 		JLabel lbOrderTitle = new JLabel("Thông tin đơn hàng");
-		lbOrderTitle.setFont(new Font("Arial", Font.BOLD, 18));
-		lbOrderTitle.setForeground(Color.WHITE);
+		lbOrderTitle.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 18));
+		lbOrderTitle.setForeground(UIUtils.COLOR_ACCENT_GOLD);
+		lbOrderTitle.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(228, 176, 114, 55)),
+			new EmptyBorder(0, 0, 8, 0)
+		));
 		pnOrderTop.add(lbOrderTitle, BorderLayout.NORTH);
 
+		// Phần Nhập ghi chú phía trên bảng đơn hàng
+		JPanel pnGhiChuContainer = new JPanel(new BorderLayout(0, 5));
+		pnGhiChuContainer.setOpaque(false);
+
+		JLabel lbGhiChu = new JLabel("Ghi chú:");
+		lbGhiChu.setFont(UIUtils.FONT_LABEL_BOLD);
+		lbGhiChu.setForeground(new Color(242, 232, 220));
+		pnGhiChuContainer.add(lbGhiChu, BorderLayout.NORTH);
+
+		txtGhiChu = UIUtils.createTextAreaWithHint("Ví dụ: ít đá, không đường...");
+		txtGhiChu.setRows(3);
+		txtGhiChu.setColumns(20);
+		txtGhiChu.setBackground(UIUtils.COLOR_BG_INPUT);
+		txtGhiChu.setForeground(new Color(40, 24, 14));
+		txtGhiChu.setFont(new Font(UIUtils.FONT_FAMILY, Font.PLAIN, 13));
+		txtGhiChu.setBorder(new EmptyBorder(6, 8, 6, 8));
+
+		JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
+		scrollGhiChu.setBorder(new LineBorder(new Color(165, 135, 110), 1, true));
+		pnGhiChuContainer.add(scrollGhiChu, BorderLayout.CENTER);
+
+		pnOrderTop.add(pnGhiChuContainer, BorderLayout.CENTER);
 		pnRightCol.add(pnOrderTop, BorderLayout.NORTH);
 
-		// Bảng danh sách món đặt
-		String[] cotBang = {"STT", "Tên món", "SL", "Đơn giá", "Thành tiền", "Ghi chú"};
-		modelDonHang = new DefaultTableModel(cotBang, 0) {
+		// Bảng danh sách món đặt (chỉ đọc, không cho sửa trực tiếp trên bảng)
+		String[] tenCotDonHang = {"STT", "Tên món", "SL", "Đơn giá", "Thành tiền", "Mô tả"};
+		modelDonHang = new DefaultTableModel(tenCotDonHang, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 				return false;
@@ -258,91 +238,42 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		};
 
 		tblDonHang = new JTable(modelDonHang);
-		tblDonHang.setRowHeight(42);
-		tblDonHang.setBackground(new Color(222, 222, 222));
-		tblDonHang.setGridColor(new Color(120, 120, 120));
-		tblDonHang.setFont(new Font("Arial", Font.PLAIN, 12));
-		tblDonHang.getTableHeader().setBackground(new Color(222, 222, 222));
-		tblDonHang.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 11));
-		tblDonHang.getTableHeader().setPreferredSize(new Dimension(0, 32));
-
-		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-		for (int i = 0; i < tblDonHang.getColumnCount(); i++) {
-			tblDonHang.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-		}
-		tblDonHang.getColumnModel().getColumn(0).setPreferredWidth(35);
-		tblDonHang.getColumnModel().getColumn(1).setPreferredWidth(95);
+		JScrollPane scrollBang = UIUtils.createTableScrollPane(tblDonHang);
+		UIUtils.centerTableCells(tblDonHang);
+		tblDonHang.getColumnModel().getColumn(0).setPreferredWidth(34);
+		tblDonHang.getColumnModel().getColumn(1).setPreferredWidth(84);
 		tblDonHang.getColumnModel().getColumn(2).setPreferredWidth(30);
+		tblDonHang.getColumnModel().getColumn(3).setPreferredWidth(62);
+		tblDonHang.getColumnModel().getColumn(4).setPreferredWidth(74);
+		tblDonHang.getColumnModel().getColumn(5).setPreferredWidth(106);
 
-		JScrollPane scrollBang = new JScrollPane(tblDonHang);
-		scrollBang.getViewport().setBackground(new Color(222, 222, 222));
-		scrollBang.setBorder(new LineBorder(new Color(90, 90, 90), 1));
 		pnRightCol.add(scrollBang, BorderLayout.CENTER);
 
 		// Phần dưới: Tổng tiền + Nút Xóa & Thanh toán
-		JPanel pnOrderBottom = new JPanel(new BorderLayout(0, 15));
+		JPanel pnOrderBottom = new JPanel(new BorderLayout(0, 14));
 		pnOrderBottom.setOpaque(false);
 
-		JPanel pnTotalRow = new JPanel(new BorderLayout());
-		pnTotalRow.setOpaque(false);
+		JPanel pnTotalRow = UIUtils.createCardPanel(UIUtils.COLOR_DARK_ROAST, 12, new Insets(10, 14, 10, 14));
+		pnTotalRow.setLayout(new BorderLayout());
 
 		JLabel lbTongTienText = new JLabel("Tổng tiền:");
 		lbTongTienText.setFont(fontDam);
-		lbTongTienText.setForeground(new Color(128, 25, 25));
+		lbTongTienText.setForeground(new Color(242, 232, 220));
 
 		lbTongTienGiaTri = new JLabel("0Đ");
-		lbTongTienGiaTri.setFont(fontDam);
-		lbTongTienGiaTri.setForeground(new Color(128, 25, 25));
+		lbTongTienGiaTri.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 18));
+		lbTongTienGiaTri.setForeground(UIUtils.COLOR_ACCENT_GOLD);
 
 		pnTotalRow.add(lbTongTienText, BorderLayout.WEST);
 		pnTotalRow.add(lbTongTienGiaTri, BorderLayout.EAST);
 		pnOrderBottom.add(pnTotalRow, BorderLayout.NORTH);
 
-		JPanel pnOrderButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+		JPanel pnOrderButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0));
 		pnOrderButtons.setOpaque(false);
 
-		btnXoa = new JButton("Xóa") {
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(186, 145, 114));
-				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.setColor(new Color(92, 32, 0));
-				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.dispose();
-				super.paintComponent(g);
-			}
-		};
-		btnXoa.setOpaque(false);
-		btnXoa.setContentAreaFilled(false);
-		btnXoa.setBorderPainted(false);
-		btnXoa.setFocusPainted(false);
-		btnXoa.setForeground(Color.WHITE);
-		btnXoa.setFont(new Font("Arial", Font.BOLD, 14));
-		btnXoa.setPreferredSize(new Dimension(75, 42));
-		btnXoa.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-		btnThanhToan = new JButton("Thanh toán") {
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(78, 30, 0));
-				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.dispose();
-				super.paintComponent(g);
-			}
-		};
-		btnThanhToan.setOpaque(false);
-		btnThanhToan.setContentAreaFilled(false);
-		btnThanhToan.setBorderPainted(false);
-		btnThanhToan.setFocusPainted(false);
-		btnThanhToan.setForeground(Color.WHITE);
-		btnThanhToan.setFont(new Font("Arial", Font.BOLD, 14));
-		btnThanhToan.setPreferredSize(new Dimension(130, 42));
-		btnThanhToan.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		Font fontBtnAction = new Font(UIUtils.FONT_FAMILY, Font.BOLD, 14);
+		btnXoa = UIUtils.taoNutBoGocPOS("Xóa", UIUtils.COLOR_BTN_XOA, null, fontBtnAction, 95, 42);
+		btnThanhToan = UIUtils.taoNutBoGocPOS("Thanh toán", UIUtils.COLOR_BTN_LUU, null, fontBtnAction, 145, 42);
 
 		pnOrderButtons.add(btnXoa);
 		pnOrderButtons.add(btnThanhToan);
@@ -352,157 +283,11 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 
 		gbc.gridx = 1;
 		gbc.gridy = 0;
-		gbc.weightx = 0.38;
+		gbc.weightx = 0.39;
 		gbc.insets = new Insets(0, 0, 0, 0);
 		pnMainContent.add(pnRightCol, gbc);
 
 		add(pnMainContent, BorderLayout.CENTER);
-	}
-
-	/** Tạo panel nền nâu bo góc dùng trên header. */
-	private JPanel taoBadgeHeader(int width) {
-		JPanel badge = new JPanel(new GridBagLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(172, 118, 78));
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-				g2.dispose();
-			}
-		};
-		badge.setOpaque(false);
-		badge.setPreferredSize(new Dimension(width, 38));
-		return badge;
-	}
-
-	/** Tạo nút lọc / tìm kiếm bo góc. */
-	private JButton taoNutLoc(String text, int width, Font font) {
-		JButton btn = new JButton(text) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(new Color(186, 145, 114));
-				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.setColor(new Color(139, 69, 19));
-				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-				g2.dispose();
-				super.paintComponent(g);
-			}
-		};
-		btn.setOpaque(false);
-		btn.setContentAreaFilled(false);
-		btn.setBorderPainted(false);
-		btn.setFocusPainted(false);
-		btn.setForeground(Color.WHITE);
-		btn.setFont(font);
-		btn.setPreferredSize(new Dimension(width, 34));
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		return btn;
-	}
-
-	/** Tạo thẻ hiển thị một món trong thực đơn. */
-	private JPanel taoTheMon(DoUongDTO doUong) {
-		JPanel cardMon = new JPanel(new BorderLayout()) {
-			@Override
-			protected void paintComponent(Graphics g) {
-				super.paintComponent(g);
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(Color.WHITE);
-				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-				g2.setColor(new Color(28, 28, 28));
-				g2.fillRoundRect(0, 0, getWidth(), (int) (getHeight() * 0.48), 18, 18);
-				g2.fillRect(0, (int) (getHeight() * 0.48) - 10, getWidth(), 10);
-				g2.dispose();
-			}
-		};
-		cardMon.setOpaque(false);
-
-		JPanel pnImgHolder = new JPanel();
-		pnImgHolder.setOpaque(false);
-		pnImgHolder.setPreferredSize(new Dimension(0, 105));
-		cardMon.add(pnImgHolder, BorderLayout.NORTH);
-
-		JPanel pnInfo = new JPanel();
-		pnInfo.setLayout(new BoxLayout(pnInfo, BoxLayout.Y_AXIS));
-		pnInfo.setOpaque(false);
-		pnInfo.setBorder(new EmptyBorder(8, 12, 10, 12));
-
-		JLabel lbTenMon = new JLabel(doUong.getTenMon());
-		lbTenMon.setFont(new Font("Arial", Font.BOLD, 14));
-		lbTenMon.setForeground(Color.BLACK);
-		lbTenMon.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-		JLabel lbMoTa = new JLabel(doUong.getMoTa());
-		lbMoTa.setFont(new Font("Arial", Font.PLAIN, 10));
-		lbMoTa.setForeground(Color.GRAY);
-		lbMoTa.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-		JLabel lbGia = new JLabel(DoUongBUS.dinhDangGia(doUong.getDonGia()));
-		lbGia.setFont(new Font("Arial", Font.BOLD, 12));
-		lbGia.setForeground(new Color(255, 80, 80));
-		lbGia.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-		JPanel pnSpinner = new JPanel(new BorderLayout());
-		pnSpinner.setAlignmentX(Component.LEFT_ALIGNMENT);
-		pnSpinner.setMaximumSize(new Dimension(200, 24));
-		pnSpinner.setPreferredSize(new Dimension(140, 24));
-
-		JLabel lbSoLuong = new JLabel("0", SwingConstants.CENTER);
-		lbSoLuong.setOpaque(true);
-		lbSoLuong.setBackground(new Color(215, 215, 215));
-		lbSoLuong.setFont(new Font("Arial", Font.BOLD, 12));
-		nhanSoLuong.put(doUong.getMaMon(), lbSoLuong);
-
-		JButton btnTru = new JButton("-");
-		btnTru.setBackground(new Color(92, 32, 0));
-		btnTru.setForeground(Color.WHITE);
-		btnTru.setFont(new Font("Arial", Font.BOLD, 13));
-		btnTru.setFocusPainted(false);
-		btnTru.setBorderPainted(false);
-		btnTru.setPreferredSize(new Dimension(40, 24));
-		btnTru.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-		JButton btnCong = new JButton("+");
-		btnCong.setBackground(new Color(92, 32, 0));
-		btnCong.setForeground(Color.WHITE);
-		btnCong.setFont(new Font("Arial", Font.BOLD, 10));
-		btnCong.setFocusPainted(false);
-		btnCong.setBorderPainted(false);
-		btnCong.setPreferredSize(new Dimension(40, 24));
-		btnCong.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-		pnSpinner.add(btnTru, BorderLayout.WEST);
-		pnSpinner.add(lbSoLuong, BorderLayout.CENTER);
-		pnSpinner.add(btnCong, BorderLayout.EAST);
-
-		pnInfo.add(lbTenMon);
-		pnInfo.add(Box.createVerticalStrut(3));
-		pnInfo.add(lbMoTa);
-		pnInfo.add(Box.createVerticalStrut(5));
-		pnInfo.add(lbGia);
-		pnInfo.add(Box.createVerticalStrut(6));
-		pnInfo.add(pnSpinner);
-
-		cardMon.add(pnInfo, BorderLayout.CENTER);
-
-		// Gắn sự kiện cho nút tăng / giảm của thẻ
-		maMonCuaNutTru.put(btnTru, doUong.getMaMon());
-		maMonCuaNutCong.put(btnCong, doUong.getMaMon());
-		btnTru.addActionListener(this);
-		btnCong.addActionListener(this);
-
-		return cardMon;
-	}
-
-	private String taoNhanNguoiDung() {
-		if (Auth.laQuanLy()) {
-			return "Quản lý: " + Auth.getTenHienThi();
-		}
-		return "Nhân viên: " + Auth.getTenHienThi();
 	}
 
 	// ==================== KHU VỰC GẮN SỰ KIỆN ====================
@@ -510,41 +295,129 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		btnTimKiem.addActionListener(this);
 		btnXoa.addActionListener(this);
 		btnThanhToan.addActionListener(this);
-		// Nhấn Enter trong ô tìm kiếm cũng tìm
 		txtTimKiem.addActionListener(this);
+
+		for (JButton btnLoc : nhomCuaNutLoc.keySet()) {
+			btnLoc.addActionListener(this);
+		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object nguon = e.getSource();
+		String lenh = e.getActionCommand();
 
 		if (nguon == btnTimKiem || nguon == txtTimKiem) {
-			capNhatDanhSachMon();
+			timKiemMon();
 		} else if (nguon == btnXoa) {
 			xoaMonDangChon();
 		} else if (nguon == btnThanhToan) {
 			thanhToan();
 		} else if (nhomCuaNutLoc.containsKey(nguon)) {
 			nhomDangLoc = nhomCuaNutLoc.get(nguon);
+			UIUtils.capNhatTrangThaiNutLocPOS((JButton) nguon, nhomCuaNutLoc.keySet());
 			capNhatDanhSachMon();
-		} else if (maMonCuaNutCong.containsKey(nguon)) {
-			themMon(maMonCuaNutCong.get(nguon));
-		} else if (maMonCuaNutTru.containsKey(nguon)) {
-			botMon(maMonCuaNutTru.get(nguon));
+		} else if (lenh != null && lenh.startsWith("TANG:")) {
+			themMon(lenh.substring(5));
+		} else if (lenh != null && lenh.startsWith("GIAM:")) {
+			botMon(lenh.substring(5));
+		} else if (nguon instanceof JTextField
+				&& ((JTextField) nguon).getClientProperty("maMon") != null) {
+			capNhatSoLuongTuO((JTextField) nguon);
+		}
+	}
+
+	@Override
+	public void focusGained(FocusEvent e) {
+		if (e.getSource() instanceof JTextField) {
+			JTextField txt = (JTextField) e.getSource();
+			if (txt.getClientProperty("maMon") != null) {
+				txt.selectAll();
+			}
+		}
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		if (e.getSource() instanceof JTextField) {
+			JTextField txt = (JTextField) e.getSource();
+			if (txt.getClientProperty("maMon") != null) {
+				capNhatSoLuongTuO(txt);
+			}
 		}
 	}
 
 	// ==================== KHU VỰC GIỎ HÀNG ====================
 	private void themMon(String maMon) {
 		DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
-		if (hoaDonBUS.themMon(doUong)) {
+		if (doUong == null) {
+			return;
+		}
+
+		ChiTietHoaDonDTO chiTiet = new ChiTietHoaDonDTO();
+		chiTiet.setDoUong(doUong);
+		chiTiet.setSoLuong(1);
+		chiTiet.setDonGia(doUong.getDonGia());
+		if (chiTietHoaDonBUS.themChiTiet(chiTiet)) {
 			capNhatGioHang();
 		}
 	}
 
 	private void botMon(String maMon) {
-		if (hoaDonBUS.giamMon(maMon)) {
+		if (chiTietHoaDonBUS.giamChiTiet(maMon)) {
 			capNhatGioHang();
+		}
+	}
+
+	/**
+	 * Cập nhật giỏ hàng theo số lượng người dùng gõ tay trên thẻ món.
+	 * Ô trống hoặc không phải số nguyên không âm sẽ được khôi phục về giá trị cũ.
+	 */
+	private void capNhatSoLuongTuO(JTextField txtSoLuong) {
+		Object maMonValue = txtSoLuong.getClientProperty("maMon");
+		if (!(maMonValue instanceof String)) {
+			return;
+		}
+		String maMon = (String) maMonValue;
+
+		ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(maMon);
+		int soLuongHienTai = (dong == null) ? 0 : dong.getSoLuong();
+
+		int soLuongMoi;
+		try {
+			soLuongMoi = Integer.parseInt(txtSoLuong.getText().trim());
+		} catch (NumberFormatException e) {
+			soLuongMoi = -1;
+		}
+
+		if (soLuongMoi < 0) {
+			txtSoLuong.setText(String.valueOf(soLuongHienTai));
+			return;
+		}
+		if (soLuongMoi == soLuongHienTai) {
+			if (!txtSoLuong.getText().trim().equals(String.valueOf(soLuongHienTai))) {
+				txtSoLuong.setText(String.valueOf(soLuongHienTai));
+			}
+			return;
+		}
+
+		if (dong == null && soLuongMoi > 0) {
+			DoUongDTO doUong = dsDoUongBUS.timTheoMa(maMon);
+			if (doUong == null) {
+				txtSoLuong.setText("0");
+				return;
+			}
+			ChiTietHoaDonDTO chiTiet = new ChiTietHoaDonDTO();
+			chiTiet.setDoUong(doUong);
+			chiTiet.setSoLuong(soLuongMoi);
+			chiTiet.setDonGia(doUong.getDonGia());
+			chiTietHoaDonBUS.themChiTiet(chiTiet);
+		} else {
+			chiTietHoaDonBUS.capNhatSoLuong(maMon, soLuongMoi);
+		}
+		capNhatGioHang();
+		if (txtSoLuong.isFocusOwner()) {
+			txtSoLuong.setCaretPosition(txtSoLuong.getText().length());
 		}
 	}
 
@@ -552,61 +425,89 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 	/** Nạp lại danh sách thẻ món theo từ khóa và nhóm đang chọn. */
 	public void capNhatDanhSachMon() {
 		pnGridMon.removeAll();
-		nhanSoLuong.clear();
-		maMonCuaNutCong.clear();
-		maMonCuaNutTru.clear();
+		oSoLuong.clear();
+		nutGiam.clear();
 
 		List<DoUongDTO> dsMon = dsDoUongBUS.locVaTim(txtTimKiem.getText(), nhomDangLoc);
 		for (int i = 0; i < dsMon.size(); i++) {
-			pnGridMon.add(taoTheMon(dsMon.get(i)));
+			DoUongDTO mon = dsMon.get(i);
+			JPanel card = UIUtils.taoTheMonPOS(mon.getMaMon(), mon.getTenMon(),
+					mon.getMoTa(), UIUtils.dinhDangTien(mon.getDonGia()), this);
+			Object o = card.getClientProperty("txtSoLuong");
+			if (o instanceof JTextField) {
+				JTextField txtSoLuong = (JTextField) o;
+				txtSoLuong.putClientProperty("maMon", mon.getMaMon());
+				txtSoLuong.addActionListener(this);
+				txtSoLuong.addFocusListener(this);
+				oSoLuong.put(mon.getMaMon(), txtSoLuong);
+			}
+			Object oBtnTru = card.getClientProperty("btnTru");
+			if (oBtnTru instanceof JButton) {
+				nutGiam.put(mon.getMaMon(), (JButton) oBtnTru);
+			}
+			pnGridMon.add(card);
 		}
 
 		capNhatSoLuongTrenThe();
 		pnGridMon.revalidate();
 		pnGridMon.repaint();
-
-		if (dsMon.isEmpty() && !txtTimKiem.getText().trim().isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
-					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
-		}
 	}
 
-	/** Nạp lại bảng đơn hàng và tổng tiền từ HoaDonBUS. */
+	/** Nạp lại bảng đơn hàng và tổng tiền từ ChiTietHoaDonBUS. */
 	public void capNhatGioHang() {
 		modelDonHang.setRowCount(0);
 		maMonTrongBang.clear();
 
-		List<ChiTietHoaDonDTO> gioHang = hoaDonBUS.layGioHang();
+		List<ChiTietHoaDonDTO> gioHang = chiTietHoaDonBUS.layGioHang();
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
+			String moTa = dong.getMoTa();
 			modelDonHang.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
 				String.valueOf(dong.getSoLuong()),
-				HoaDonBUS.dinhDangTien(dong.getDonGia()),
-				HoaDonBUS.dinhDangTien(dong.getThanhTien()),
-				""
+				UIUtils.dinhDangTien(dong.getDonGia()),
+				UIUtils.dinhDangTien(dong.getThanhTien()),
+				moTa == null ? "" : moTa
 			});
 			maMonTrongBang.add(dong.getMaMon());
 		}
 
-		lbTongTienGiaTri.setText(HoaDonBUS.dinhDangTien(hoaDonBUS.tongTien()));
+		lbTongTienGiaTri.setText(UIUtils.dinhDangTien(chiTietHoaDonBUS.tongTienGioHang()));
 		capNhatSoLuongTrenThe();
 	}
 
 	/** Cập nhật số lượng hiển thị trên từng thẻ món. */
 	private void capNhatSoLuongTrenThe() {
-		for (Map.Entry<String, JLabel> muc : nhanSoLuong.entrySet()) {
-			ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(muc.getKey());
-			if (dong == null) {
-				muc.getValue().setText("0");
-			} else {
-				muc.getValue().setText(String.valueOf(dong.getSoLuong()));
+		for (Map.Entry<String, JTextField> muc : oSoLuong.entrySet()) {
+			ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(muc.getKey());
+			int soLuong = (dong == null) ? 0 : dong.getSoLuong();
+			muc.getValue().setText(String.valueOf(soLuong));
+
+			JButton btnTru = nutGiam.get(muc.getKey());
+			if (btnTru != null) {
+				boolean coTheGiam = soLuong > 0;
+				btnTru.setEnabled(coTheGiam);
+				if (coTheGiam) {
+					btnTru.setBackground(UIUtils.COLOR_HEADER);
+					btnTru.setCursor(new Cursor(Cursor.HAND_CURSOR));
+				} else {
+					btnTru.setBackground(new Color(115, 88, 75));
+					btnTru.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+				}
 			}
 		}
 	}
 
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
+	private void timKiemMon() {
+		capNhatDanhSachMon();
+		if (oSoLuong.isEmpty() && !txtTimKiem.getText().trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Không tìm thấy món.",
+					"Thông báo", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+
 	private void xoaMonDangChon() {
 		int dongDangChon = tblDonHang.getSelectedRow();
 		if (dongDangChon < 0) {
@@ -616,7 +517,7 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 		}
 
 		String maMon = maMonTrongBang.get(dongDangChon);
-		ChiTietHoaDonDTO dong = hoaDonBUS.timTrongGio(maMon);
+		ChiTietHoaDonDTO dong = chiTietHoaDonBUS.timTrongGio(maMon);
 		if (dong == null) {
 			return;
 		}
@@ -625,50 +526,27 @@ public class BanHangPOSPanel extends JPanel implements ActionListener {
 				"Xóa \"" + dong.getTenMon() + "\" khỏi đơn hàng?",
 				"Xác nhận xóa", JOptionPane.YES_NO_OPTION);
 		if (luaChon == JOptionPane.YES_OPTION) {
-			hoaDonBUS.xoaMon(maMon);
+			chiTietHoaDonBUS.xoaChiTiet(maMon);
 			capNhatGioHang();
 		}
 	}
 
 	private void thanhToan() {
-		if (hoaDonBUS.gioHangRong()) {
+		if (chiTietHoaDonBUS.gioHangRong()) {
 			JOptionPane.showMessageDialog(this, "Đơn hàng chưa có món nào để thanh toán.",
 					"Thông báo", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
-		// Điều hướng sang màn hình ThanhToanPOSPanel
 		if (mainFrame != null) {
-			mainFrame.switchCard("Thanh toán");
+			mainFrame.moThanhToan(txtGhiChu.getText());
 		}
 	}
-//	private void hienThiHoaDon(HoaDonDTO hoaDon) {
-//		if (hoaDon == null) {
-//			return;
-//		}
-//
-//		JTextArea txtHoaDon = new JTextArea(hoaDonBUS.taoNoiDungHoaDon(hoaDon));
-//		txtHoaDon.setEditable(false);
-//		txtHoaDon.setFont(new Font("Monospaced", Font.PLAIN, 13));
-//		txtHoaDon.setBorder(new EmptyBorder(10, 10, 10, 10));
-//
-//		JScrollPane scroll = new JScrollPane(txtHoaDon);
-//		scroll.setPreferredSize(new Dimension(470, 380));
-//
-//		JOptionPane.showMessageDialog(this, scroll, "Hóa đơn " + hoaDon.getMaHD(),
-//				JOptionPane.INFORMATION_MESSAGE);
-//
-//		int luaChon = JOptionPane.showConfirmDialog(this, "Xuất hóa đơn ra file văn bản?",
-//				"Xuất hóa đơn", JOptionPane.YES_NO_OPTION);
-//		if (luaChon == JOptionPane.YES_OPTION) {
-//			String duongDan = hoaDonBUS.xuatHoaDonRaFile(hoaDon);
-//			if (duongDan == null) {
-//				JOptionPane.showMessageDialog(this, "Không thể xuất hóa đơn ra file.",
-//						"Lỗi", JOptionPane.ERROR_MESSAGE);
-//			} else {
-//				JOptionPane.showMessageDialog(this, "Đã xuất hóa đơn:\n" + duongDan,
-//						"Thành công", JOptionPane.INFORMATION_MESSAGE);
-//			}
-//		}
-//	}
+
+	/** Xóa ghi chú của đơn hàng sau khi đã thanh toán xong. */
+	public void xoaGhiChu() {
+		txtGhiChu.setText("");
+	}
+
+	
 }

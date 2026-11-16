@@ -1,97 +1,84 @@
 package newDayCoffee.dto;
 
-public class HoaDonDTO {
-    private String maHD;
-    private String ngayLap;
-    private String maNV;
-    private double tongTien;
-    private double tienKhachDua;
-    private double tienThoi;
-    private String phuongThucTT;
-    private String ghiChu;
+import java.time.LocalDate;
+import java.util.Objects;
 
+public class HoaDonDTO {
+    private String maHoaDon;
+    private LocalDate ngayLap;
+    private NhanVienDTO maNV;
+    private double tienKhachTra;
+    private String ghiChu;
+    private String trangThai;
+   
+    
+    
     public HoaDonDTO() {
-        this.maHD = "";
-        this.ngayLap = "";
-        this.maNV = "";
-        this.tongTien = 0;
-        this.tienKhachDua = 0;
-        this.tienThoi = 0;
-        this.phuongThucTT = "";
+        this.maHoaDon = "";
+        this.ngayLap = LocalDate.now();
+        this.maNV = new NhanVienDTO();
+        this.tienKhachTra = 0;
         this.ghiChu = "";
+        this.trangThai = "";
     }
 
     public HoaDonDTO(String maHD) {
         this();
-        this.maHD = maHD;
+        this.maHoaDon = maHD;
     }
 
-    public HoaDonDTO(String maHD, String ngayLap, String maNV, double tongTien, double tienKhachDua, double tienThoi, String phuongThucTT, String ghiChu) {
-        this.maHD = maHD;
+    public HoaDonDTO(String maHD, LocalDate ngayLap, NhanVienDTO maNV, double tienKhachDua, String ghiChu, String trangThai) {
+        this.maHoaDon = maHD;
         this.ngayLap = ngayLap;
         this.maNV = maNV;
-        this.tongTien = tongTien;
-        this.tienKhachDua = tienKhachDua;
-        this.tienThoi = tienThoi;
-        this.phuongThucTT = phuongThucTT;
+        this.tienKhachTra = tienKhachDua;
         this.ghiChu = ghiChu;
+        this.trangThai = trangThai;
     }
 
+    
     public String getMaHD() {
-        return maHD;
+        return maHoaDon;
     }
 
     public void setMaHD(String maHD) {
-        this.maHD = maHD;
+        this.maHoaDon = maHD;
     }
 
-    public String getNgayLap() {
+    public LocalDate getNgayLap() {
         return ngayLap;
     }
 
-    public void setNgayLap(String ngayLap) {
+    public void setNgayLap(LocalDate ngayLap) {
         this.ngayLap = ngayLap;
     }
 
-    public String getMaNV() {
+    public NhanVienDTO getMaNV() {
         return maNV;
     }
 
-    public void setMaNV(String maNV) {
+    public void setMaNV(NhanVienDTO maNV) {
         this.maNV = maNV;
     }
 
-    public double getTongTien() {
-        return tongTien;
+    public String getTrangThai() {
+        return trangThai;
     }
 
-    public void setTongTien(double tongTien) {
-        this.tongTien = tongTien;
+    public void setTrangThai(String trangThai) {
+        this.trangThai = trangThai;
     }
+
+
 
     public double getTienKhachDua() {
-        return tienKhachDua;
+        return tienKhachTra;
     }
 
     public void setTienKhachDua(double tienKhachDua) {
-        this.tienKhachDua = tienKhachDua;
+        this.tienKhachTra = tienKhachDua;
     }
 
-    public double getTienThoi() {
-        return tienThoi;
-    }
-
-    public void setTienThoi(double tienThoi) {
-        this.tienThoi = tienThoi;
-    }
-
-    public String getPhuongThucTT() {
-        return phuongThucTT;
-    }
-
-    public void setPhuongThucTT(String phuongThucTT) {
-        this.phuongThucTT = phuongThucTT;
-    }
 
     public String getGhiChu() {
         return ghiChu;
@@ -101,10 +88,29 @@ public class HoaDonDTO {
         this.ghiChu = ghiChu;
     }
 
-    @Override
+    
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(maHoaDon);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		HoaDonDTO other = (HoaDonDTO) obj;
+		return Objects.equals(maHoaDon, other.maHoaDon);
+	}
+
+	@Override
     public String toString() {
-        return "HoaDonDTO [maHD=" + maHD + ", ngayLap=" + ngayLap + ", maNV=" + maNV + ", tongTien=" + tongTien
-                + ", tienKhachDua=" + tienKhachDua + ", tienThoi=" + tienThoi + ", phuongThucTT=" + phuongThucTT
-                + ", ghiChu=" + ghiChu + "]";
+        return "HoaDonDTO [maHD=" + maHoaDon + ", ngayLap=" + ngayLap + ", maNV=" + maNV
+                + ", tienKhachDua=" + tienKhachTra
+                + ", ghiChu=" + ghiChu + ", trangThai=" + trangThai + "]";
     }
 }

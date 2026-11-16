@@ -5,317 +5,162 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.utils.Auth;
-import newDayCoffee.utils.Validator;
 
-/**
- * Xử lý nghiệp vụ của một phiên bán hàng (giỏ hàng và thanh toán).
- *
- * Lớp này nhận DSHoaDonBUS để lưu hóa đơn và NhanVienBUS để lấy thông tin
- * nhân viên đang làm việc. Mọi kiểm tra dữ liệu đều đi qua Validator,
- * phiên đăng nhập đi qua Auth.
- */
 public class HoaDonBUS {
 
-    // ==================== KHU VỰC DỮ LIỆU ====================
-    private final DSHoaDonBUS dsHoaDonBUS;
-    private final NhanVienBUS nhanVienBUS;
-    private final List<ChiTietHoaDonDTO> gioHang;
-    private HoaDonDTO hoaDonVuaTao;
+	private HoaDonDTO hoaDon;
+	private DoUongDTO doUong;
+	private DSChiTietHoaDonBus dsChiTietHoaDon;
 
-    private static final DateTimeFormatter DINH_DANG_THOI_GIAN =
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+	private DSHoaDonBUS dsHoaDonBUS;
+	private ChiTietHoaDonBUS chiTietHoaDonBUS;
+	private HoaDonDTO hoaDonVuaTao;
 
-    /**
-     * Nhận các BUS cần thiết từ nơi tạo (MainFrame) để dùng chung dữ liệu,
-     * không dùng singleton.
-     */
-    public HoaDonBUS(DSHoaDonBUS dsHoaDonBUS, NhanVienBUS nhanVienBUS) {
-        this.dsHoaDonBUS = dsHoaDonBUS;
-        this.nhanVienBUS = nhanVienBUS;
-        this.gioHang = new ArrayList<>();
-        this.hoaDonVuaTao = null;
-    }
+	public HoaDonBUS() {
+	}
 
-    // ==================== KHU VỰC GIỎ HÀNG ====================
-    /** Trả về bản sao giỏ hàng để giao diện hiển thị. */
-    public List<ChiTietHoaDonDTO> layGioHang() {
-        return new ArrayList<>(gioHang);
-    }
+	public HoaDonBUS(HoaDonDTO hoaDon, DoUongDTO doUong, DSChiTietHoaDonBus dsChiTietHoaDon) {
+		super();
+		this.hoaDon = hoaDon;
+		this.doUong = doUong;
+		this.dsChiTietHoaDon = dsChiTietHoaDon;
+	}
 
-    /** Tìm một dòng trong giỏ hàng theo mã món. */
-    public ChiTietHoaDonDTO timTrongGio(String maMon) {
-        String ma = Validator.chuanHoa(maMon);
-        for (int i = 0; i < gioHang.size(); i++) {
-            if (gioHang.get(i).getMaMon().equalsIgnoreCase(ma)) {
-                return gioHang.get(i);
-            }
-        }
-        return null;
-    }
+	public HoaDonBUS(DSHoaDonBUS dsHoaDonBUS, ChiTietHoaDonBUS chiTietHoaDonBUS) {
+		this.dsHoaDonBUS = dsHoaDonBUS;
+		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
+		this.hoaDonVuaTao = null;
+	}
 
-    /**
-     * Thêm một món vào giỏ. Nếu món đã có thì tăng số lượng thêm 1.
-     *
-     * @return true nếu thêm được.
-     */
-    public boolean themMon(DoUongDTO doUong) {
-        if (doUong == null) {
-            return false;
-        }
-        return themMon(doUong, 1);
-    }
+	public HoaDonDTO getHoaDon() {
+		return hoaDon;
+	}
 
-    /** Thêm một món với số lượng chỉ định. */
-    public boolean themMon(DoUongDTO doUong, int soLuong) {
-        if (doUong == null) {
-            return false;
-        }
-        if (Validator.kiemTraSoLuong(soLuong) != null) {
-            return false;
-        }
+	public void setHoaDon(HoaDonDTO hoaDon) {
+		this.hoaDon = hoaDon;
+	}
 
-        ChiTietHoaDonDTO dongDaCo = timTrongGio(doUong.getMaMon());
-        if (dongDaCo != null) {
-            dongDaCo.setSoLuong(dongDaCo.getSoLuong() + soLuong);
-        } else {
-            gioHang.add(new ChiTietHoaDonDTO("", doUong.getMaMon(), doUong.getTenMon(),
-                    soLuong, doUong.getDonGia()));
-        }
-        return true;
-    }
+	public DoUongDTO getDoUong() {
+		return doUong;
+	}
 
-    /**
-     * Giảm số lượng một món. Nếu chỉ còn 1 thì xóa khỏi giỏ.
-     *
-     * @return true nếu tìm thấy món trong giỏ.
-     */
-    public boolean giamMon(String maMon) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        if (dong.getSoLuong() > 1) {
-            dong.setSoLuong(dong.getSoLuong() - 1);
-        } else {
-            gioHang.remove(dong);
-        }
-        return true;
-    }
+	public void setDoUong(DoUongDTO doUong) {
+		this.doUong = doUong;
+	}
 
-    /** Cập nhật số lượng của một món. Số lượng <= 0 thì xóa khỏi giỏ. */
-    public boolean capNhatSoLuong(String maMon, int soLuong) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        if (soLuong <= 0) {
-            gioHang.remove(dong);
-        } else {
-            dong.setSoLuong(soLuong);
-        }
-        return true;
-    }
+	public DSChiTietHoaDonBus getDsChiTietHoaDon() {
+		return dsChiTietHoaDon;
+	}
 
-    /** Xóa một món khỏi giỏ. */
-    public boolean xoaMon(String maMon) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        gioHang.remove(dong);
-        return true;
-    }
+	public void setDsChiTietHoaDon(DSChiTietHoaDonBus dsChiTietHoaDon) {
+		this.dsChiTietHoaDon = dsChiTietHoaDon;
+	}
 
-    /** Xóa toàn bộ giỏ hàng. */
-    public void xoaGioHang() {
-        gioHang.clear();
-    }
+	public double tinhTongTien(HoaDonDTO hd) {
+		if (hd == null || hd.getMaHD() == null || hd.getMaHD().trim().isEmpty()) {
+			return 0;
+		}
 
-    /** Tổng tiền của giỏ hàng hiện tại. */
-    public double tongTien() {
-        double tong = 0;
-        for (int i = 0; i < gioHang.size(); i++) {
-            tong = tong + gioHang.get(i).getThanhTien();
-        }
-        return tong;
-    }
+		List<ChiTietHoaDonDTO> dsChiTiet = null;
+		if (dsChiTietHoaDon != null) {
+			dsChiTiet = dsChiTietHoaDon.layTheoHoaDon(hd.getMaHD());
+		} else if (dsHoaDonBUS != null) {
+			dsChiTiet = dsHoaDonBUS.layChiTiet(hd.getMaHD());
+		} else if (chiTietHoaDonBUS != null) {
+			dsChiTiet = chiTietHoaDonBUS.layTheoHoaDon(hd.getMaHD());
+		}
 
-    /** Tổng số lượng món trong giỏ. */
-    public int tongSoLuong() {
-        int tong = 0;
-        for (int i = 0; i < gioHang.size(); i++) {
-            tong = tong + gioHang.get(i).getSoLuong();
-        }
-        return tong;
-    }
+		if (dsChiTiet == null || dsChiTiet.isEmpty()) {
+			return 0;
+		}
 
-    public boolean gioHangRong() {
-        return gioHang.isEmpty();
-    }
+		double tong = 0;
+		for (int i = 0; i < dsChiTiet.size(); i++) {
+			ChiTietHoaDonDTO ct = dsChiTiet.get(i);
+			if (ct != null) {
+				ChiTietHoaDonBUS busChiTiet = new ChiTietHoaDonBUS(ct, ct.getDoUong());
+				tong = tong + busChiTiet.tinhThanhTien();
+			}
+		}
+		return tong;
+	}
 
-    // ==================== KHU VỰC THANH TOÁN ====================
-    /**
-     * Kiểm tra thông tin thanh toán trước khi lập hóa đơn.
-     *
-     * @return null nếu hợp lệ, ngược lại là thông báo lỗi.
-     */
-    public String kiemTraThanhToan(String tienKhachDuaText, String phuongThucTT) {
-        if (gioHangRong()) {
-            return "Đơn hàng chưa có món nào để thanh toán.";
-        }
-        double tienKhachDua = Validator.docSoTien(tienKhachDuaText);
-        if (tienKhachDua < 0) {
-            return "Tiền khách đưa không hợp lệ.";
-        }
-        return Validator.kiemTraThanhToan(tongTien(), tienKhachDua, phuongThucTT);
-    }
+//	public double tinhTongTien() {
+//		return tinhTongTien(this.hoaDon);
+//	} lỗi là hàm không chứa tham số
 
-    /**
-     * Lập hóa đơn cho giỏ hàng hiện tại và lưu vào DSHoaDonBUS.
-     *
-     * @return null nếu thành công, ngược lại là thông báo lỗi.
-     */
-    public String thanhToan(String tienKhachDuaText, String phuongThucTT, String ghiChu) {
-        hoaDonVuaTao = null;
+	public double tienThua(HoaDonDTO hd) {
+		if (hd == null) {
+			return 0;
+		}
+		double tongTien = tinhTongTien(hd);
+		double khachTra = hd.getTienKhachDua();
+		return khachTra - tongTien;
+	}
 
-        String loi = kiemTraThanhToan(tienKhachDuaText, phuongThucTT);
-        if (loi != null) {
-            return loi;
-        }
-        if (!Auth.isDangNhap()) {
-            return "Vui lòng đăng nhập trước khi thanh toán.";
-        }
+//	public double tinhTienThua() {
+//		return tienThua(this.hoaDon);
+//	}lỗi là hàm không chứa tham số
 
-        double tienKhachDua = Validator.docSoTien(tienKhachDuaText);
-        double tongTien = tongTien();
+	public String thanhToan(HoaDonDTO hoaDonMoi) {
+		hoaDonVuaTao = null;
 
-        HoaDonDTO hoaDon = new HoaDonDTO();
-        hoaDon.setMaHD(dsHoaDonBUS.taoMaHoaDon());
-        hoaDon.setNgayLap(LocalDateTime.now().format(DINH_DANG_THOI_GIAN));
-        hoaDon.setMaNV(Auth.getNguoiDung().getMaNV());
-        hoaDon.setTongTien(tongTien);
-        hoaDon.setTienKhachDua(tienKhachDua);
-        hoaDon.setTienThoi(tienKhachDua - tongTien);
-        hoaDon.setPhuongThucTT(Validator.chuanHoa(phuongThucTT));
-        hoaDon.setGhiChu(Validator.chuanHoa(ghiChu));
+		if (chiTietHoaDonBUS == null || chiTietHoaDonBUS.gioHangRong()) {
+			return "Đơn hàng chưa có món nào để thanh toán.";
+		}
+		if (!Auth.isDangNhap()) {
+			return "Vui lòng đăng nhập trước khi thanh toán.";
+		}
+		if (hoaDonMoi == null) {
+			return "Thông tin hóa đơn không hợp lệ.";
+		}
+		if (dsHoaDonBUS == null) {
+			return "Hệ thống hóa đơn chưa được khởi tạo.";
+		}
 
-        // Sao chép giỏ hàng sang chi tiết hóa đơn để giỏ hàng có thể dùng tiếp
-        List<ChiTietHoaDonDTO> dsChiTiet = new ArrayList<>();
-        for (int i = 0; i < gioHang.size(); i++) {
-            ChiTietHoaDonDTO dong = gioHang.get(i);
-            dsChiTiet.add(new ChiTietHoaDonDTO(hoaDon.getMaHD(), dong.getMaMon(),
-                    dong.getTenMon(), dong.getSoLuong(), dong.getDonGia()));
-        }
+		hoaDonMoi.setMaHD(dsHoaDonBUS.taoMaHoaDon());
+		hoaDonMoi.setNgayLap(LocalDate.now());
+		hoaDonMoi.setMaNV(Auth.getNguoiDung());
+		hoaDonMoi.setGhiChu(chuanHoa(hoaDonMoi.getGhiChu()));
+		hoaDonMoi.setTrangThai("Đã thanh toán");
 
-        if (!dsHoaDonBUS.themHoaDon(hoaDon, dsChiTiet)) {
-            return "Không thể lưu hóa đơn. Vui lòng thử lại.";
-        }
+		if (!dsHoaDonBUS.themHoaDon(hoaDonMoi)) {
+			return "Không thể lưu hóa đơn. Vui lòng thử lại.";
+		}
 
-        hoaDonVuaTao = hoaDon;
-        xoaGioHang();
-        return null;
-    }
+		this.hoaDon = hoaDonMoi;
+		hoaDonVuaTao = hoaDonMoi;
+		return null;
+	}
 
-    /** Hóa đơn vừa thanh toán thành công, dùng để in phiếu. */
-    public HoaDonDTO layHoaDonVuaTao() {
-        return hoaDonVuaTao;
-    }
+	public HoaDonDTO layHoaDonVuaTao() {
+		return hoaDonVuaTao;
+	}
 
-    // ==================== KHU VỰC IN / XUẤT HÓA ĐƠN ====================
-    /**
-     * Tạo nội dung hóa đơn dạng văn bản để hiển thị hoặc ghi file.
-     */
-    public String taoNoiDungHoaDon(HoaDonDTO hoaDon) {
-        if (hoaDon == null) {
-            return "";
-        }
+	public String xuatHoaDonRaFile(HoaDonDTO hoaDonXuat, String noiDung) {
+		if (hoaDonXuat == null || noiDung == null) {
+			return null;
+		}
 
-        StringBuilder noiDung = new StringBuilder();
-        noiDung.append("        NEW DAY COFFEE\n");
-        noiDung.append("      HÓA ĐƠN THANH TOÁN\n");
-        noiDung.append("------------------------------------------\n");
-        noiDung.append("Mã hóa đơn : ").append(hoaDon.getMaHD()).append("\n");
-        noiDung.append("Ngày lập   : ").append(hoaDon.getNgayLap()).append("\n");
-        noiDung.append("Nhân viên  : ").append(tenNhanVien(hoaDon.getMaNV())).append("\n");
-        noiDung.append("------------------------------------------\n");
+		try {
+			Path thuMuc = Paths.get("hoadon");
+			Files.createDirectories(thuMuc);
+			Path file = thuMuc.resolve(hoaDonXuat.getMaHD() + ".txt");
+			Files.write(file, noiDung.getBytes(StandardCharsets.UTF_8));
+			return file.toAbsolutePath().toString();
+		} catch (IOException e) {
+			return null;
+		}
+	}
 
-        List<ChiTietHoaDonDTO> dsChiTiet = dsHoaDonBUS.layChiTiet(hoaDon.getMaHD());
-        for (int i = 0; i < dsChiTiet.size(); i++) {
-            ChiTietHoaDonDTO chiTiet = dsChiTiet.get(i);
-            noiDung.append(chiTiet.getTenMon())
-                    .append("  x").append(chiTiet.getSoLuong())
-                    .append("  ").append(dinhDangTien(chiTiet.getDonGia()))
-                    .append(" = ").append(dinhDangTien(chiTiet.getThanhTien()))
-                    .append("\n");
-        }
-
-        noiDung.append("------------------------------------------\n");
-        noiDung.append("Tổng tiền   : ").append(dinhDangTien(hoaDon.getTongTien())).append("\n");
-        noiDung.append("Khách đưa   : ").append(dinhDangTien(hoaDon.getTienKhachDua())).append("\n");
-        noiDung.append("Tiền thối   : ").append(dinhDangTien(hoaDon.getTienThoi())).append("\n");
-        noiDung.append("Phương thức : ").append(hoaDon.getPhuongThucTT()).append("\n");
-
-        if (!Validator.rong(hoaDon.getGhiChu())) {
-            noiDung.append("Ghi chú     : ").append(hoaDon.getGhiChu()).append("\n");
-        }
-
-        noiDung.append("------------------------------------------\n");
-        noiDung.append("Cảm ơn quý khách! Hẹn gặp lại.\n");
-        return noiDung.toString();
-    }
-
-    /**
-     * Xuất hóa đơn ra file văn bản UTF-8 trong thư mục "hoadon".
-     *
-     * @return đường dẫn file nếu ghi thành công, null nếu thất bại.
-     */
-    public String xuatHoaDonRaFile(HoaDonDTO hoaDon) {
-        if (hoaDon == null) {
-            return null;
-        }
-
-        try {
-            Path thuMuc = Paths.get("hoadon");
-            Files.createDirectories(thuMuc);
-            Path file = thuMuc.resolve(hoaDon.getMaHD() + ".txt");
-            Files.write(file, taoNoiDungHoaDon(hoaDon).getBytes(StandardCharsets.UTF_8));
-            return file.toAbsolutePath().toString();
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /** Lấy tên nhân viên lập hóa đơn, ưu tiên người đang đăng nhập. */
-    private String tenNhanVien(String maNV) {
-        if (nhanVienBUS != null) {
-            if (Auth.getNguoiDung() != null
-                    && Auth.getNguoiDung().getMaNV().equalsIgnoreCase(Validator.chuanHoa(maNV))) {
-                return Auth.getTenHienThi();
-            }
-            if (nhanVienBUS.timTheoMa(maNV) != null) {
-                return nhanVienBUS.timTheoMa(maNV).getTenNV();
-            }
-        }
-        return Validator.chuanHoa(maNV);
-    }
-
-    // ==================== KHU VỰC ĐỊNH DẠNG ====================
-    /** Định dạng tiền Việt Nam để hiển thị: 15000 -> 15.000Đ. */
-    public static String dinhDangTien(double soTien) {
-        return Validator.dinhDangTien(soTien);
-    }
-
-    /** Định dạng tiền để đưa lên ô nhập: 15000 -> 15000. */
-    public static String dinhDangTienNhap(double soTien) {
-        return Validator.dinhDangTienNhap(soTien);
-    }
+	private static String chuanHoa(String giaTri) {
+		return giaTri == null ? "" : giaTri.trim();
+	}
 }

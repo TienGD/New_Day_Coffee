@@ -42,8 +42,35 @@ public class Auth {
         if (nguoiDungHienTai == null) {
             return false;
         }
-        return Validator.laMaQuanLy(nguoiDungHienTai.getMaNV())
+        String maNV = nguoiDungHienTai.getMaNV();
+        return maNV != null && maNV.trim().toLowerCase().startsWith("ql")
                 && "Quản lí".equals(nguoiDungHienTai.getChucVu());
+    }
+
+    /** Quyền màn hình dùng chung cho menu và điều hướng. */
+    public static boolean coQuyenTruyCapManHinh(String tenManHinh) {
+        if (!isDangNhap() || tenManHinh == null) {
+            return false;
+        }
+        if ("Tổng quan".equals(tenManHinh)) {
+            return true;
+        }
+        switch (tenManHinh) {
+     // Các màn hình chỉ dành riêng cho Quản lý
+        case "Thực đơn":
+        case "Nhân viên":
+        case "Danh sách hóa đơn":
+        case "Tài khoản":
+            return laQuanLy();
+
+        // Màn hình cả Quản lý và Nhân viên đều có thể truy cập
+        case "Bán hàng":
+        case "Thanh toán":
+            return true;
+
+        default:
+            return false;
+        }
     }
 
     public static String getTenHienThi() {

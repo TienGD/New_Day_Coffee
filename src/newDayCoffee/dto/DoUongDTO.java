@@ -1,56 +1,56 @@
 package newDayCoffee.dto;
 
-public class DoUongDTO {
-    private String maMon;
-    private String tenMon;
-    private double donGia;
-    private String moTa;
+import java.util.Objects;
 
+public class DoUongDTO {
+    private String maDoUong;
+    private String tenDoUong;
+    private double giaBan;
+    private String moTa;
+   
+    
+    
     public DoUongDTO() {
-        this.maMon = "";
-        this.tenMon = "";
-        this.donGia = 0;
+        this.maDoUong = "";
+        this.tenDoUong = "";
+        this.giaBan = 0;
         this.moTa = "";
     }
 
     public DoUongDTO(String maMon) {
         this();
-        this.maMon = maMon;
-    }
-
-    public DoUongDTO(String maMon, String tenMon, double donGia) {
-        this(maMon, tenMon, donGia, "");
+        this.maDoUong = maMon;
     }
 
     public DoUongDTO(String maMon, String tenMon, double donGia, String moTa) {
-        this.maMon = maMon;
-        this.tenMon = tenMon;
-        this.donGia = donGia;
+        this.maDoUong = maMon;
+        this.tenDoUong = tenMon;
+        this.giaBan = donGia;
         this.moTa = moTa;
     }
 
     public String getMaMon() {
-        return maMon;
+        return maDoUong;
     }
 
     public void setMaMon(String maMon) {
-        this.maMon = maMon;
+        this.maDoUong = maMon;
     }
 
     public String getTenMon() {
-        return tenMon;
+        return tenDoUong;
     }
 
     public void setTenMon(String tenMon) {
-        this.tenMon = tenMon;
+        this.tenDoUong = tenMon;
     }
 
     public double getDonGia() {
-        return donGia;
+        return giaBan;
     }
 
     public void setDonGia(double donGia) {
-        this.donGia = donGia;
+        this.giaBan = donGia;
     }
 
     public String getMoTa() {
@@ -62,7 +62,24 @@ public class DoUongDTO {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(maDoUong);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DoUongDTO other = (DoUongDTO) obj;
+        return Objects.equals(maDoUong, other.maDoUong);
+    }
+
+    @Override
     public String toString() {
-        return "DoUongDTO [maMon=" + maMon + ", tenMon=" + tenMon + ", donGia=" + donGia + ", moTa=" + moTa + "]";
+        return "DoUongDTO [maMon=" + maDoUong + ", tenMon=" + tenDoUong + ", donGia=" + giaBan + ", moTa=" + moTa + "]";
     }
 }
