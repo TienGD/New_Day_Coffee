@@ -26,6 +26,10 @@ public class TaiKhoanDTO {
         this.maDangNhap = maDangNhap;
     }
 
+    public TaiKhoanDTO(NhanVienDTO maNV, String matKhau) {
+        this(maNV, matKhau, (maNV != null && maNV.getMaNV() != null) ? maNV.getMaNV() : "");
+    }
+
    
 	public String getMatKhau() {
 		return matKhau;

@@ -109,16 +109,24 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	/** Ưu tiên nạp thực đơn và hóa đơn từ CSDL nếu đang có kết nối. */
 	private void napDuLieuTuCSDL() {
-		if (!dsDoUongBUS.daNapDuLieu()) {
-			List<DoUongDTO> dsDoUongDB = new DoUongDAO().getAll();
-			dsDoUongBUS.napDuLieuTuCSDL(dsDoUongDB);
-		}
-		if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
-			List<HoaDonDTO> dsHoaDonDB = new HoaDonDAO().getAll();
-			if (dsHoaDonBUS.napDuLieuTuCSDL(dsHoaDonDB, this.DSNhanVienBUS)) {
-				List<ChiTietHoaDonDTO> dsChiTietDB = new ChiTietHoaDonDAO().getAll();
-				chiTietHoaDonBUS.napDuLieuTuCSDL(dsChiTietDB, dsHoaDonBUS, dsDoUongBUS);
+		try {
+			if (!dsDoUongBUS.daNapDuLieu()) {
+				List<DoUongDTO> dsDoUongDB = new DoUongDAO().getAll();
+				if (dsDoUongDB != null && !dsDoUongDB.isEmpty()) {
+					dsDoUongBUS.napDuLieuTuCSDL(dsDoUongDB);
+				}
 			}
+			if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
+				List<HoaDonDTO> dsHoaDonDB = new HoaDonDAO().getAll();
+				if (dsHoaDonDB != null && !dsHoaDonDB.isEmpty() && dsHoaDonBUS.napDuLieuTuCSDL(dsHoaDonDB, this.DSNhanVienBUS)) {
+					List<ChiTietHoaDonDTO> dsChiTietDB = new ChiTietHoaDonDAO().getAll();
+					if (dsChiTietDB != null && !dsChiTietDB.isEmpty()) {
+						chiTietHoaDonBUS.napDuLieuTuCSDL(dsChiTietDB, dsHoaDonBUS, dsDoUongBUS);
+					}
+				}
+			}
+		} catch (Exception e) {
+			// Bắt ngoại lệ an toàn nếu cơ sở dữ liệu chưa sẵn sàng, đảm bảo giao diện vẫn khởi chạy bình thường
 		}
 	}
 

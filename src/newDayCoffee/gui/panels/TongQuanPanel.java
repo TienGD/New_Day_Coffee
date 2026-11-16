@@ -22,7 +22,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import newDayCoffee.bus.DSHoaDonBUS;
-import newDayCoffee.dto.ThongKeMonDTO;
+import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.utils.UIUtils;
 
 /**
@@ -47,7 +47,7 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 	// ==================== KHU VỰC TẦNG XỬ LÝ ====================
 	private final DSHoaDonBUS dsHoaDonBUS;
 	private boolean sapXepGiam = false;
-	private List<ThongKeMonDTO> dsMonHienTai = new ArrayList<>();
+	private List<ChiTietHoaDonDTO> dsMonHienTai = new ArrayList<>();
 
 	public TongQuanPanel(DSHoaDonBUS dsHoaDonBUS) {
 		this.dsHoaDonBUS = dsHoaDonBUS;
@@ -172,7 +172,7 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		if (dsMonHienTai.isEmpty()) {
 			lbMonBanChayNhat.setText("Chưa có");
 		} else {
-			List<ThongKeMonDTO> dsGiam = sapXepDanhSach(dsMonHienTai, true);
+			List<ChiTietHoaDonDTO> dsGiam = sapXepDanhSach(dsMonHienTai, true);
 			lbMonBanChayNhat.setText(dsGiam.get(0).getTenMon());
 		}
 
@@ -182,10 +182,10 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 
 	/** Nạp lại bảng món bán chạy bằng cách sắp xếp bản sao dsMonHienTai. */
 	private void capNhatBangMonBanChay() {
-		List<ThongKeMonDTO> dsSapXep = sapXepDanhSach(dsMonHienTai, sapXepGiam);
+		List<ChiTietHoaDonDTO> dsSapXep = sapXepDanhSach(dsMonHienTai, sapXepGiam);
 
 		modelMonBanChay.setRowCount(0);
-		for (ThongKeMonDTO mon : dsSapXep) {
+		for (ChiTietHoaDonDTO mon : dsSapXep) {
 			modelMonBanChay.addRow(new Object[]{mon.getTenMon(), mon.getSoLuong()});
 		}
 	}
@@ -201,11 +201,11 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		btnSapXepBanChay.repaint();
 	}
 
-	private static List<ThongKeMonDTO> sapXepDanhSach(List<ThongKeMonDTO> nguon, final boolean giamDan) {
-		List<ThongKeMonDTO> banSao = nguon == null ? new ArrayList<>() : new ArrayList<>(nguon);
-		Collections.sort(banSao, new Comparator<ThongKeMonDTO>() {
+	private static List<ChiTietHoaDonDTO> sapXepDanhSach(List<ChiTietHoaDonDTO> nguon, final boolean giamDan) {
+		List<ChiTietHoaDonDTO> banSao = nguon == null ? new ArrayList<>() : new ArrayList<>(nguon);
+		Collections.sort(banSao, new Comparator<ChiTietHoaDonDTO>() {
 			@Override
-			public int compare(ThongKeMonDTO a, ThongKeMonDTO b) {
+			public int compare(ChiTietHoaDonDTO a, ChiTietHoaDonDTO b) {
 				int cmp = giamDan
 						? Integer.compare(b.getSoLuong(), a.getSoLuong())
 						: Integer.compare(a.getSoLuong(), b.getSoLuong());

@@ -14,10 +14,16 @@ public class ChiTietHoaDonDTO {
     }
 
     public ChiTietHoaDonDTO(String maHD, String maMon) {
+        this();
         this.maHoaDon.setMaHD(maHD);
         this.maDoUong.setMaMon(maMon);
     }
 
+    public ChiTietHoaDonDTO(DoUongDTO doUong, int soLuong) {
+        this();
+        this.maDoUong = doUong;
+        this.soLuong = soLuong;
+    }
 
     public ChiTietHoaDonDTO(HoaDonDTO hoaDon, DoUongDTO doUong, int soLuong, double donGia) {
         this.maHoaDon = hoaDon;
@@ -71,6 +77,20 @@ public class ChiTietHoaDonDTO {
 
     public void setSoLuong(int soLuong) {
         this.soLuong = soLuong;
+    }
+
+    public double getDonGia() {
+        return maDoUong != null ? maDoUong.getDonGia() : 0;
+    }
+
+    public void setDonGia(double donGia) {
+        if (maDoUong != null) {
+            maDoUong.setDonGia(donGia);
+        }
+    }
+
+    public double getThanhTien() {
+        return soLuong * getDonGia();
     }
 
 

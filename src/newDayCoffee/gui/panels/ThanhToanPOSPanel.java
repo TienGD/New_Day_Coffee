@@ -553,12 +553,14 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 		List<ChiTietHoaDonDTO> gioHang = chiTietHoaDonBUS.layGioHang();
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
+			double donGia = dong.getDoUong() != null ? dong.getDoUong().getDonGia() : dong.getDonGia();
+			double thanhTien = dong.getSoLuong() * donGia;
 			modelSanPham.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
 				String.valueOf(dong.getSoLuong()),
-				UIUtils.dinhDangTien(dong.getDonGia()),
-				UIUtils.dinhDangTien(dong.getThanhTien())
+				UIUtils.dinhDangTien(donGia),
+				UIUtils.dinhDangTien(thanhTien)
 			});
 		}
 
@@ -641,8 +643,8 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 			return "";
 		}
 
-		double tongTien = dsHoaDonBUS.tongTienHoaDon(hoaDon);
-		double tienThoi = hoaDon.getTienKhachDua() - tongTien;
+		double tongTien = hoaDonBUS.tinhTongTien(hoaDon);
+		double tienThoi = hoaDonBUS.tienThua(hoaDon);
 
 		StringBuilder noiDung = new StringBuilder();
 		noiDung.append("        NEW DAY COFFEE\n");
@@ -655,10 +657,12 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 
 		List<ChiTietHoaDonDTO> dsChiTiet = dsHoaDonBUS.layChiTiet(hoaDon.getMaHD());
 		for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
+			double donGia = chiTiet.getDoUong() != null ? chiTiet.getDoUong().getDonGia() : chiTiet.getDonGia();
+			double thanhTien = chiTiet.getSoLuong() * donGia;
 			noiDung.append(chiTiet.getTenMon())
 					.append("  x").append(chiTiet.getSoLuong())
-					.append("  ").append(UIUtils.dinhDangTien(chiTiet.getDonGia()))
-					.append(" = ").append(UIUtils.dinhDangTien(chiTiet.getThanhTien()))
+					.append("  ").append(UIUtils.dinhDangTien(donGia))
+					.append(" = ").append(UIUtils.dinhDangTien(thanhTien))
 					.append("\n");
 		}
 

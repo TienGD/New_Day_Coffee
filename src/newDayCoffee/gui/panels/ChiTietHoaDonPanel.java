@@ -9,6 +9,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -223,7 +225,12 @@ public class ChiTietHoaDonPanel extends JDialog {
 			"Đóng", UIUtils.COLOR_DEEP_BROWN,
 			new Font(UIUtils.FONT_FAMILY, Font.BOLD, 13), 100, 36
 		);
-		btnDong.addActionListener(e -> dispose());
+		btnDong.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		pnNut.add(btnDong);
 
 		pn.add(Box.createVerticalStrut(4), BorderLayout.NORTH);

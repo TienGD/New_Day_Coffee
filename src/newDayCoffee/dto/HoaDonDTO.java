@@ -92,7 +92,7 @@ public class HoaDonDTO {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(maNV);
+		return Objects.hash(maHoaDon);
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public class HoaDonDTO {
 		if (getClass() != obj.getClass())
 			return false;
 		HoaDonDTO other = (HoaDonDTO) obj;
-		return Objects.equals(maNV, other.maNV);
+		return Objects.equals(maHoaDon, other.maHoaDon);
 	}
 
 	@Override

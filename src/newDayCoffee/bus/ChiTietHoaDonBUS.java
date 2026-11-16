@@ -8,7 +8,6 @@ import java.util.Map;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
-import newDayCoffee.dto.ThongKeMonDTO;
 
 /**
  * Xử lý nghiệp vụ trên chi tiết hóa đơn.
@@ -18,11 +17,48 @@ import newDayCoffee.dto.ThongKeMonDTO;
  */
 public class ChiTietHoaDonBUS {
 
-    // ==================== KHU VỰC DỮ LIỆU ====================
+    // ==================== KHU VỰC DỮ LIỆU ĐỐI TƯỢNG ĐƠN ====================
+    private ChiTietHoaDonDTO chiTietHoaDon;
+    private DoUongDTO doUong;
+
+    // ==================== KHU VỰC DỮ LIỆU DANH SÁCH ====================
     private final List<ChiTietHoaDonDTO> dsChiTiet;
 
     public ChiTietHoaDonBUS() {
-        dsChiTiet = new ArrayList<>();
+        this.dsChiTiet = new ArrayList<>();
+    }
+
+    public ChiTietHoaDonBUS(ChiTietHoaDonDTO chiTietHoaDon, DoUongDTO doUong) {
+        this();
+        this.chiTietHoaDon = chiTietHoaDon;
+        this.doUong = doUong;
+    }
+
+    public ChiTietHoaDonDTO getChiTietHoaDon() {
+        return chiTietHoaDon;
+    }
+
+    public void setChiTietHoaDon(ChiTietHoaDonDTO chiTietHoaDon) {
+        this.chiTietHoaDon = chiTietHoaDon;
+    }
+
+    public DoUongDTO getDoUong() {
+        return doUong;
+    }
+
+    public void setDoUong(DoUongDTO doUong) {
+        this.doUong = doUong;
+    }
+
+    /** Tính thành tiền cho chi tiết hóa đơn hiện tại: Số lượng x Đơn giá */
+    public double tinhThanhTien() {
+        if (chiTietHoaDon != null && doUong != null) {
+            return chiTietHoaDon.getSoLuong() * doUong.getDonGia();
+        }
+        if (chiTietHoaDon != null) {
+            return chiTietHoaDon.getThanhTien();
+        }
+        return 0;
     }
 
     // ==================== KHU VỰC GIỎ HÀNG ====================
@@ -158,17 +194,16 @@ public class ChiTietHoaDonBUS {
         return ketQua;
     }
 
-    /** Tổng tiền của một hóa đơn đã lưu. */
+    /** Tổng tiền của một hóa đơn, tính từ danh sách chi tiết đã lưu. */
     public double tongTienTheoHoaDon(String maHD) {
         double tong = 0;
-        List<ChiTietHoaDonDTO> ds = layTheoHoaDon(maHD);
-        for (ChiTietHoaDonDTO chiTiet : ds) {
+        for (ChiTietHoaDonDTO chiTiet : layTheoHoaDon(maHD)) {
             tong = tong + chiTiet.getThanhTien();
         }
         return tong;
     }
 
-    /** Tổng số lượng món thuộc các hóa đơn được truyền vào. */
+    /** Tổng số lượng món trong các hóa đơn được truyền vào. */
     public int tongSoLuongTheoHoaDon(List<String> dsMaHD) {
         int tong = 0;
         for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
@@ -179,10 +214,7 @@ public class ChiTietHoaDonBUS {
         return tong;
     }
 
-    /**
-     * Tổng hợp số lượng bán ra của từng món trong các hóa đơn được truyền vào.
-     * Khóa của kết quả là tên món, giá trị là tổng số lượng.
-     */
+    /** Thống kê số lượng bán theo từng món trong các hóa đơn truyền vào. */
     public Map<String, Integer> thongKeMonBanChay(List<String> dsMaHD) {
         Map<String, Integer> ketQua = new LinkedHashMap<>();
 
@@ -190,8 +222,7 @@ public class ChiTietHoaDonBUS {
             if (!thuocHoaDon(chiTiet, dsMaHD)) {
                 continue;
             }
-
-            String tenMon = chuanHoa(chiTiet.getTenMon());
+            String tenMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getTenMon());
             if (tenMon.isEmpty()) {
                 tenMon = chuanHoa(chiTiet.getMaMon());
             }
@@ -207,10 +238,9 @@ public class ChiTietHoaDonBUS {
 
     /**
      * Tổng hợp số lượng bán ra của từng món theo mã món trong các hóa đơn được truyền vào.
-     * Giữ mã món để tầng hiển thị tie-break khi trùng số lượng.
      */
-    public List<ThongKeMonDTO> thongKeMonTheoMa(List<String> dsMaHD) {
-        Map<String, ThongKeMonDTO> ketQua = new LinkedHashMap<>();
+    public List<ChiTietHoaDonDTO> thongKeMonTheoMa(List<String> dsMaHD) {
+        Map<String, ChiTietHoaDonDTO> ketQua = new LinkedHashMap<>();
 
         for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
             if (!thuocHoaDon(chiTiet, dsMaHD)) {
@@ -227,14 +257,12 @@ public class ChiTietHoaDonBUS {
                 khoa = tenMon.toLowerCase();
             }
 
-            ThongKeMonDTO thongKe = ketQua.get(khoa);
+            ChiTietHoaDonDTO thongKe = ketQua.get(khoa);
             if (thongKe == null) {
-                ketQua.put(khoa, new ThongKeMonDTO(maMon, tenMon, chiTiet.getSoLuong()));
+                ChiTietHoaDonDTO moi = new ChiTietHoaDonDTO(chiTiet.getDoUong(), chiTiet.getSoLuong());
+                ketQua.put(khoa, moi);
             } else {
                 thongKe.setSoLuong(thongKe.getSoLuong() + chiTiet.getSoLuong());
-                if (thongKe.getTenMon().isEmpty() && !tenMon.isEmpty()) {
-                    thongKe.setTenMon(tenMon);
-                }
             }
         }
         return new ArrayList<>(ketQua.values());

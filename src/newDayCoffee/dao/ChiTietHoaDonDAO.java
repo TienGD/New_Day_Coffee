@@ -81,7 +81,7 @@ public class ChiTietHoaDonDAO {
         ct.setHoaDon(hd);
         ct.setDoUong(du);
         ct.setSoLuong(rs.getInt("soLuong"));
-        ct.setDonGia(giaBan);
+        // ct.setDonGia(giaBan); // Vô hiệu hóa lệnh này vì đơn giá đã được nạp qua DoUongDTO (du.setDonGia)
         return ct;
     }
 

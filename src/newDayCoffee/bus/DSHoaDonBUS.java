@@ -9,7 +9,6 @@ import java.util.Map;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.dto.NhanVienDTO;
-import newDayCoffee.dto.ThongKeMonDTO;
 
 /**
  * Xử lý nghiệp vụ trên danh sách hóa đơn.
@@ -182,7 +181,7 @@ public class DSHoaDonBUS {
     }
 
     /** Danh sách thống kê số lượng từng món bán được trong ngày hôm nay (kèm mã món). */
-    public List<ThongKeMonDTO> layDanhSachThongKeMonHomNay() {
+    public List<ChiTietHoaDonDTO> layDanhSachThongKeMonHomNay() {
         return chiTietHoaDonBUS.thongKeMonTheoMa(layMaHoaDonHomNay());
     }
 
