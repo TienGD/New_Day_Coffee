@@ -4,45 +4,45 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 public class HoaDonDTO {
-    private String maHD;
+    private String maHoaDon;
     private LocalDate ngayLap;
     private NhanVienDTO maNV;
-    private double tienKhachDua;
+    private double tienKhachTra;
     private String ghiChu;
     private String trangThai;
    
     
     
     public HoaDonDTO() {
-        this.maHD = "";
+        this.maHoaDon = "";
         this.ngayLap = LocalDate.now();
         this.maNV = new NhanVienDTO();
-        this.tienKhachDua = 0;
+        this.tienKhachTra = 0;
         this.ghiChu = "";
         this.trangThai = "";
     }
 
     public HoaDonDTO(String maHD) {
         this();
-        this.maHD = maHD;
+        this.maHoaDon = maHD;
     }
 
     public HoaDonDTO(String maHD, LocalDate ngayLap, NhanVienDTO maNV, double tienKhachDua, String ghiChu, String trangThai) {
-        this.maHD = maHD;
+        this.maHoaDon = maHD;
         this.ngayLap = ngayLap;
         this.maNV = maNV;
-        this.tienKhachDua = tienKhachDua;
+        this.tienKhachTra = tienKhachDua;
         this.ghiChu = ghiChu;
         this.trangThai = trangThai;
     }
 
     
     public String getMaHD() {
-        return maHD;
+        return maHoaDon;
     }
 
     public void setMaHD(String maHD) {
-        this.maHD = maHD;
+        this.maHoaDon = maHD;
     }
 
     public LocalDate getNgayLap() {
@@ -72,11 +72,11 @@ public class HoaDonDTO {
 
 
     public double getTienKhachDua() {
-        return tienKhachDua;
+        return tienKhachTra;
     }
 
     public void setTienKhachDua(double tienKhachDua) {
-        this.tienKhachDua = tienKhachDua;
+        this.tienKhachTra = tienKhachDua;
     }
 
 
@@ -109,8 +109,8 @@ public class HoaDonDTO {
 
 	@Override
     public String toString() {
-        return "HoaDonDTO [maHD=" + maHD + ", ngayLap=" + ngayLap + ", maNV=" + maNV
-                + ", tienKhachDua=" + tienKhachDua
+        return "HoaDonDTO [maHD=" + maHoaDon + ", ngayLap=" + ngayLap + ", maNV=" + maNV
+                + ", tienKhachDua=" + tienKhachTra
                 + ", ghiChu=" + ghiChu + ", trangThai=" + trangThai + "]";
     }
 }
