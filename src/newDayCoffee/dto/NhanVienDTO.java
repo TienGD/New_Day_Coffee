@@ -7,7 +7,7 @@ public class NhanVienDTO {
     private String maNV;
     private String tenNV;
     private LocalDate ngaySinh;
-    private String sdt;
+    private String soDienThoai;
     private String email;
     private String chucVu;
     private String gioiTinh;
@@ -17,7 +17,7 @@ public class NhanVienDTO {
         this.maNV = "";
         this.tenNV = "";
         this.ngaySinh = null;
-        this.sdt = "";
+        this.soDienThoai = "";
         this.email = "";
         this.chucVu = "";
         this.gioiTinh = "";
@@ -32,7 +32,7 @@ public class NhanVienDTO {
         this.maNV = maNV;
         this.tenNV = tenNV;
         this.ngaySinh = ngaySinh;
-        this.sdt = sdt;
+        this.soDienThoai = sdt;
         this.email = email;
         this.chucVu = chucVu;
         this.gioiTinh = gioiTinh;
@@ -63,11 +63,11 @@ public class NhanVienDTO {
     }
 
     public String getSdt() {
-        return sdt;
+        return soDienThoai;
     }
 
     public void setSdt(String sdt) {
-        this.sdt = sdt;
+        this.soDienThoai = sdt;
     }
 
     public String getEmail() {
@@ -115,7 +115,7 @@ public class NhanVienDTO {
 
 	@Override
     public String toString() {
-        return "NhanVienDTO [maNV=" + maNV + ", tenNV=" + tenNV + ", ngaySinh=" + ngaySinh + ", sdt=" + sdt + ", email="
+        return "NhanVienDTO [maNV=" + maNV + ", tenNV=" + tenNV + ", ngaySinh=" + ngaySinh + ", sdt=" + soDienThoai + ", email="
                 + email + ", chucVu=" + chucVu + ", gioiTinh=" + gioiTinh + "]";
     }
 }

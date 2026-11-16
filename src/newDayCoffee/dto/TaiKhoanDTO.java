@@ -5,22 +5,25 @@ import java.util.Objects;
 public class TaiKhoanDTO {
     private String matKhau;
     private NhanVienDTO maNV; 
+    private String maDangNhap;
 
     public TaiKhoanDTO() {
     	this.maNV = new NhanVienDTO();
     	this.matKhau = "";
+    	this.maDangNhap = "";
     }
 
     
     
-    public TaiKhoanDTO(String maNV) {
+    public TaiKhoanDTO(String maDangNhap) {
         this();
-        this.maNV = new NhanVienDTO(maNV);
+        this.maDangNhap = maDangNhap;
     }
     
-    public TaiKhoanDTO(NhanVienDTO maNV, String matKhau) {
+    public TaiKhoanDTO(NhanVienDTO maNV, String matKhau, String maDangNhap) {
         this.maNV = maNV;
         this.matKhau = matKhau;
+        this.maDangNhap = maDangNhap;
     }
 
    
@@ -39,11 +42,26 @@ public class TaiKhoanDTO {
 	public void setMaNV(NhanVienDTO maNV) {
 		this.maNV = maNV;
 	}
+	
+	
+
+	public String getMaDangNhap() {
+		return maDangNhap;
+	}
+
+
+
+	public void setMaDangNhap(String maDangNhap) {
+		this.maDangNhap = maDangNhap;
+	}
+
+
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(maNV);
+		return Objects.hash(maDangNhap);
 	}
+	
 
 	@Override
 	public boolean equals(Object obj) {
@@ -54,7 +72,7 @@ public class TaiKhoanDTO {
 		if (getClass() != obj.getClass())
 			return false;
 		TaiKhoanDTO other = (TaiKhoanDTO) obj;
-		return Objects.equals(maNV, other.maNV);
+		return Objects.equals(maDangNhap, other.maDangNhap);
 	}
     
     
