@@ -67,6 +67,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
 	public QuanLyThucDonPanel(DSDoUongBUS dsDoUongBUS) {
 		this.dsDoUongBUS = dsDoUongBUS;
+		this.dsDoUongBUS.khoiTaoDuLieu();
 		khoiTaoGiaoDien();
 		ganSuKien();
 		capNhatBang();
@@ -116,12 +117,6 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		pnForm.add(txtTenMon);
 		pnForm.add(lbDonGia);
 		pnForm.add(txtDonGia);
-		pnForm.add(Box.createHorizontalStrut(8));
-		pnForm.add(btnThem);
-		pnForm.add(btnSua);
-		pnForm.add(btnXoa);
-		pnForm.add(Box.createHorizontalStrut(4));
-		pnForm.add(btnLuu);
 
 		// --- HÀNG MÔ TẢ MÓN ---
 		JPanel pnMoTa = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
@@ -136,14 +131,24 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 		pnMoTa.add(lbMoTa);
 		pnMoTa.add(Box.createHorizontalStrut(11));
 		pnMoTa.add(txtMoTa);
-		pnMoTa.add(Box.createHorizontalStrut(8));
-		pnMoTa.add(btnMoi);
+
+		// Tách nhóm thao tác khỏi hàng nhập liệu để nút Lưu không bị khuất.
+		JPanel pnThaoTac = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+		pnThaoTac.setOpaque(false);
+		pnThaoTac.add(btnThem);
+		pnThaoTac.add(btnSua);
+		pnThaoTac.add(btnXoa);
+		pnThaoTac.add(btnLuu);
+		pnThaoTac.add(btnMoi);
 
 		pnForm.setAlignmentX(Component.LEFT_ALIGNMENT);
 		pnMoTa.setAlignmentX(Component.LEFT_ALIGNMENT);
 		pnFormCard.add(pnForm);
 		pnFormCard.add(Box.createVerticalStrut(12));
 		pnFormCard.add(pnMoTa);
+		pnThaoTac.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pnFormCard.add(Box.createVerticalStrut(12));
+		pnFormCard.add(pnThaoTac);
 
 		// --- HÀNG TÌM KIẾM & BỘ LỌC DANH MỤC ---
 		JPanel pnSearchFilter = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 16, new Insets(12, 16, 12, 16));

@@ -29,6 +29,7 @@ public class DoUongDAO {
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return null; // Phân biệt lỗi kết nối với thực đơn rỗng để BUS có thể thử lại.
         }
 
         return dsDoUong;

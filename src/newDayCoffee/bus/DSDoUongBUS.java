@@ -10,13 +10,14 @@ import newDayCoffee.utils.Auth;
 /**
  * Xử lý nghiệp vụ trên danh sách đồ uống.
  *
- * Dữ liệu hiện được lưu trong bộ nhớ. Khi DAO hoàn thiện chỉ cần thay
- * phần luuVaoCSDL() là có thể nối cơ sở dữ liệu.
+ * Dữ liệu được nạp từ CSDL; các thay đổi được giữ trong bộ nhớ đến khi lưu.
  * Việc kiểm tra dữ liệu form do giao diện thực hiện.
  */
 public class DSDoUongBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
+    private final DoUongDAO doUongDAO;
+    private boolean daNapDuLieu;
     private final List<DoUongDTO> dsDoUong;
     private final List<DoUongDTO> dsThemMoi;
     private final List<DoUongDTO> dsCapNhat;
@@ -29,11 +30,11 @@ public class DSDoUongBUS {
 
     /** Khởi tạo danh sách thực đơn: tự động lấy dữ liệu hiện có từ SQL Server qua DoUongDAO. */
     public void khoiTaoDuLieu() {
-        if (!dsDoUong.isEmpty()) {
+        if (daNapDuLieu || !dsThemMoi.isEmpty() || !dsCapNhat.isEmpty() || !dsMaXoa.isEmpty()) {
             return;
         }
         try {
-            List<DoUongDTO> dsTuDB = new DoUongDAO().getAll();
+            List<DoUongDTO> dsTuDB = doUongDAO.getAll();
             napDuLieuTuCSDL(dsTuDB);
         } catch (Exception e) {
             // Bắt ngoại lệ an toàn khi cơ sở dữ liệu chưa sẵn sàng
@@ -42,22 +43,22 @@ public class DSDoUongBUS {
 
     /** Cho biết thực đơn đã được nạp dữ liệu từ CSDL hay chưa. */
     public boolean daNapDuLieu() {
-        return !dsDoUong.isEmpty();
+        return daNapDuLieu;
     }
 
-    /** Nạp thực đơn từ CSDL khi danh sách hiện đang trống. */
+    /** Nạp thực đơn lần đầu, không ghi đè thay đổi đang chờ lưu. */
     public boolean napDuLieuTuCSDL(List<DoUongDTO> dsTuDB) {
-        if (!dsDoUong.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
+        if (daNapDuLieu || dsTuDB == null
+                || !dsThemMoi.isEmpty() || !dsCapNhat.isEmpty() || !dsMaXoa.isEmpty()) {
             return false;
         }
+        dsDoUong.clear();
         for (DoUongDTO mon : dsTuDB) {
             if (mon != null && !chuanHoa(mon.getMaMon()).isEmpty() && timTheoMa(mon.getMaMon()) == null) {
                 dsDoUong.add(mon);
             }
         }
-        if (dsDoUong.isEmpty()) {
-            return false;
-        }
+        daNapDuLieu = true;
         dsThemMoi.clear();
         dsCapNhat.clear();
         dsMaXoa.clear();
@@ -65,6 +66,11 @@ public class DSDoUongBUS {
     }
 
     public DSDoUongBUS() {
+        this(new DoUongDAO());
+    }
+
+    DSDoUongBUS(DoUongDAO doUongDAO) {
+        this.doUongDAO = doUongDAO;
         dsDoUong = new ArrayList<>();
         dsThemMoi = new ArrayList<>();
         dsCapNhat = new ArrayList<>();
@@ -309,7 +315,10 @@ public class DSDoUongBUS {
      * và đồng bộ lại danh sách trong bộ nhớ với dữ liệu thực tế trong database.
      */
     public boolean luuVaoCSDL() {
-        DoUongDAO dao = new DoUongDAO();
+        if (!Auth.laQuanLy()) {
+            return false;
+        }
+        DoUongDAO dao = doUongDAO;
         if (dsThemMoi.isEmpty() && dsCapNhat.isEmpty() && dsMaXoa.isEmpty()) {
             List<DoUongDTO> dsHienTai = dao.getAll();
             if (dsHienTai == null || (dsHienTai.isEmpty() && !dsDoUong.isEmpty())) {
@@ -343,10 +352,12 @@ public class DSDoUongBUS {
         }
 
         List<DoUongDTO> dsDongBo = dao.getAll();
-        if (dsDongBo != null && !dsDongBo.isEmpty()) {
-            dsDoUong.clear();
-            dsDoUong.addAll(dsDongBo);
+        if (dsDongBo == null) {
+            return false;
         }
+        dsDoUong.clear();
+        dsDoUong.addAll(dsDongBo);
+        daNapDuLieu = true;
         return true;
     }
 
