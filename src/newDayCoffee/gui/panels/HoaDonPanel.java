@@ -55,8 +55,7 @@ public class HoaDonPanel extends JPanel {
 		// --- HEADER CARD ---
 		JPanel pnHeaderCard = UIUtils.createCardPanel(UIUtils.COLOR_HEADER, 16, new Insets(14, 20, 14, 20));
 		pnHeaderCard.setLayout(new BorderLayout());
-		lbHeader = UIUtils.createTitleLabel("DANH SÁCH CÁC HÓA ĐƠN TRONG NGÀY: "
-				+ LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+		lbHeader = UIUtils.createTitleLabel("DANH SÁCH TẤT CẢ HÓA ĐƠN");
 		pnHeaderCard.add(lbHeader, BorderLayout.WEST);
 		add(pnHeaderCard, BorderLayout.NORTH);
 
@@ -137,36 +136,58 @@ public class HoaDonPanel extends JPanel {
 
 	// ==================== KHU VỰC XỬ LÝ NGHIỆP VỤ ====================
 
-	/** Nạp lại danh sách hóa đơn trong ngày (mỗi hàng = 1 hóa đơn). */
+	
+	
 	public void capNhatDuLieu() {
-		model.setRowCount(0);
-
-		List<HoaDonDTO> dsHoaDon = dsHoaDonBUS.layDanhSachHoaDon();
-		int soHoaDon = 0;
-		for (HoaDonDTO hoaDon : dsHoaDon) {
-			if (hoaDon.getNgayLap() == null || !LocalDate.now().equals(hoaDon.getNgayLap())) {
-				continue;
-			}
-
-			NhanVienDTO nhanVien = hoaDon.getMaNV();
-			String tenNV = nhanVien == null ? "" : nhanVien.getTenNV();
-			String trangThai = hoaDon.getTrangThai() == null ? "" : hoaDon.getTrangThai();
-			double tongTien = dsHoaDonBUS.tongTienHoaDon(hoaDon);
-
-			// Lưu đối tượng HoaDonDTO vào cột ẩn clientProperty qua mảng Object
-			model.addRow(new Object[]{
-				hoaDon,                                    // cột 0: lưu DTO, renderer vẽ icon
-				hoaDon.getMaHD(),                          // cột 1: Mã HD
-				UIUtils.dinhDangNgay(hoaDon.getNgayLap()), // cột 2: Ngày lập
-				tenNV,                                     // cột 3: Nhân viên
-				trangThai,                                 // cột 4: Trạng thái
-				UIUtils.dinhDangTien(tongTien)             // cột 5: Thành tiền
-			});
-			soHoaDon++;
-		}
-
-		lbSoHoaDon.setText(soHoaDon + " hóa đơn");
+	
+	    // Xóa dữ liệu cũ trên bảng
+	    model.setRowCount(0);
+	
+	    // Lấy tất cả hóa đơn
+	    List<HoaDonDTO> dsHoaDon =
+	            dsHoaDonBUS.layDanhSachHoaDon();
+	
+	    int soHoaDon = 0;
+	
+	    for (HoaDonDTO hoaDon : dsHoaDon) {
+	
+	        if (hoaDon == null) {
+	            continue;
+	        }
+	
+	        // Lấy thông tin nhân viên lập hóa đơn
+	        NhanVienDTO nhanVien = hoaDon.getMaNV();
+	
+	        String tenNV = nhanVien == null
+	                ? ""
+	                : nhanVien.getTenNV();
+	
+	        // Lấy trạng thái hóa đơn
+	        String trangThai = hoaDon.getTrangThai() == null
+	                ? ""
+	                : hoaDon.getTrangThai();
+	
+	        // Tính tổng tiền hóa đơn
+	        double tongTien =
+	                dsHoaDonBUS.tongTienHoaDon(hoaDon);
+	
+	        // Thêm dữ liệu vào JTable
+	        model.addRow(new Object[] {
+	            hoaDon,
+	            hoaDon.getMaHD(),
+	            UIUtils.dinhDangNgay(hoaDon.getNgayLap()),
+	            tenNV,
+	            trangThai,
+	            UIUtils.dinhDangTien(tongTien)
+	        });
+	
+	        soHoaDon++;
+	    }
+	
+	    // Cập nhật tổng số hóa đơn
+	    lbSoHoaDon.setText(soHoaDon + " hóa đơn");
 	}
+
 
 	/** Mở dialog Chi tiết hóa đơn theo dòng được chọn. */
 	private void moChiTietHoaDon(int row) {

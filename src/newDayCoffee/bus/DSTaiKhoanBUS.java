@@ -3,6 +3,7 @@ package newDayCoffee.bus;
 import java.util.ArrayList;
 import java.util.List;
 
+import newDayCoffee.dao.TaiKhoanDAO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.Validator;
@@ -17,9 +18,15 @@ public class DSTaiKhoanBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<TaiKhoanDTO> dsTaiKhoan;
+    private final List<TaiKhoanDTO> dsThemMoi;
+    private final List<TaiKhoanDTO> dsCapNhat;
+    private final List<String> dsMaXoa;
 
     public DSTaiKhoanBUS() {
         dsTaiKhoan = new ArrayList<>();
+        dsThemMoi = new ArrayList<>();
+        dsCapNhat = new ArrayList<>();
+        dsMaXoa = new ArrayList<>();
     }
 
     // ==================== KHU VỰC ĐỌC / KIỂM TRA ====================
@@ -28,14 +35,20 @@ public class DSTaiKhoanBUS {
         return new ArrayList<>(dsTaiKhoan);
     }
 
-    /** Tìm tài khoản theo mã nhân viên (không phân biệt hoa thường). */
+    /** Tìm tài khoản theo mã nhân viên / mã đăng nhập (không phân biệt hoa thường). */
     public TaiKhoanDTO timTheoMa(String maNV) {
         String ma = chuanHoa(maNV);
         if (ma.isEmpty()) {
             return null;
         }
         for (TaiKhoanDTO tk : dsTaiKhoan) {
+            if (tk == null) {
+                continue;
+            }
             if (tk.getMaNV() != null && chuanHoa(tk.getMaNV().getMaNV()).equalsIgnoreCase(ma)) {
+                return tk;
+            }
+            if (chuanHoa(tk.getMaDangNhap()).equalsIgnoreCase(ma)) {
                 return tk;
             }
         }
@@ -78,7 +91,11 @@ public class DSTaiKhoanBUS {
             return "Mật khẩu phải có từ 6 đến 32 ký tự.";
         }
         tk.setMatKhau(matKhau);
+        if (chuanHoa(tk.getMaDangNhap()).isEmpty()) {
+            tk.setMaDangNhap(maNV);
+        }
         dsTaiKhoan.add(tk);
+        ghiNhanThemMoi(tk);
         return null;
     }
 
@@ -89,11 +106,48 @@ public class DSTaiKhoanBUS {
             return false;
         }
         dsTaiKhoan.remove(tk);
+        ghiNhanXoa(tk.getMaDangNhap());
         return true;
     }
 
-    /** Lưu danh sách vào CSDL. Hiện dữ liệu vẫn nằm trong bộ nhớ. */
+    /**
+     * Lưu toàn bộ thay đổi chờ lưu (thêm, sửa, xóa) xuống SQL Server thông qua TaiKhoanDAO
+     * và đồng bộ lại danh sách tài khoản với dữ liệu thực tế trong database.
+     */
     public boolean luuVaoCSDL() {
+        TaiKhoanDAO dao = new TaiKhoanDAO();
+        if (dsThemMoi.isEmpty() && dsCapNhat.isEmpty() && dsMaXoa.isEmpty()) {
+            List<TaiKhoanDTO> dsHienTai = dao.getAll();
+            if (dsHienTai == null || (dsHienTai.isEmpty() && !dsTaiKhoan.isEmpty())) {
+                return false;
+            }
+            return true;
+        }
+
+        while (!dsThemMoi.isEmpty()) {
+            TaiKhoanDTO tk = dsThemMoi.get(0);
+            if (!dao.insert(tk)) {
+                return false;
+            }
+            dsThemMoi.remove(0);
+        }
+
+        while (!dsCapNhat.isEmpty()) {
+            TaiKhoanDTO tk = dsCapNhat.get(0);
+            if (!dao.update(tk)) {
+                return false;
+            }
+            dsCapNhat.remove(0);
+        }
+
+        while (!dsMaXoa.isEmpty()) {
+            String ma = dsMaXoa.get(0);
+            if (!dao.delete(ma)) {
+                return false;
+            }
+            dsMaXoa.remove(0);
+        }
+
         return true;
     }
 
@@ -111,34 +165,52 @@ public class DSTaiKhoanBUS {
             return "Mật khẩu phải có từ 6 đến 32 ký tự.";
         }
         tk.setMatKhau(matKhau);
+        ghiNhanCapNhat(tk);
         return null;
     }
 
-    /** Nạp danh sách tài khoản mẫu khi dữ liệu còn trống. */
-    public boolean napDuLieuMau(List<TaiKhoanDTO> dsTaiKhoanMau) {
-        if (laySoLuongTaiKhoan() > 0 || dsTaiKhoanMau == null || dsTaiKhoanMau.isEmpty()) {
-            return false;
+    private void ghiNhanThemMoi(TaiKhoanDTO tk) {
+        String ma = chuanHoa(tk.getMaDangNhap()).toLowerCase();
+        if (dsMaXoa.remove(ma)) {
+            dsCapNhat.add(tk);
+        } else {
+            dsThemMoi.add(tk);
         }
-        List<String> dsMaDaCo = new ArrayList<>();
-        List<String> dsMatKhauChuan = new ArrayList<>();
-        for (TaiKhoanDTO taiKhoan : dsTaiKhoanMau) {
-            if (taiKhoan == null || taiKhoan.getMaNV() == null) {
-                return false;
+    }
+
+    private void ghiNhanCapNhat(TaiKhoanDTO tk) {
+        String ma = chuanHoa(tk.getMaDangNhap()).toLowerCase();
+        for (int i = 0; i < dsThemMoi.size(); i++) {
+            if (chuanHoa(dsThemMoi.get(i).getMaDangNhap()).equalsIgnoreCase(ma)) {
+                dsThemMoi.set(i, tk);
+                return;
             }
-            String maNV = chuanHoa(taiKhoan.getMaNV().getMaNV()).toLowerCase();
-            String matKhau = chuanHoa(taiKhoan.getMatKhau());
-            if (maNV.isEmpty() || dsMaDaCo.contains(maNV) || !matKhau.matches(Validator.MAT_KHAU)) {
-                return false;
+        }
+        for (int i = 0; i < dsCapNhat.size(); i++) {
+            if (chuanHoa(dsCapNhat.get(i).getMaDangNhap()).equalsIgnoreCase(ma)) {
+                dsCapNhat.set(i, tk);
+                return;
             }
-            dsMaDaCo.add(maNV);
-            dsMatKhauChuan.add(matKhau);
         }
-        for (int i = 0; i < dsTaiKhoanMau.size(); i++) {
-            TaiKhoanDTO taiKhoan = dsTaiKhoanMau.get(i);
-            taiKhoan.setMatKhau(dsMatKhauChuan.get(i));
-            dsTaiKhoan.add(taiKhoan);
+        dsCapNhat.add(tk);
+    }
+
+    private void ghiNhanXoa(String maDangNhap) {
+        String ma = chuanHoa(maDangNhap).toLowerCase();
+        for (int i = dsThemMoi.size() - 1; i >= 0; i--) {
+            if (chuanHoa(dsThemMoi.get(i).getMaDangNhap()).equalsIgnoreCase(ma)) {
+                dsThemMoi.remove(i);
+                return;
+            }
         }
-        return true;
+        for (int i = dsCapNhat.size() - 1; i >= 0; i--) {
+            if (chuanHoa(dsCapNhat.get(i).getMaDangNhap()).equalsIgnoreCase(ma)) {
+                dsCapNhat.remove(i);
+            }
+        }
+        if (!dsMaXoa.contains(ma)) {
+            dsMaXoa.add(ma);
+        }
     }
 
     /** Nạp danh sách tài khoản đọc từ CSDL khi bộ nhớ đang trống, liên kết tham chiếu nhân viên. */
@@ -173,6 +245,9 @@ public class DSTaiKhoanBUS {
             return false;
         }
         dsTaiKhoan.addAll(hopLe);
+        dsThemMoi.clear();
+        dsCapNhat.clear();
+        dsMaXoa.clear();
         return true;
     }
 

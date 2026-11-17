@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import newDayCoffee.dao.ChiTietHoaDonDAO;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
+import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
 
 public class DSChiTietHoaDonBus {
@@ -30,10 +32,18 @@ public class DSChiTietHoaDonBus {
         this.dsDoUongBUS = dsDoUongBUS;
     }
 
+    public void setDsDoUongBUS(DSDoUongBUS dsDoUongBUS) {
+        this.dsDoUongBUS = dsDoUongBUS;
+    }
+
+    private boolean laTrongGio(ChiTietHoaDonDTO ct) {
+        return ct != null && (ct.getHoaDon() == null || ct.getMaHD() == null || ct.getMaHD().trim().isEmpty());
+    }
+
     public List<ChiTietHoaDonDTO> layGioHang() {
         List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
         for (ChiTietHoaDonDTO ct : chiTietHoaDonBus) {
-            if (ct != null && ct.getHoaDon() == null) ketQua.add(ct);
+            if (laTrongGio(ct)) ketQua.add(ct);
         }
         return ketQua;
     }
@@ -46,7 +56,7 @@ public class DSChiTietHoaDonBus {
     }
 
     public boolean themChiTiet(ChiTietHoaDonDTO chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getDoUong() == null || chiTiet.getHoaDon() != null
+        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getDoUong() == null || !laTrongGio(chiTiet)
                 || (dsDoUongBUS != null && dsDoUongBUS.timTheoMa(chiTiet.getMaMon()) == null)) {
             return false;
         }
@@ -64,8 +74,9 @@ public class DSChiTietHoaDonBus {
 
     public boolean capNhatSoLuong(String maMon, int soLuong) {
         ChiTietHoaDonDTO ct = timTrongGio(maMon);
-        if (ct == null || soLuong < 0 || !Double.isFinite(ct.getDonGia() * soLuong)) return false;
-        if (soLuong == 0) return xoaChiTiet(maMon);
+        if (ct == null) return false;
+        if (soLuong <= 0) return xoaChiTiet(maMon);
+        if (!Double.isFinite(ct.getDonGia() * soLuong)) return false;
         ct.setSoLuong(soLuong);
         return true;
     }
@@ -79,12 +90,20 @@ public class DSChiTietHoaDonBus {
         boolean daXoa = false;
         for (int i = chiTietHoaDonBus.size() - 1; i >= 0; i--) {
             ChiTietHoaDonDTO ct = chiTietHoaDonBus.get(i);
-            if (ct != null && ct.getHoaDon() == null && cungMa(ct.getMaMon(), maMon)) {
+            if (laTrongGio(ct) && cungMa(ct.getMaMon(), maMon)) {
                 chiTietHoaDonBus.remove(i);
                 daXoa = true;
             }
         }
         return daXoa;
+    }
+
+    public void xoaGioHang() {
+        for (int i = chiTietHoaDonBus.size() - 1; i >= 0; i--) {
+            if (laTrongGio(chiTietHoaDonBus.get(i))) {
+                chiTietHoaDonBus.remove(i);
+            }
+        }
     }
 
     public boolean gioHangRong() {
@@ -93,7 +112,17 @@ public class DSChiTietHoaDonBus {
 
     public double tongTienGioHang() {
         double tong = 0;
-        for (ChiTietHoaDonDTO ct : layGioHang()) tong += ct.getThanhTien();
+        for (ChiTietHoaDonDTO ct : layGioHang()) {
+            tong += new ChiTietHoaDonBUS(ct, ct.getDoUong()).tinhThanhTien();
+        }
+        return tong;
+    }
+
+    public int tongSoLuongGioHang() {
+        int tong = 0;
+        for (ChiTietHoaDonDTO ct : layGioHang()) {
+            tong += ct.getSoLuong();
+        }
         return tong;
     }
 
@@ -107,8 +136,22 @@ public class DSChiTietHoaDonBus {
 
     public double tongTienTheoHoaDon(String maHD) {
         double tong = 0;
-        for (ChiTietHoaDonDTO ct : layTheoHoaDon(maHD)) tong += ct.getThanhTien();
+        for (ChiTietHoaDonDTO ct : layTheoHoaDon(maHD)) {
+            tong += new ChiTietHoaDonBUS(ct, ct.getDoUong()).tinhThanhTien();
+        }
         return tong;
+    }
+
+    public boolean coDoUongTrongChiTiet(String maMon) {
+        if (maMon == null || maMon.trim().isEmpty()) {
+            return false;
+        }
+        for (ChiTietHoaDonDTO ct : chiTietHoaDonBus) {
+            if (ct != null && cungMa(ct.getMaMon(), maMon)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean ganHoaDon(HoaDonDTO hoaDon, List<ChiTietHoaDonDTO> dsChiTiet) {
@@ -118,7 +161,7 @@ public class DSChiTietHoaDonBus {
         if (gioHang.size() != dsChiTiet.size()) return false;
         List<String> dsMa = new ArrayList<>();
         for (ChiTietHoaDonDTO ct : dsChiTiet) {
-            if (ct == null || ct.getSoLuong() <= 0 || ct.getHoaDon() != null || !gioHang.contains(ct)
+            if (ct == null || ct.getSoLuong() <= 0 || !laTrongGio(ct) || !gioHang.contains(ct)
                     || (dsDoUongBUS != null && dsDoUongBUS.timTheoMa(ct.getMaMon()) == null)) return false;
             String ma = ct.getMaMon().trim().toLowerCase(java.util.Locale.ROOT);
             if (dsMa.contains(ma)) return false;
@@ -128,26 +171,59 @@ public class DSChiTietHoaDonBus {
         return true;
     }
 
+    public int napDuLieuTuCSDL(DSHoaDonBUS dsHoaDonBUS, DSDoUongBUS dsDoUongBUS) {
+        try {
+            List<ChiTietHoaDonDTO> dsTuDB = new ChiTietHoaDonDAO().getAll();
+            return napDuLieuTuCSDLCount(dsTuDB, dsHoaDonBUS, dsDoUongBUS);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public boolean napDuLieuTuCSDL(List<ChiTietHoaDonDTO> dsTuDB, DSHoaDonBUS dsHoaDonBUS,
             DSDoUongBUS dsDoUongBUS) {
-        if (dsTuDB == null || dsHoaDonBUS == null || dsDoUongBUS == null) return false;
-        this.dsDoUongBUS = dsDoUongBUS;
-        boolean daNap = false;
+        return napDuLieuTuCSDLCount(dsTuDB, dsHoaDonBUS, dsDoUongBUS) > 0;
+    }
+
+    public int napDuLieuTuCSDLCount(List<ChiTietHoaDonDTO> dsTuDB, DSHoaDonBUS dsHoaDonBUS,
+            DSDoUongBUS dsDoUongBUS) {
+        if (dsTuDB == null || dsTuDB.isEmpty()) return 0;
+        if (dsDoUongBUS != null) {
+            this.dsDoUongBUS = dsDoUongBUS;
+        }
+        int daThem = 0;
         for (ChiTietHoaDonDTO ct : dsTuDB) {
-            if (ct == null || ct.getSoLuong() <= 0) continue;
-            HoaDonDTO hd = dsHoaDonBUS.timTheoMa(ct.getMaHD());
-            if (hd == null || dsDoUongBUS.timTheoMa(ct.getMaMon()) == null) continue;
+            if (ct == null || ct.getSoLuong() <= 0 || ct.getDoUong() == null) continue;
+            String maHD = ct.getMaHD() == null ? "" : ct.getMaHD().trim();
+            String maMon = ct.getMaMon() == null ? "" : ct.getMaMon().trim();
+            if (maHD.isEmpty() || maMon.isEmpty()) continue;
+            if (dsHoaDonBUS != null) {
+                HoaDonDTO hd = dsHoaDonBUS.timTheoMa(maHD);
+                if (hd == null) continue;
+                ct.setHoaDon(hd);
+            }
+            if (dsDoUongBUS != null) {
+                DoUongDTO du = dsDoUongBUS.timTheoMa(maMon);
+                if (du != null) {
+                    ct.setDoUong(du);
+                }
+            }
             boolean trung = false;
-            for (ChiTietHoaDonDTO cu : layTheoHoaDon(hd.getMaHD())) {
-                if (cungMa(cu.getMaMon(), ct.getMaMon())) { trung = true; break; }
+            for (ChiTietHoaDonDTO cu : layTheoHoaDon(maHD)) {
+                if (cungMa(cu.getMaMon(), maMon)) {
+                    trung = true;
+                    break;
+                }
             }
             if (trung) continue;
-            ct.setHoaDon(hd);
-            ct.setDoUong(dsDoUongBUS.timTheoMa(ct.getMaMon()));
             chiTietHoaDonBus.add(ct);
-            daNap = true;
+            daThem++;
         }
-        return daNap;
+        return daNapCount(daThem);
+    }
+
+    private int daNapCount(int daThem) {
+        return daThem;
     }
 
     public int tongSoLuongTheoHoaDon(List<String> dsMaHD) {

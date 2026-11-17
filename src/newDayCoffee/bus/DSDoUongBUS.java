@@ -3,6 +3,7 @@ package newDayCoffee.bus;
 import java.util.ArrayList;
 import java.util.List;
 
+import newDayCoffee.dao.DoUongDAO;
 import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.utils.Auth;
 
@@ -17,16 +18,36 @@ public class DSDoUongBUS {
 
     // ==================== KHU VỰC DỮ LIỆU ====================
     private final List<DoUongDTO> dsDoUong;
-    private boolean daNapDuLieuMau;
+    private final List<DoUongDTO> dsThemMoi;
+    private final List<DoUongDTO> dsCapNhat;
+    private final List<String> dsMaXoa;
+    private ChiTietHoaDonBUS chiTietHoaDonBUS;
 
-    /** Cho biết thực đơn đã được nạp dữ liệu khởi tạo hay chưa. */
-    public boolean daNapDuLieu() {
-        return daNapDuLieuMau || !dsDoUong.isEmpty();
+    public void setChiTietHoaDonBUS(ChiTietHoaDonBUS chiTietHoaDonBUS) {
+        this.chiTietHoaDonBUS = chiTietHoaDonBUS;
     }
 
-    /** Nạp thực đơn ưu tiên từ CSDL khi danh sách hiện đang trống. */
+    /** Khởi tạo danh sách thực đơn: tự động lấy dữ liệu hiện có từ SQL Server qua DoUongDAO. */
+    public void khoiTaoDuLieu() {
+        if (!dsDoUong.isEmpty()) {
+            return;
+        }
+        try {
+            List<DoUongDTO> dsTuDB = new DoUongDAO().getAll();
+            napDuLieuTuCSDL(dsTuDB);
+        } catch (Exception e) {
+            // Bắt ngoại lệ an toàn khi cơ sở dữ liệu chưa sẵn sàng
+        }
+    }
+
+    /** Cho biết thực đơn đã được nạp dữ liệu từ CSDL hay chưa. */
+    public boolean daNapDuLieu() {
+        return !dsDoUong.isEmpty();
+    }
+
+    /** Nạp thực đơn từ CSDL khi danh sách hiện đang trống. */
     public boolean napDuLieuTuCSDL(List<DoUongDTO> dsTuDB) {
-        if (daNapDuLieuMau || !dsDoUong.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
+        if (!dsDoUong.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
             return false;
         }
         for (DoUongDTO mon : dsTuDB) {
@@ -37,21 +58,17 @@ public class DSDoUongBUS {
         if (dsDoUong.isEmpty()) {
             return false;
         }
-        daNapDuLieuMau = true;
+        dsThemMoi.clear();
+        dsCapNhat.clear();
+        dsMaXoa.clear();
         return true;
-    }
-
-    /** Nạp dữ liệu khởi tạo một lần, không phục hồi món mẫu đã bị xóa. */
-    public void napDuLieuMau(List<DoUongDTO> dsMau) {
-        if (daNapDuLieuMau || dsMau == null) return;
-        for (DoUongDTO mon : dsMau) {
-            if (mon != null && timTheoMa(mon.getMaMon()) == null) dsDoUong.add(mon);
-        }
-        daNapDuLieuMau = true;
     }
 
     public DSDoUongBUS() {
         dsDoUong = new ArrayList<>();
+        dsThemMoi = new ArrayList<>();
+        dsCapNhat = new ArrayList<>();
+        dsMaXoa = new ArrayList<>();
     }
 
     // ==================== KHU VỰC ĐỌC / TÌM KIẾM ====================
@@ -194,34 +211,39 @@ public class DSDoUongBUS {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền thêm món.";
         }
-        if (doUong == null) {
+        if (doUong == null || chuanHoa(doUong.getMaMon()).isEmpty()) {
             return "Thông tin món không hợp lệ.";
         }
+        doUong.setMaMon(chuanHoa(doUong.getMaMon()).toLowerCase());
         if (timTheoMa(doUong.getMaMon()) != null) {
             return "Mã món đã tồn tại.";
         }
 
         dsDoUong.add(doUong);
+        ghiNhanThemMoi(doUong);
         return null;
     }
 
-    /** Cập nhật tên, giá và mô tả của món đã có. */
+    /** Cập nhật tên, giá và mô tả của món đã có (tạo bản ghi mới để không làm lệch đơn giá hóa đơn cũ). */
     public String suaDoUong(String maMon, String tenMon, double donGia, String moTa) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền sửa món.";
         }
 
-        DoUongDTO du = timTheoMa(maMon);
-        if (du == null) {
-            return "Không tìm thấy món cần sửa.";
+        String ma = chuanHoa(maMon);
+        for (int i = 0; i < dsDoUong.size(); i++) {
+            DoUongDTO du = dsDoUong.get(i);
+            if (du.getMaMon().equalsIgnoreCase(ma)) {
+                DoUongDTO capNhat = new DoUongDTO(du.getMaMon(), chuanHoa(tenMon), donGia, chuanHoa(moTa));
+                dsDoUong.set(i, capNhat);
+                ghiNhanCapNhat(capNhat);
+                return null;
+            }
         }
-        du.setTenMon(chuanHoa(tenMon));
-        du.setDonGia(donGia);
-        du.setMoTa(chuanHoa(moTa));
-        return null;
+        return "Không tìm thấy món cần sửa.";
     }
 
-    /** Xóa món theo mã. */
+    /** Xóa món theo mã. Từ chối xóa nếu món đã xuất hiện trong đơn hàng hoặc hóa đơn. */
     public String xoaDoUong(String maMon) {
         if (!Auth.laQuanLy()) {
             return "Chỉ quản lí mới có quyền xóa món.";
@@ -230,12 +252,101 @@ public class DSDoUongBUS {
         if (du == null) {
             return "Không tìm thấy món cần xóa.";
         }
+        if (chiTietHoaDonBUS != null && chiTietHoaDonBUS.coDoUongTrongChiTiet(du.getMaMon())) {
+            return "Không thể xóa món đang có trong đơn hàng hoặc hóa đơn.";
+        }
         dsDoUong.remove(du);
+        ghiNhanXoa(du.getMaMon());
         return null;
     }
 
-    /** Lưu danh sách vào CSDL. Hiện dữ liệu vẫn nằm trong bộ nhớ. */
+    private void ghiNhanThemMoi(DoUongDTO mon) {
+        String ma = chuanHoa(mon.getMaMon()).toLowerCase();
+        if (dsMaXoa.remove(ma)) {
+            dsCapNhat.add(mon);
+        } else {
+            dsThemMoi.add(mon);
+        }
+    }
+
+    private void ghiNhanCapNhat(DoUongDTO mon) {
+        String ma = chuanHoa(mon.getMaMon()).toLowerCase();
+        for (int i = 0; i < dsThemMoi.size(); i++) {
+            if (chuanHoa(dsThemMoi.get(i).getMaMon()).equalsIgnoreCase(ma)) {
+                dsThemMoi.set(i, mon);
+                return;
+            }
+        }
+        for (int i = 0; i < dsCapNhat.size(); i++) {
+            if (chuanHoa(dsCapNhat.get(i).getMaMon()).equalsIgnoreCase(ma)) {
+                dsCapNhat.set(i, mon);
+                return;
+            }
+        }
+        dsCapNhat.add(mon);
+    }
+
+    private void ghiNhanXoa(String maMon) {
+        String ma = chuanHoa(maMon).toLowerCase();
+        for (int i = dsThemMoi.size() - 1; i >= 0; i--) {
+            if (chuanHoa(dsThemMoi.get(i).getMaMon()).equalsIgnoreCase(ma)) {
+                dsThemMoi.remove(i);
+                return;
+            }
+        }
+        for (int i = dsCapNhat.size() - 1; i >= 0; i--) {
+            if (chuanHoa(dsCapNhat.get(i).getMaMon()).equalsIgnoreCase(ma)) {
+                dsCapNhat.remove(i);
+            }
+        }
+        if (!dsMaXoa.contains(ma)) {
+            dsMaXoa.add(ma);
+        }
+    }
+
+    /**
+     * Lưu toàn bộ thay đổi chờ lưu (thêm, sửa, xóa) xuống SQL Server thông qua DoUongDAO
+     * và đồng bộ lại danh sách trong bộ nhớ với dữ liệu thực tế trong database.
+     */
     public boolean luuVaoCSDL() {
+        DoUongDAO dao = new DoUongDAO();
+        if (dsThemMoi.isEmpty() && dsCapNhat.isEmpty() && dsMaXoa.isEmpty()) {
+            List<DoUongDTO> dsHienTai = dao.getAll();
+            if (dsHienTai == null || (dsHienTai.isEmpty() && !dsDoUong.isEmpty())) {
+                return false;
+            }
+            return true;
+        }
+
+        while (!dsThemMoi.isEmpty()) {
+            DoUongDTO mon = dsThemMoi.get(0);
+            if (!dao.insert(mon)) {
+                return false;
+            }
+            dsThemMoi.remove(0);
+        }
+
+        while (!dsCapNhat.isEmpty()) {
+            DoUongDTO mon = dsCapNhat.get(0);
+            if (!dao.update(mon)) {
+                return false;
+            }
+            dsCapNhat.remove(0);
+        }
+
+        while (!dsMaXoa.isEmpty()) {
+            String ma = dsMaXoa.get(0);
+            if (!dao.delete(ma)) {
+                return false;
+            }
+            dsMaXoa.remove(0);
+        }
+
+        List<DoUongDTO> dsDongBo = dao.getAll();
+        if (dsDongBo != null && !dsDongBo.isEmpty()) {
+            dsDoUong.clear();
+            dsDoUong.addAll(dsDongBo);
+        }
         return true;
     }
 

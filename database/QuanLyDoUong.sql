@@ -315,48 +315,48 @@ INSERT [dbo].[TaiKhoan] ([maDangNhap], [matKhau], [maNV]) VALUES (N'nv08', N'123
 INSERT [dbo].[TaiKhoan] ([maDangNhap], [matKhau], [maNV]) VALUES (N'ql01', N'123456', N'ql01');
 GO
 
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD001', CAST(N'2026-11-01T08:15:00.0000000' AS DateTime2), CAST(110000.00 AS Decimal(12, 2)), N'Mang đi', N'nv01', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD002', CAST(N'2026-11-01T09:20:00.0000000' AS DateTime2), CAST(120000.00 AS Decimal(12, 2)), N'Uống tại quán', N'nv02', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD003', CAST(N'2026-11-02T10:10:00.0000000' AS DateTime2), CAST(150000.00 AS Decimal(12, 2)), NULL, N'nv03', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD004', CAST(N'2026-11-02T14:30:00.0000000' AS DateTime2), CAST(80000.00 AS Decimal(12, 2)), N'Mang đi', N'nv04', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD005', CAST(N'2026-11-03T08:45:00.0000000' AS DateTime2), CAST(150000.00 AS Decimal(12, 2)), NULL, N'nv05', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD006', CAST(N'2026-11-03T15:20:00.0000000' AS DateTime2), CAST(140000.00 AS Decimal(12, 2)), N'Uống tại quán', N'nv06', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD007', CAST(N'2026-11-04T09:10:00.0000000' AS DateTime2), CAST(100000.00 AS Decimal(12, 2)), NULL, N'nv07', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD008', CAST(N'2026-11-04T16:25:00.0000000' AS DateTime2), CAST(130000.00 AS Decimal(12, 2)), N'Mang đi', N'nv08', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD009', CAST(N'2026-11-05T08:30:00.0000000' AS DateTime2), CAST(140000.00 AS Decimal(12, 2)), NULL, N'ql01', N'Đã thanh toán');
-INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD010', CAST(N'2026-11-05T17:15:00.0000000' AS DateTime2), CAST(90000.00 AS Decimal(12, 2)), N'Uống tại quán', N'ql01', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026001', CAST(N'2026-11-01T08:15:00.0000000' AS DateTime2), CAST(110000.00 AS Decimal(12, 2)), N'Mang đi', N'nv01', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026002', CAST(N'2026-11-01T09:20:00.0000000' AS DateTime2), CAST(120000.00 AS Decimal(12, 2)), N'Uống tại quán', N'nv02', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026003', CAST(N'2026-11-02T10:10:00.0000000' AS DateTime2), CAST(150000.00 AS Decimal(12, 2)), NULL, N'nv03', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026004', CAST(N'2026-11-02T14:30:00.0000000' AS DateTime2), CAST(80000.00 AS Decimal(12, 2)), N'Mang đi', N'nv04', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026005', CAST(N'2026-11-03T08:45:00.0000000' AS DateTime2), CAST(150000.00 AS Decimal(12, 2)), NULL, N'nv05', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026006', CAST(N'2026-11-03T15:20:00.0000000' AS DateTime2), CAST(140000.00 AS Decimal(12, 2)), N'Uống tại quán', N'nv06', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026007', CAST(N'2026-11-04T09:10:00.0000000' AS DateTime2), CAST(100000.00 AS Decimal(12, 2)), NULL, N'nv07', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026008', CAST(N'2026-11-04T16:25:00.0000000' AS DateTime2), CAST(130000.00 AS Decimal(12, 2)), N'Mang đi', N'nv08', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026009', CAST(N'2026-11-05T08:30:00.0000000' AS DateTime2), CAST(140000.00 AS Decimal(12, 2)), NULL, N'ql01', N'Đã thanh toán');
+INSERT [dbo].[HoaDon] ([maHoaDon], [ngayLap], [tienKhachTra], [ghiChu], [maNV], [trangThai]) VALUES (N'HD2026010', CAST(N'2026-11-05T17:15:00.0000000' AS DateTime2), CAST(90000.00 AS Decimal(12, 2)), N'Uống tại quán', N'ql01', N'Đã thanh toán');
 GO
 
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD001', N'cof01', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD001', N'cof02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD001', N'tea01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD002', N'cof03', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD002', N'mil01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD002', N'tea02', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD003', N'cof03', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD003', N'mil02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD003', N'tea03', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD004', N'cof01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD004', N'cof02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD004', N'tea02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD005', N'cof03', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD005', N'mil02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD005', N'tea01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD006', N'cof02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD006', N'mil01', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD006', N'tea03', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD007', N'cof01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD007', N'mil02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD007', N'tea02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD008', N'cof03', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD008', N'mil01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD008', N'tea01', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD009', N'cof02', 2);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD009', N'mil02', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD009', N'tea03', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD010', N'cof01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD010', N'mil01', 1);
-INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD010', N'tea02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026001', N'cof01', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026001', N'cof02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026001', N'tea01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026002', N'cof03', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026002', N'mil01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026002', N'tea02', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026003', N'cof03', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026003', N'mil02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026003', N'tea03', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026004', N'cof01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026004', N'cof02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026004', N'tea02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026005', N'cof03', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026005', N'mil02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026005', N'tea01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026006', N'cof02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026006', N'mil01', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026006', N'tea03', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026007', N'cof01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026007', N'mil02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026007', N'tea02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026008', N'cof03', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026008', N'mil01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026008', N'tea01', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026009', N'cof02', 2);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026009', N'mil02', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026009', N'tea03', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026010', N'cof01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026010', N'mil01', 1);
+INSERT [dbo].[ChiTietHoaDon] ([maHoaDon], [maDoUong], [soLuong]) VALUES (N'HD2026010', N'tea02', 1);
 GO
 
 -- 9. Kiem tra nhanh so ban ghi, View va Function

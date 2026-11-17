@@ -37,14 +37,15 @@ public class Auth {
         return nguoiDungHienTai != null;
     }
 
-    /** Chỉ tài khoản có mã qlXX và chức vụ "Quản lí" mới được quản lý nhân viên/thực đơn. */
+    /** Chỉ tài khoản có mã qlXX và chức vụ "Quản lí" / "Quản lý" mới được quản lý nhân viên/thực đơn. */
     public static boolean laQuanLy() {
         if (nguoiDungHienTai == null) {
             return false;
         }
         String maNV = nguoiDungHienTai.getMaNV();
+        String chucVu = nguoiDungHienTai.getChucVu() == null ? "" : nguoiDungHienTai.getChucVu().trim();
         return maNV != null && maNV.trim().toLowerCase().startsWith("ql")
-                && "Quản lí".equals(nguoiDungHienTai.getChucVu());
+                && ("Quản lí".equalsIgnoreCase(chucVu) || "Quản lý".equalsIgnoreCase(chucVu));
     }
 
     /** Quyền màn hình dùng chung cho menu và điều hướng. */
@@ -52,7 +53,7 @@ public class Auth {
         if (!isDangNhap() || tenManHinh == null) {
             return false;
         }
-        if ("Tổng quan".equals(tenManHinh)) {
+        if ("Tổng quan".equals(tenManHinh)) { 
             return true;
         }
         switch (tenManHinh) {

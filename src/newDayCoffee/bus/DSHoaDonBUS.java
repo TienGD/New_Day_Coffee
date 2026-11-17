@@ -3,9 +3,13 @@ package newDayCoffee.bus;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import newDayCoffee.dao.ChiTietHoaDonDAO;
+import newDayCoffee.dao.HoaDonDAO;
 import newDayCoffee.dto.ChiTietHoaDonDTO;
 import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.dto.NhanVienDTO;
@@ -82,7 +86,49 @@ public class DSHoaDonBUS {
         return chiTietHoaDonBUS.tongTienTheoHoaDon(hoaDon.getMaHD());
     }
 
+    /** Tính thành tiền của một dòng chi tiết hóa đơn thông qua ChiTietHoaDonBUS. */
+    public double tinhThanhTienChiTiet(ChiTietHoaDonDTO chiTiet) {
+        if (chiTiet == null || chiTietHoaDonBUS == null) {
+            return 0;
+        }
+        return chiTietHoaDonBUS.tinhThanhTien(chiTiet);
+    }
+
+    /** Kiểm tra nhân viên đã từng lập hóa đơn nào trong danh sách hay chưa. */
+    public boolean coHoaDonCuaNhanVien(String maNV) {
+        String ma = chuanHoa(maNV);
+        if (ma.isEmpty()) {
+            return false;
+        }
+        for (HoaDonDTO hoaDon : dsHoaDon) {
+            if (hoaDon != null && hoaDon.getMaNV() != null
+                    && chuanHoa(hoaDon.getMaNV().getMaNV()).equalsIgnoreCase(ma)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ==================== KHU VỰC THÊM HÓA ĐƠN ====================
+    /** Nạp hóa đơn và chi tiết hóa đơn từ CSDL thông qua DAO khi bộ nhớ đang trống. */
+    public boolean napDuLieuTuCSDL(DSNhanVienBUS dsNhanVienBUS, DSDoUongBUS dsDoUongBUS) {
+        if (!dsHoaDon.isEmpty()) {
+            return false;
+        }
+        try {
+            List<HoaDonDTO> dsTuDB = new HoaDonDAO().getAll();
+            if (dsTuDB != null && !dsTuDB.isEmpty() && napDuLieuTuCSDL(dsTuDB, dsNhanVienBUS)) {
+                if (chiTietHoaDonBUS != null) {
+                    chiTietHoaDonBUS.napDuLieuTuCSDL(this, dsDoUongBUS);
+                }
+                return true;
+            }
+        } catch (Exception e) {
+            // Bắt ngoại lệ an toàn nếu cơ sở dữ liệu chưa sẵn sàng
+        }
+        return false;
+    }
+
     /** Nạp danh sách hóa đơn đọc từ CSDL khi bộ nhớ đang trống. */
     public boolean napDuLieuTuCSDL(List<HoaDonDTO> dsTuDB, DSNhanVienBUS dsNhanVienBUS) {
         if (!dsHoaDon.isEmpty() || dsTuDB == null || dsTuDB.isEmpty()) {
@@ -117,6 +163,14 @@ public class DSHoaDonBUS {
 
         dsHoaDon.add(hoaDon);
         chiTietHoaDonBUS.ganHoaDon(hoaDon, dsChiTietMoi);
+
+        HoaDonDAO hoaDonDAO = new HoaDonDAO();
+        if (hoaDonDAO.insert(hoaDon)) {
+            ChiTietHoaDonDAO chiTietDAO = new ChiTietHoaDonDAO();
+            for (ChiTietHoaDonDTO ct : dsChiTietMoi) {
+                chiTietDAO.insert(ct);
+            }
+        }
         return true;
     }
 
@@ -183,6 +237,47 @@ public class DSHoaDonBUS {
     /** Danh sách thống kê số lượng từng món bán được trong ngày hôm nay (kèm mã món). */
     public List<ChiTietHoaDonDTO> layDanhSachThongKeMonHomNay() {
         return chiTietHoaDonBUS.thongKeMonTheoMa(layMaHoaDonHomNay());
+    }
+
+    /** Danh sách các hóa đơn được lập trong ngày hôm nay. */
+    public List<HoaDonDTO> layDanhSachHoaDonHomNay() {
+        List<HoaDonDTO> ketQua = new ArrayList<>();
+        for (HoaDonDTO hoaDon : dsHoaDon) {
+            if (laHomNay(hoaDon)) {
+                ketQua.add(hoaDon);
+            }
+        }
+        return ketQua;
+    }
+
+    /** Sắp xếp danh sách thống kê món theo số lượng tăng hoặc giảm dần. */
+    public List<ChiTietHoaDonDTO> sapXepThongKeMon(List<ChiTietHoaDonDTO> nguon, final boolean giamDan) {
+        List<ChiTietHoaDonDTO> banSao = nguon == null ? new ArrayList<ChiTietHoaDonDTO>() : new ArrayList<ChiTietHoaDonDTO>(nguon);
+        Collections.sort(banSao, new Comparator<ChiTietHoaDonDTO>() {
+            @Override
+            public int compare(ChiTietHoaDonDTO a, ChiTietHoaDonDTO b) {
+                int cmp = giamDan
+                        ? Integer.compare(b.getSoLuong(), a.getSoLuong())
+                        : Integer.compare(a.getSoLuong(), b.getSoLuong());
+                if (cmp != 0) {
+                    return cmp;
+                }
+                String maA = a.getMaMon() == null ? "" : a.getMaMon();
+                String maB = b.getMaMon() == null ? "" : b.getMaMon();
+                cmp = maA.compareToIgnoreCase(maB);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                cmp = maA.compareTo(maB);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                String tenA = a.getTenMon() == null ? "" : a.getTenMon();
+                String tenB = b.getTenMon() == null ? "" : b.getTenMon();
+                return tenA.compareToIgnoreCase(tenB);
+            }
+        });
+        return banSao;
     }
 
     /** Mã các hóa đơn được lập trong ngày hôm nay. */

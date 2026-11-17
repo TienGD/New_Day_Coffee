@@ -479,10 +479,11 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 		String ma = maNV.toLowerCase();
 		String chucVu = layChucVu();
-		if (ma.startsWith("ql") && !chucVu.equals("Quản lí")) {
+		boolean laChucVuQuanLy = chucVu.equalsIgnoreCase("Quản lí") || chucVu.equalsIgnoreCase("Quản lý");
+		if (ma.startsWith("ql") && !laChucVuQuanLy) {
 			return "Mã nhân viên bắt đầu bằng ql phải có chức vụ Quản lí.";
 		}
-		if (ma.startsWith("nv") && chucVu.equals("Quản lí")) {
+		if (ma.startsWith("nv") && laChucVuQuanLy) {
 			return "Mã nhân viên bắt đầu bằng nv không được có chức vụ Quản lí.";
 		}
 		return null;
@@ -542,6 +543,7 @@ public class QuanLyNhanVienPanel extends JPanel implements ActionListener, ListS
 
 	private void luuDuLieu() {
 		if (DSNhanVienBUS.luuVaoCSDL()) {
+			capNhatBang(false);
 			JOptionPane.showMessageDialog(this, "Đã lưu danh sách nhân viên.",
 					"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		} else {

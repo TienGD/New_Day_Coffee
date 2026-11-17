@@ -65,6 +65,44 @@ public class HoaDonDAO {
         return null;
     }
 
+    // Thêm hóa đơn mới vào CSDL
+    public boolean insert(HoaDonDTO hd) {
+        if (hd == null || hd.getMaHD() == null || hd.getMaHD().trim().isEmpty()
+                || hd.getMaNV() == null || hd.getMaNV().getMaNV() == null) {
+            return false;
+        }
+        String sql = "INSERT INTO dbo.HoaDon (maHoaDon, ngayLap, tienKhachTra, ghiChu, maNV, trangThai) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, hd.getMaHD().trim());
+            if (hd.getNgayLap() != null) {
+                ps.setTimestamp(2, Timestamp.valueOf(hd.getNgayLap().atStartOfDay()));
+            } else {
+                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            }
+            ps.setDouble(3, hd.getTienKhachDua());
+            String ghiChu = hd.getGhiChu() != null ? hd.getGhiChu().trim() : "";
+            if (ghiChu.isEmpty()) {
+                ps.setNull(4, java.sql.Types.NVARCHAR);
+            } else {
+                ps.setString(4, ghiChu);
+            }
+            ps.setString(5, hd.getMaNV().getMaNV().trim());
+            String trangThai = (hd.getTrangThai() != null && !hd.getTrangThai().trim().isEmpty())
+                    ? hd.getTrangThai().trim()
+                    : "Đã thanh toán";
+            ps.setString(6, trangThai);
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private static HoaDonDTO mapRow(ResultSet rs) throws SQLException {
         HoaDonDTO hd = new HoaDonDTO();
         hd.setMaHD(nullToEmpty(rs.getString("maHoaDon")));

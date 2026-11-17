@@ -433,6 +433,7 @@ public class TaiKhoanPanel extends JPanel implements ActionListener, ListSelecti
 
 	private void luuDuLieu() {
 		if (dsTaiKhoanBUS.luuVaoCSDL()) {
+			capNhatBang(false);
 			JOptionPane.showMessageDialog(this, "Đã lưu danh sách tài khoản.",
 					"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		} else {

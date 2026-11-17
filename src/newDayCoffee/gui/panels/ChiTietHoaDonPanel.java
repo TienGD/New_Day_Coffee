@@ -262,7 +262,7 @@ public class ChiTietHoaDonPanel extends JDialog {
 				chiTiet.getTenMon(),
 				chiTiet.getSoLuong(),
 				UIUtils.dinhDangTien(chiTiet.getDonGia()),
-				UIUtils.dinhDangTien(chiTiet.getThanhTien())
+				UIUtils.dinhDangTien(dsHoaDonBUS.tinhThanhTienChiTiet(chiTiet))
 			});
 			tongSoLuong += chiTiet.getSoLuong();
 		}

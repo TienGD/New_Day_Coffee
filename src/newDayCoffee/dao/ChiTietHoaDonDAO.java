@@ -65,6 +65,29 @@ public class ChiTietHoaDonDAO {
         return dsChiTiet;
     }
 
+    // Thêm dòng chi tiết hóa đơn mới vào CSDL
+    public boolean insert(ChiTietHoaDonDTO ct) {
+        if (ct == null || ct.getMaHD() == null || ct.getMaHD().trim().isEmpty()
+                || ct.getMaMon() == null || ct.getMaMon().trim().isEmpty()
+                || ct.getSoLuong() <= 0) {
+            return false;
+        }
+        String sql = "INSERT INTO dbo.ChiTietHoaDon (maHoaDon, maDoUong, soLuong) VALUES (?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, ct.getMaHD().trim());
+            ps.setString(2, ct.getMaMon().trim());
+            ps.setInt(3, ct.getSoLuong());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private static ChiTietHoaDonDTO mapRow(ResultSet rs) throws SQLException {
         HoaDonDTO hd = new HoaDonDTO();
         hd.setMaHD(nullToEmpty(rs.getString("maHoaDon")));

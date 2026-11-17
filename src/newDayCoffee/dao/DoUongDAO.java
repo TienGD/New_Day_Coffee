@@ -59,6 +59,68 @@ public class DoUongDAO {
         return null;
     }
 
+    // Thêm đồ uống mới vào CSDL
+    public boolean insert(DoUongDTO du) {
+        if (du == null || du.getMaMon() == null || du.getMaMon().trim().isEmpty()) {
+            return false;
+        }
+        String sql = "INSERT INTO dbo.DoUong (maDoUong, tenDoUong, moTa, giaBan) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, du.getMaMon().trim().toLowerCase());
+            ps.setString(2, du.getTenMon() != null ? du.getTenMon().trim() : "");
+            ps.setString(3, du.getMoTa() != null ? du.getMoTa().trim() : "");
+            ps.setDouble(4, du.getDonGia());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Cập nhật thông tin đồ uống trong CSDL
+    public boolean update(DoUongDTO du) {
+        if (du == null || du.getMaMon() == null || du.getMaMon().trim().isEmpty()) {
+            return false;
+        }
+        String sql = "UPDATE dbo.DoUong SET tenDoUong = ?, moTa = ?, giaBan = ? WHERE maDoUong = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, du.getTenMon() != null ? du.getTenMon().trim() : "");
+            ps.setString(2, du.getMoTa() != null ? du.getMoTa().trim() : "");
+            ps.setDouble(3, du.getDonGia());
+            ps.setString(4, du.getMaMon().trim());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Xóa đồ uống khỏi CSDL theo mã
+    public boolean delete(String maDoUong) {
+        if (maDoUong == null || maDoUong.trim().isEmpty()) {
+            return false;
+        }
+        String sql = "DELETE FROM dbo.DoUong WHERE maDoUong = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, maDoUong.trim());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private static DoUongDTO mapRow(ResultSet rs) throws SQLException {
         DoUongDTO du = new DoUongDTO();
         du.setMaMon(nullToEmpty(rs.getString("maDoUong")));
