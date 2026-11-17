@@ -44,7 +44,7 @@ public class Auth {
         }
         String maNV = nguoiDungHienTai.getMaNV();
         return maNV != null && maNV.trim().toLowerCase().startsWith("ql")
-                && "Quản lí".equals(nguoiDungHienTai.getChucVu());
+                && "Quản lý".equals(nguoiDungHienTai.getChucVu());
     }
 
     /** Quyền màn hình dùng chung cho menu và điều hướng. */
