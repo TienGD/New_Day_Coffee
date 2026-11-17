@@ -17,13 +17,18 @@ public class TaiKhoanDTO {
     
     public TaiKhoanDTO(String maDangNhap) {
         this();
-        this.maDangNhap = maDangNhap;
+        this.maDangNhap = maDangNhap != null ? maDangNhap : "";
+        this.maNV.setMaNV(this.maDangNhap);
     }
     
     public TaiKhoanDTO(NhanVienDTO maNV, String matKhau, String maDangNhap) {
-        this.maNV = maNV;
-        this.matKhau = matKhau;
-        this.maDangNhap = maDangNhap;
+        this.maNV = maNV != null ? maNV : new NhanVienDTO();
+        this.matKhau = matKhau != null ? matKhau : "";
+        if (maDangNhap != null && !maDangNhap.trim().isEmpty()) {
+            this.maDangNhap = maDangNhap;
+        } else {
+            this.maDangNhap = this.maNV.getMaNV() != null ? this.maNV.getMaNV() : "";
+        }
     }
 
     public TaiKhoanDTO(NhanVienDTO maNV, String matKhau) {
@@ -45,11 +50,19 @@ public class TaiKhoanDTO {
 
 	public void setMaNV(NhanVienDTO maNV) {
 		this.maNV = maNV;
+		if ((this.maDangNhap == null || this.maDangNhap.trim().isEmpty())
+				&& maNV != null && maNV.getMaNV() != null) {
+			this.maDangNhap = maNV.getMaNV();
+		}
 	}
 	
 	
 
 	public String getMaDangNhap() {
+		if ((maDangNhap == null || maDangNhap.trim().isEmpty())
+				&& maNV != null && maNV.getMaNV() != null) {
+			return maNV.getMaNV();
+		}
 		return maDangNhap;
 	}
 
@@ -57,6 +70,9 @@ public class TaiKhoanDTO {
 
 	public void setMaDangNhap(String maDangNhap) {
 		this.maDangNhap = maDangNhap;
+		if (this.maNV != null && (this.maNV.getMaNV() == null || this.maNV.getMaNV().trim().isEmpty())) {
+			this.maNV.setMaNV(maDangNhap != null ? maDangNhap : "");
+		}
 	}
 
 

@@ -12,9 +12,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -30,10 +27,6 @@ import javax.swing.border.EmptyBorder;
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
 import newDayCoffee.bus.NhanVienTaiKhoanBUS;
-import newDayCoffee.dao.NhanVienDAO;
-import newDayCoffee.dao.TaiKhoanDAO;
-import newDayCoffee.dto.NhanVienDTO;
-import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
 
@@ -46,7 +39,10 @@ public class LoginFrame extends JFrame implements ActionListener {
 	private JButton btnDangNhap;
 	private JLabel lblQuenMatKhau;
 	private JLabel lblShowHidePass;
+	private JLabel lblEyeQuenMK;
 	private boolean isPasswordVisible = false;
+	private boolean isNewPasswordVisible = false;
+	private char defaultEchoChar = '•';
 	private String TaiKhoanNhap = "Ví dụ: ql01 hoặc nv01";
 	private String MatKhauNhap = "Ví dụ: 123456";
 
@@ -86,95 +82,11 @@ public class LoginFrame extends JFrame implements ActionListener {
 				? new NhanVienTaiKhoanBUS(this.DSNhanVienBUS, this.taiKhoanBUS)
 				: nhanVienTaiKhoanBUS;
 
-		// Tạo tài khoản mẫu ql01 / nv01 để đăng nhập thử
-		taoDuLieuMau();
+		// Tự động tải dữ liệu nhân viên và tài khoản từ cơ sở dữ liệu
+		this.nhanVienTaiKhoanBUS.khoiTaoDuLieu();
 
 		khoiTaoGiaoDien();
 		themSuKienChoCacNut();
-	}
-
-	/** Tạo DTO mẫu tại giao diện rồi chuyển cho BUS lưu trữ. */
-	private void taoDuLieuMau() {
-		taoDuLieuMau(DSNhanVienBUS, taiKhoanBUS);
-	}
-
-	/** Tạo nhân viên mẫu cùng tài khoản của họ để test đăng nhập (fallback khi CSDL chưa có dữ liệu).
-	 * Ưu tiên nạp từ CSDL trước; nếu CSDL trống hoặc lỗi kết nối mới dùng dữ liệu mẫu.
-	 */
-	public static void taoDuLieuMau(DSNhanVienBUS DSNhanVienBUS, DSTaiKhoanBUS taiKhoanBUS) {
-		if (DSNhanVienBUS == null || taiKhoanBUS == null
-				|| DSNhanVienBUS.laySoLuongNhanVien() > 0
-				|| taiKhoanBUS.laySoLuongTaiKhoan() > 0) {
-			return;
-		}
-		if (napDuLieuTuCSDL(DSNhanVienBUS, taiKhoanBUS)) {
-			return;
-		}
-		NhanVienDTO quanLy = new NhanVienDTO("ql01", "Nguyễn Quản Lý",
-				LocalDate.of(1990, 1, 1), "0901234567", "quanly@newdaycoffee.vn",
-				"Quản lí", "Nam", "");
-		NhanVienDTO thuNgan = new NhanVienDTO("nv01", "Trần Thu Ngân",
-				LocalDate.of(2000, 1, 1), "0901234568", "thungan@newdaycoffee.vn",
-				"Thu ngân", "Nữ", "");
-		
-
-		TaiKhoanDTO taiKhoanQuanLy = new TaiKhoanDTO(quanLy, "123456");
-		TaiKhoanDTO taiKhoanThuNgan = new TaiKhoanDTO(thuNgan, "123456");
-		NhanVienDTO phaChe = new NhanVienDTO("nv02", "Nguyễn Văn An",
-				LocalDate.of(2000, 5, 15), "0901234569", "nv02@newdaycoffee.vn",
-				"Pha chế", "Nam", "");
-		NhanVienDTO nhanVien = new NhanVienDTO("nv03", "Lê Thị Mai",
-				LocalDate.of(2001, 8, 20), "0901234570", "nv03@newdaycoffee.vn",
-				"Thu ngân", "Nữ", "");
-		List<NhanVienDTO> dsNhanVienMau = new ArrayList<>();
-		dsNhanVienMau.add(quanLy);
-		dsNhanVienMau.add(thuNgan);
-		dsNhanVienMau.add(phaChe);
-		dsNhanVienMau.add(nhanVien);
-		
-		List<TaiKhoanDTO> dsTaiKhoanMau = new ArrayList<>();
-		dsTaiKhoanMau.add(taiKhoanQuanLy);
-		dsTaiKhoanMau.add(taiKhoanThuNgan);
-		dsTaiKhoanMau.add(new TaiKhoanDTO(phaChe, "123456"));
-		dsTaiKhoanMau.add(new TaiKhoanDTO(nhanVien, "123456"));
-		DSNhanVienBUS.napDuLieuMau(dsNhanVienMau);
-		taiKhoanBUS.napDuLieuMau(dsTaiKhoanMau);
-	}
-
-	private static boolean napDuLieuTuCSDL(DSNhanVienBUS dsNhanVienBUS, DSTaiKhoanBUS dsTaiKhoanBUS) {
-		List<NhanVienDTO> dsNhanVienDB = new NhanVienDAO().getAll();
-		if (dsNhanVienDB == null || dsNhanVienDB.isEmpty()) {
-			return false;
-		}
-		List<TaiKhoanDTO> dsTaiKhoanDB = new TaiKhoanDAO().getAll();
-		if (!coTaiKhoanHopLeTrongCSDL(dsNhanVienDB, dsTaiKhoanDB)) {
-			return false;
-		}
-		if (!dsNhanVienBUS.napDuLieuMau(dsNhanVienDB)) {
-			return false;
-		}
-		return dsTaiKhoanBUS.napDuLieuTuCSDL(dsTaiKhoanDB, dsNhanVienBUS);
-	}
-
-	private static boolean coTaiKhoanHopLeTrongCSDL(List<NhanVienDTO> dsNhanVienDB, List<TaiKhoanDTO> dsTaiKhoanDB) {
-		if (dsNhanVienDB == null || dsNhanVienDB.isEmpty() || dsTaiKhoanDB == null || dsTaiKhoanDB.isEmpty()) {
-			return false;
-		}
-		for (TaiKhoanDTO tk : dsTaiKhoanDB) {
-			if (tk == null || tk.getMaNV() == null || tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
-				continue;
-			}
-			String maNV = tk.getMaNV().getMaNV() == null ? "" : tk.getMaNV().getMaNV().trim();
-			if (maNV.isEmpty()) {
-				continue;
-			}
-			for (NhanVienDTO nv : dsNhanVienDB) {
-				if (nv != null && nv.getMaNV() != null && nv.getMaNV().trim().equalsIgnoreCase(maNV)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -240,6 +152,9 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 		passMatKhau = UIUtils.createRoundedPasswordFieldWithHint(15, MatKhauNhap, fontNhap);
 		passMatKhau.setBorder(new EmptyBorder(0, 8, 0, 8));
+		if (passMatKhau.getEchoChar() != (char) 0) {
+			defaultEchoChar = passMatKhau.getEchoChar();
+		}
 
 		lblShowHidePass = new JLabel(" 👁 ");
 		lblShowHidePass.setForeground(new Color(120, 95, 75));
@@ -359,7 +274,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 		passMatKhauMoi = UIUtils.createRoundedPasswordFieldWithHint(15, "Nhập mật khẩu mới", fontNhap);
 		passMatKhauMoi.setBorder(new EmptyBorder(0, 8, 0, 8));
 
-		JLabel lblEyeQuenMK = new JLabel(" 👁 ");
+		lblEyeQuenMK = new JLabel(" 👁 ");
 		lblEyeQuenMK.setForeground(new Color(120, 95, 75));
 		lblEyeQuenMK.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -430,6 +345,26 @@ public class LoginFrame extends JFrame implements ActionListener {
 				hienThiManHinhQuenMatKhau();
 			}
 		});
+
+		if (lblShowHidePass != null) {
+			lblShowHidePass.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					isPasswordVisible = !isPasswordVisible;
+					passMatKhau.setEchoChar(isPasswordVisible ? (char) 0 : defaultEchoChar);
+				}
+			});
+		}
+
+		if (lblEyeQuenMK != null) {
+			lblEyeQuenMK.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					isNewPasswordVisible = !isNewPasswordVisible;
+					passMatKhauMoi.setEchoChar(isNewPasswordVisible ? (char) 0 : defaultEchoChar);
+				}
+			});
+		}
 	}
 
 	public void hienThiManHinhQuenMatKhau() {

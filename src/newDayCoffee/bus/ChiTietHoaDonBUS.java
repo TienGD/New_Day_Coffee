@@ -1,7 +1,5 @@
 package newDayCoffee.bus;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,28 +8,40 @@ import newDayCoffee.dto.DoUongDTO;
 import newDayCoffee.dto.HoaDonDTO;
 
 /**
- * Xử lý nghiệp vụ trên chi tiết hóa đơn.
+ * Xử lý nghiệp vụ trên một đối tượng chi tiết hóa đơn (Nhóm A: tinhThanhTien),
+ * đồng thời ủy quyền các thao tác danh sách cho DSChiTietHoaDonBus (Nhóm B).
  *
- * Lớp này giữ giỏ hàng hiện tại và toàn bộ chi tiết của các hóa đơn đã lưu.
- * DTO do giao diện tạo và truyền vào; lớp này không tự tạo đối tượng DTO.
+ * Bảo đảm toàn hệ thống chỉ giữ một danh sách chi tiết hóa đơn duy nhất tại DSChiTietHoaDonBus.
  */
 public class ChiTietHoaDonBUS {
 
-    // ==================== KHU VỰC DỮ LIỆU ĐỐI TƯỢNG ĐƠN ====================
+    // ==================== KHU VỰC DỮ LIỆU ĐỐI TƯỢNG ĐƠN (NHÓM A) ====================
     private ChiTietHoaDonDTO chiTietHoaDon;
     private DoUongDTO doUong;
 
-    // ==================== KHU VỰC DỮ LIỆU DANH SÁCH ====================
-    private final List<ChiTietHoaDonDTO> dsChiTiet;
+    // ==================== KHU VỰC ỦY QUYỀN DANH SÁCH (NHÓM B) ====================
+    private final DSChiTietHoaDonBus dsChiTietHoaDonBus;
 
     public ChiTietHoaDonBUS() {
-        this.dsChiTiet = new ArrayList<>();
+        this(new DSChiTietHoaDonBus());
+    }
+
+    public ChiTietHoaDonBUS(DSChiTietHoaDonBus dsChiTietHoaDonBus) {
+        this.dsChiTietHoaDonBus = dsChiTietHoaDonBus != null ? dsChiTietHoaDonBus : new DSChiTietHoaDonBus();
     }
 
     public ChiTietHoaDonBUS(ChiTietHoaDonDTO chiTietHoaDon, DoUongDTO doUong) {
-        this();
+        this.dsChiTietHoaDonBus = null;
         this.chiTietHoaDon = chiTietHoaDon;
         this.doUong = doUong;
+    }
+
+    public DSChiTietHoaDonBus getDsChiTietHoaDonBus() {
+        return dsChiTietHoaDonBus;
+    }
+
+    private DSChiTietHoaDonBus layQuanLyDanhSach() {
+        return dsChiTietHoaDonBus != null ? dsChiTietHoaDonBus : new DSChiTietHoaDonBus();
     }
 
     public ChiTietHoaDonDTO getChiTietHoaDon() {
@@ -52,310 +62,109 @@ public class ChiTietHoaDonBUS {
 
     /** Tính thành tiền cho chi tiết hóa đơn hiện tại: Số lượng x Đơn giá */
     public double tinhThanhTien() {
-        if (chiTietHoaDon != null && doUong != null) {
-            return chiTietHoaDon.getSoLuong() * doUong.getDonGia();
+        if (chiTietHoaDon == null || chiTietHoaDon.getSoLuong() <= 0) {
+            return 0;
         }
-        if (chiTietHoaDon != null) {
-            return chiTietHoaDon.getThanhTien();
+        DoUongDTO mon = (doUong != null) ? doUong : chiTietHoaDon.getDoUong();
+        if (mon != null) {
+            return chiTietHoaDon.getSoLuong() * mon.getDonGia();
         }
-        return 0;
+        return chiTietHoaDon.getSoLuong() * chiTietHoaDon.getDonGia();
     }
 
-    // ==================== KHU VỰC GIỎ HÀNG ====================
-    /** Trả về bản sao các dòng đang nằm trong giỏ hàng. */
+    /** Tính thành tiền cho một dòng chi tiết hóa đơn truyền vào. */
+    public double tinhThanhTien(ChiTietHoaDonDTO chiTiet) {
+        if (chiTiet == null) {
+            return 0;
+        }
+        return new ChiTietHoaDonBUS(chiTiet, chiTiet.getDoUong()).tinhThanhTien();
+    }
+
+    // ==================== KHU VỰC ỦY QUYỀN GIỎ HÀNG SANG DSChiTietHoaDonBus ====================
     public List<ChiTietHoaDonDTO> layGioHang() {
-        List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laTrongGio(chiTiet)) {
-                ketQua.add(chiTiet);
-            }
-        }
-        return ketQua;
+        return layQuanLyDanhSach().layGioHang();
     }
 
-    /** Tìm một dòng trong giỏ hàng theo mã món. */
     public ChiTietHoaDonDTO timTrongGio(String maMon) {
-        String ma = chuanHoa(maMon);
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laTrongGio(chiTiet) && chiTiet.getMaMon().equalsIgnoreCase(ma)) {
-                return chiTiet;
-            }
-        }
-        return null;
+        return layQuanLyDanhSach().timTrongGio(maMon);
     }
 
-    /** Thêm một dòng chi tiết vào giỏ. Nếu món đã có thì tăng số lượng. */
     public boolean themChiTiet(ChiTietHoaDonDTO chiTiet) {
-        if (chiTiet == null || chiTiet.getDoUong() == null || chiTiet.getSoLuong() <= 0) {
-            return false;
-        }
-
-        ChiTietHoaDonDTO dongDaCo = timTrongGio(chiTiet.getMaMon());
-        if (dongDaCo != null) {
-            dongDaCo.setSoLuong(dongDaCo.getSoLuong() + chiTiet.getSoLuong());
-        } else {
-            dsChiTiet.add(chiTiet);
-        }
-        return true;
+        return layQuanLyDanhSach().themChiTiet(chiTiet);
     }
 
-    /** Giảm số lượng một món. Nếu chỉ còn 1 thì xóa khỏi giỏ. */
     public boolean giamChiTiet(String maMon) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        if (dong.getSoLuong() > 1) {
-            dong.setSoLuong(dong.getSoLuong() - 1);
-        } else {
-            dsChiTiet.remove(dong);
-        }
-        return true;
+        return layQuanLyDanhSach().giamChiTiet(maMon);
     }
 
-    /** Cập nhật số lượng của một món. Số lượng <= 0 thì xóa khỏi giỏ. */
     public boolean capNhatSoLuong(String maMon, int soLuong) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        if (soLuong <= 0) {
-            dsChiTiet.remove(dong);
-        } else {
-            dong.setSoLuong(soLuong);
-        }
-        return true;
+        return layQuanLyDanhSach().capNhatSoLuong(maMon, soLuong);
     }
 
-    /** Xóa một món khỏi giỏ. */
     public boolean xoaChiTiet(String maMon) {
-        ChiTietHoaDonDTO dong = timTrongGio(maMon);
-        if (dong == null) {
-            return false;
-        }
-        dsChiTiet.remove(dong);
-        return true;
+        return layQuanLyDanhSach().xoaChiTiet(maMon);
     }
 
-    /** Xóa toàn bộ giỏ hàng, không ảnh hưởng chi tiết của hóa đơn đã lưu. */
     public void xoaGioHang() {
-        for (int i = dsChiTiet.size() - 1; i >= 0; i--) {
-            if (laTrongGio(dsChiTiet.get(i))) {
-                dsChiTiet.remove(i);
-            }
-        }
+        layQuanLyDanhSach().xoaGioHang();
     }
 
-    /** Tổng tiền của giỏ hàng hiện tại. */
     public double tongTienGioHang() {
-        double tong = 0;
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laTrongGio(chiTiet)) {
-                tong = tong + chiTiet.getThanhTien();
-            }
-        }
-        return tong;
+        return layQuanLyDanhSach().tongTienGioHang();
     }
 
-    /** Tổng số lượng món trong giỏ. */
     public int tongSoLuongGioHang() {
-        int tong = 0;
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laTrongGio(chiTiet)) {
-                tong = tong + chiTiet.getSoLuong();
-            }
-        }
-        return tong;
+        return layQuanLyDanhSach().tongSoLuongGioHang();
     }
 
     public boolean gioHangRong() {
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (laTrongGio(chiTiet)) {
-                return false;
-            }
-        }
-        return true;
+        return layQuanLyDanhSach().gioHangRong();
     }
 
-    // ==================== KHU VỰC CHI TIẾT HÓA ĐƠN ====================
-    /** Trả về bản sao chi tiết của một hóa đơn đã lưu. */
+    // ==================== KHU VỰC ỦY QUYỀN CHI TIẾT HÓA ĐƠN SANG DSChiTietHoaDonBus ====================
     public List<ChiTietHoaDonDTO> layTheoHoaDon(String maHD) {
-        List<ChiTietHoaDonDTO> ketQua = new ArrayList<>();
-        String ma = chuanHoa(maHD);
-        if (ma.isEmpty()) {
-            return ketQua;
-        }
-
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (layMaHD(chiTiet).equalsIgnoreCase(ma)) {
-                ketQua.add(chiTiet);
-            }
-        }
-        return ketQua;
+        return layQuanLyDanhSach().layTheoHoaDon(maHD);
     }
 
-    /** Tổng tiền của một hóa đơn, tính từ danh sách chi tiết đã lưu. */
     public double tongTienTheoHoaDon(String maHD) {
-        double tong = 0;
-        for (ChiTietHoaDonDTO chiTiet : layTheoHoaDon(maHD)) {
-            tong = tong + chiTiet.getThanhTien();
-        }
-        return tong;
+        return layQuanLyDanhSach().tongTienTheoHoaDon(maHD);
     }
 
-    /** Tổng số lượng món trong các hóa đơn được truyền vào. */
+    public boolean coDoUongTrongChiTiet(String maMon) {
+        return layQuanLyDanhSach().coDoUongTrongChiTiet(maMon);
+    }
+
     public int tongSoLuongTheoHoaDon(List<String> dsMaHD) {
-        int tong = 0;
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (thuocHoaDon(chiTiet, dsMaHD)) {
-                tong = tong + chiTiet.getSoLuong();
-            }
-        }
-        return tong;
+        return layQuanLyDanhSach().tongSoLuongTheoHoaDon(dsMaHD);
     }
 
-    /** Thống kê số lượng bán theo từng món trong các hóa đơn truyền vào. */
     public Map<String, Integer> thongKeMonBanChay(List<String> dsMaHD) {
-        Map<String, Integer> ketQua = new LinkedHashMap<>();
-
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (!thuocHoaDon(chiTiet, dsMaHD)) {
-                continue;
-            }
-            String tenMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getTenMon());
-            if (tenMon.isEmpty()) {
-                tenMon = chuanHoa(chiTiet.getMaMon());
-            }
-            Integer soLuongDaCo = ketQua.get(tenMon);
-            if (soLuongDaCo == null) {
-                ketQua.put(tenMon, chiTiet.getSoLuong());
-            } else {
-                ketQua.put(tenMon, soLuongDaCo + chiTiet.getSoLuong());
-            }
-        }
-        return ketQua;
+        return layQuanLyDanhSach().thongKeMonBanChay(dsMaHD);
     }
 
-    /**
-     * Tổng hợp số lượng bán ra của từng món theo mã món trong các hóa đơn được truyền vào.
-     */
     public List<ChiTietHoaDonDTO> thongKeMonTheoMa(List<String> dsMaHD) {
-        Map<String, ChiTietHoaDonDTO> ketQua = new LinkedHashMap<>();
-
-        for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
-            if (!thuocHoaDon(chiTiet, dsMaHD)) {
-                continue;
-            }
-
-            String maMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getMaMon());
-            String tenMon = chiTiet.getDoUong() == null ? "" : chuanHoa(chiTiet.getTenMon());
-            if (tenMon.isEmpty()) {
-                tenMon = maMon;
-            }
-            String khoa = maMon.toLowerCase();
-            if (khoa.isEmpty()) {
-                khoa = tenMon.toLowerCase();
-            }
-
-            ChiTietHoaDonDTO thongKe = ketQua.get(khoa);
-            if (thongKe == null) {
-                ChiTietHoaDonDTO moi = new ChiTietHoaDonDTO(chiTiet.getDoUong(), chiTiet.getSoLuong());
-                ketQua.put(khoa, moi);
-            } else {
-                thongKe.setSoLuong(thongKe.getSoLuong() + chiTiet.getSoLuong());
-            }
-        }
-        return new ArrayList<>(ketQua.values());
+        return layQuanLyDanhSach().thongKeMonTheoMa(dsMaHD);
     }
 
-    /** Gán hóa đơn cho các dòng chi tiết khi lưu hóa đơn. */
     public void ganHoaDon(HoaDonDTO hoaDon, List<ChiTietHoaDonDTO> dsChiTietMoi) {
         if (hoaDon == null || dsChiTietMoi == null) {
             return;
         }
-        for (ChiTietHoaDonDTO chiTiet : dsChiTietMoi) {
-            chiTiet.setHoaDon(hoaDon);
+        if (!layQuanLyDanhSach().ganHoaDon(hoaDon, dsChiTietMoi)) {
+            for (ChiTietHoaDonDTO chiTiet : dsChiTietMoi) {
+                if (chiTiet != null) {
+                    chiTiet.setHoaDon(hoaDon);
+                }
+            }
         }
     }
 
-    /** Nạp chi tiết hóa đơn đọc từ CSDL (không đưa dòng thiếu mã hóa đơn vào giỏ hàng). */
+    public int napDuLieuTuCSDL(DSHoaDonBUS dsHoaDonBUS, DSDoUongBUS dsDoUongBUS) {
+        return layQuanLyDanhSach().napDuLieuTuCSDL(dsHoaDonBUS, dsDoUongBUS);
+    }
+
     public int napDuLieuTuCSDL(List<ChiTietHoaDonDTO> dsTuDB,
             DSHoaDonBUS dsHoaDonBUS, DSDoUongBUS dsDoUongBUS) {
-        if (dsTuDB == null || dsTuDB.isEmpty()) {
-            return 0;
-        }
-        List<String> khoaDaCo = new ArrayList<>();
-        for (ChiTietHoaDonDTO ct : dsChiTiet) {
-            String maHD = layMaHD(ct);
-            String maMon = ct.getDoUong() == null ? "" : chuanHoa(ct.getMaMon());
-            if (!maHD.isEmpty() && !maMon.isEmpty()) {
-                khoaDaCo.add(maHD.toLowerCase() + "\0" + maMon.toLowerCase());
-            }
-        }
-        int daThem = 0;
-        for (ChiTietHoaDonDTO ct : dsTuDB) {
-            if (ct == null || ct.getSoLuong() <= 0 || ct.getDoUong() == null) {
-                continue;
-            }
-            String maHD = layMaHD(ct);
-            String maMon = chuanHoa(ct.getMaMon());
-            if (maHD.isEmpty() || maMon.isEmpty()) {
-                continue;
-            }
-            String khoa = maHD.toLowerCase() + "\0" + maMon.toLowerCase();
-            if (khoaDaCo.contains(khoa)) {
-                continue;
-            }
-            if (dsHoaDonBUS != null) {
-                HoaDonDTO hdBus = dsHoaDonBUS.timTheoMa(maHD);
-                if (hdBus == null) {
-                    continue;
-                }
-                ct.setHoaDon(hdBus);
-            }
-            if (dsDoUongBUS != null) {
-                DoUongDTO duBus = dsDoUongBUS.timTheoMa(maMon);
-                if (duBus != null) {
-                    ct.setDoUong(duBus);
-                }
-            }
-            khoaDaCo.add(khoa);
-            dsChiTiet.add(ct);
-            daThem++;
-        }
-        return daThem;
-    }
-
-    // ==================== KHU VỰC HỖ TRỢ ====================
-    /** Một dòng thuộc giỏ hàng khi chưa được gán mã hóa đơn. */
-    private boolean laTrongGio(ChiTietHoaDonDTO chiTiet) {
-        return chiTiet != null && layMaHD(chiTiet).isEmpty();
-    }
-
-    private boolean thuocHoaDon(ChiTietHoaDonDTO chiTiet, List<String> dsMaHD) {
-        if (chiTiet == null || dsMaHD == null) {
-            return false;
-        }
-        String maHD = layMaHD(chiTiet);
-        if (maHD.isEmpty()) {
-            return false;
-        }
-        for (String ma : dsMaHD) {
-            if (chuanHoa(ma).equalsIgnoreCase(maHD)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String layMaHD(ChiTietHoaDonDTO chiTiet) {
-        if (chiTiet == null || chiTiet.getHoaDon() == null) {
-            return "";
-        }
-        return chuanHoa(chiTiet.getHoaDon().getMaHD());
-    }
-
-    private static String chuanHoa(String giaTri) {
-        return giaTri == null ? "" : giaTri.trim();
+        return layQuanLyDanhSach().napDuLieuTuCSDLCount(dsTuDB, dsHoaDonBUS, dsDoUongBUS);
     }
 }

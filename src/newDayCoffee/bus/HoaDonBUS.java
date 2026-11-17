@@ -36,6 +36,7 @@ public class HoaDonBUS {
 	public HoaDonBUS(DSHoaDonBUS dsHoaDonBUS, ChiTietHoaDonBUS chiTietHoaDonBUS) {
 		this.dsHoaDonBUS = dsHoaDonBUS;
 		this.chiTietHoaDonBUS = chiTietHoaDonBUS;
+		this.dsChiTietHoaDon = chiTietHoaDonBUS != null ? chiTietHoaDonBUS.getDsChiTietHoaDonBus() : null;
 		this.hoaDonVuaTao = null;
 	}
 
@@ -92,9 +93,9 @@ public class HoaDonBUS {
 		return tong;
 	}
 
-//	public double tinhTongTien() {
-//		return tinhTongTien(this.hoaDon);
-//	} lỗi là hàm không chứa tham số
+	public double tinhTongTien() {
+		return tinhTongTien(this.hoaDon);
+	}
 
 	public double tienThua(HoaDonDTO hd) {
 		if (hd == null) {
@@ -105,9 +106,17 @@ public class HoaDonBUS {
 		return khachTra - tongTien;
 	}
 
-//	public double tinhTienThua() {
-//		return tienThua(this.hoaDon);
-//	}lỗi là hàm không chứa tham số
+	public double tinhTienThua(HoaDonDTO hd) {
+		return tienThua(hd);
+	}
+
+	public double tinhTienThua() {
+		return tienThua(this.hoaDon);
+	}
+
+	public double tinhTienThua(double tienKhachDua, double tongTien) {
+		return tienKhachDua - tongTien;
+	}
 
 	public String thanhToan(HoaDonDTO hoaDonMoi) {
 		hoaDonVuaTao = null;

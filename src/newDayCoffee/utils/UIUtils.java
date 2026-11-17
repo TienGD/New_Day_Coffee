@@ -570,11 +570,16 @@ public class UIUtils {
 		return badge;
 	}
 
-	public static String taoNhanNguoiDung() {
-		if (Auth.laQuanLy()) {
-			return "Quản lý: " + Auth.getTenHienThi();
+	public static String taoNhanNguoiDung(boolean laQuanLy, String tenHienThi) {
+		String ten = tenHienThi == null ? "" : tenHienThi;
+		if (laQuanLy) {
+			return "Quản lý: " + ten;
 		}
-		return "Nhân viên: " + Auth.getTenHienThi();
+		return "Nhân viên: " + ten;
+	}
+
+	public static String taoNhanNguoiDung() {
+		return taoNhanNguoiDung(Auth.laQuanLy(), Auth.getTenHienThi());
 	}
 
 	public static void resetMauMenu(JButton... buttons) {

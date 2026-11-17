@@ -10,13 +10,13 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -24,15 +24,10 @@ import newDayCoffee.bus.DSHoaDonBUS;
 import newDayCoffee.bus.DSDoUongBUS;
 import newDayCoffee.bus.DSTaiKhoanBUS;
 import newDayCoffee.bus.ChiTietHoaDonBUS;
+import newDayCoffee.bus.DSChiTietHoaDonBus;
 import newDayCoffee.bus.HoaDonBUS;
 import newDayCoffee.bus.DSNhanVienBUS;
 import newDayCoffee.bus.NhanVienTaiKhoanBUS;
-import newDayCoffee.dao.ChiTietHoaDonDAO;
-import newDayCoffee.dao.DoUongDAO;
-import newDayCoffee.dao.HoaDonDAO;
-import newDayCoffee.dto.ChiTietHoaDonDTO;
-import newDayCoffee.dto.DoUongDTO;
-import newDayCoffee.dto.HoaDonDTO;
 import newDayCoffee.gui.panels.BanHangPOSPanel;
 import newDayCoffee.gui.panels.HoaDonPanel;
 import newDayCoffee.gui.panels.QuanLyNhanVienPanel;
@@ -100,34 +95,19 @@ public class MainFrame extends JFrame implements ActionListener {
 				? nhanVienTaiKhoanBUS
 				: new NhanVienTaiKhoanBUS(this.DSNhanVienBUS, this.taiKhoanBUS);
 		this.dsDoUongBUS = new DSDoUongBUS();
-		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS();
+		this.chiTietHoaDonBUS = new ChiTietHoaDonBUS(new DSChiTietHoaDonBus(this.dsDoUongBUS));
+		this.dsDoUongBUS.setChiTietHoaDonBUS(this.chiTietHoaDonBUS);
 		this.dsHoaDonBUS = new DSHoaDonBUS(chiTietHoaDonBUS);
+		this.nhanVienTaiKhoanBUS.setDsHoaDonBUS(this.dsHoaDonBUS);
 		this.hoaDonBUS = new HoaDonBUS(dsHoaDonBUS, chiTietHoaDonBUS);
 		napDuLieuTuCSDL();
 		khoiTaoGiaoDien();
 	}
 
-	/** Ưu tiên nạp thực đơn và hóa đơn từ CSDL nếu đang có kết nối. */
+	/** Ủy quyền cho tầng BUS nạp thực đơn và hóa đơn từ CSDL. */
 	private void napDuLieuTuCSDL() {
-		try {
-			if (!dsDoUongBUS.daNapDuLieu()) {
-				List<DoUongDTO> dsDoUongDB = new DoUongDAO().getAll();
-				if (dsDoUongDB != null && !dsDoUongDB.isEmpty()) {
-					dsDoUongBUS.napDuLieuTuCSDL(dsDoUongDB);
-				}
-			}
-			if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
-				List<HoaDonDTO> dsHoaDonDB = new HoaDonDAO().getAll();
-				if (dsHoaDonDB != null && !dsHoaDonDB.isEmpty() && dsHoaDonBUS.napDuLieuTuCSDL(dsHoaDonDB, this.DSNhanVienBUS)) {
-					List<ChiTietHoaDonDTO> dsChiTietDB = new ChiTietHoaDonDAO().getAll();
-					if (dsChiTietDB != null && !dsChiTietDB.isEmpty()) {
-						chiTietHoaDonBUS.napDuLieuTuCSDL(dsChiTietDB, dsHoaDonBUS, dsDoUongBUS);
-					}
-				}
-			}
-		} catch (Exception e) {
-			// Bắt ngoại lệ an toàn nếu cơ sở dữ liệu chưa sẵn sàng, đảm bảo giao diện vẫn khởi chạy bình thường
-		}
+		this.dsDoUongBUS.khoiTaoDuLieu();
+		this.dsHoaDonBUS.napDuLieuTuCSDL(this.DSNhanVienBUS, this.dsDoUongBUS);
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -268,7 +248,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		badgeCaKet.add(lbCaKet);
 
 		JPanel badgeNguoiDung = UIUtils.taoBadge(240);
-		JLabel lbNguoiDungHeader = new JLabel(UIUtils.taoNhanNguoiDung());
+		JLabel lbNguoiDungHeader = new JLabel(UIUtils.taoNhanNguoiDung(Auth.laQuanLy(), Auth.getTenHienThi()));
 		lbNguoiDungHeader.setFont(UIUtils.FONT_LABEL_BOLD);
 		lbNguoiDungHeader.setForeground(Color.WHITE);
 		badgeNguoiDung.add(lbNguoiDungHeader);
@@ -336,9 +316,14 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (o.equals(btnTaiKhoan)) {
 			switchCard("Tài khoản");
 		} else if (o.equals(btnDangXuat)) {
-			nhanVienTaiKhoanBUS.dangXuat();
-			new LoginFrame(taiKhoanBUS, DSNhanVienBUS, nhanVienTaiKhoanBUS).setVisible(true);
-			this.dispose();
+			int xacNhan = JOptionPane.showConfirmDialog(this,
+					"Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+					"Xác nhận đăng xuất", JOptionPane.YES_NO_OPTION);
+			if (xacNhan == JOptionPane.YES_OPTION) {
+				nhanVienTaiKhoanBUS.dangXuat();
+				new LoginFrame(taiKhoanBUS, DSNhanVienBUS, nhanVienTaiKhoanBUS).setVisible(true);
+				this.dispose();
+			}
 		}
 	}
 
@@ -368,25 +353,40 @@ public class MainFrame extends JFrame implements ActionListener {
 		if (tenManHinh.equals("Tổng quan")) {
 			btnTongQuan.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("CHI NHÁNH GÒ VẤP");
+			if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
+				dsHoaDonBUS.napDuLieuTuCSDL(this.DSNhanVienBUS, this.dsDoUongBUS);
+			}
 			tongQuanPanel.capNhatDuLieu();
 		} else if (tenManHinh.equals("Bán hàng")) {
 			btnBanHang.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("BÁN HÀNG");
+			if (!dsDoUongBUS.daNapDuLieu()) {
+				dsDoUongBUS.khoiTaoDuLieu();
+			}
 			banHangPOSPanel.capNhatDanhSachMon();
 			banHangPOSPanel.capNhatGioHang();
 		} else if (tenManHinh.equals("Thực đơn")) {
 			btnThucDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("THỰC ĐƠN QUÁN");
+			if (!dsDoUongBUS.daNapDuLieu()) {
+				dsDoUongBUS.khoiTaoDuLieu();
+			}
 			quanLyThucDonPanel.capNhatBang(false);
 			quanLyThucDonPanel.focusMacDinh();
 		} else if (tenManHinh.equals("Nhân viên")) {
 			btnNhanVien.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("NHÂN VIÊN");
+			if (DSNhanVienBUS.laySoLuongNhanVien() == 0) {
+				nhanVienTaiKhoanBUS.khoiTaoDuLieu();
+			}
 			quanLyNhanVienPanel.capNhatBang(false);
 			quanLyNhanVienPanel.focusMacDinh();
 		} else if (tenManHinh.equals("Danh sách hóa đơn")) {
 			btnHoaDon.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("HÓA ĐƠN");
+			if (dsHoaDonBUS.layDanhSachHoaDon().isEmpty()) {
+				dsHoaDonBUS.napDuLieuTuCSDL(this.DSNhanVienBUS, this.dsDoUongBUS);
+			}
 			HoaDonPanel.capNhatDuLieu();
 		} else if (tenManHinh.equals("Thanh toán")) {
 			btnBanHang.setForeground(Color.BLACK);
@@ -395,6 +395,9 @@ public class MainFrame extends JFrame implements ActionListener {
 		} else if (tenManHinh.equals("Tài khoản")) {
 			btnTaiKhoan.setForeground(Color.BLACK);
 			lbHeaderTieuDe.setText("TÀI KHOẢN");
+			if (taiKhoanBUS.laySoLuongTaiKhoan() == 0) {
+				nhanVienTaiKhoanBUS.khoiTaoDuLieu();
+			}
 			TaiKhoanPanel.capNhatBang(false);
 			TaiKhoanPanel.focusMacDinh();
 		}

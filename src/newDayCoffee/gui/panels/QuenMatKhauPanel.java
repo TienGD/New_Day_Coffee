@@ -8,6 +8,8 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -18,6 +20,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import newDayCoffee.bus.NhanVienTaiKhoanBUS;
 import newDayCoffee.utils.UIUtils;
 import newDayCoffee.utils.Validator;
 
@@ -38,15 +41,27 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 	private String EmailNhap = "Ví dụ: nv01@newdaycoffee.vn";
 	private String MatKhauMoiNhap = "Ví dụ: 123456";
 	private ActionListener suKienQuayLai;
+	private NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS;
+	private boolean isPasswordVisible = false;
+	private char defaultEchoChar = '•';
 
-	public QuenMatKhauPanel(ActionListener suKienQuayLai) {
+	public QuenMatKhauPanel(NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS, ActionListener suKienQuayLai) {
+		this.nhanVienTaiKhoanBUS = nhanVienTaiKhoanBUS;
 		this.suKienQuayLai = suKienQuayLai;
 		khoiTaoGiaoDien();
 		themSuKienChoCacNut();
 	}
 
+	public QuenMatKhauPanel(ActionListener suKienQuayLai) {
+		this(null, suKienQuayLai);
+	}
+
 	public QuenMatKhauPanel() {
-		this(null);
+		this(null, null);
+	}
+
+	public void setNhanVienTaiKhoanBUS(NhanVienTaiKhoanBUS nhanVienTaiKhoanBUS) {
+		this.nhanVienTaiKhoanBUS = nhanVienTaiKhoanBUS;
 	}
 
 	// ==================== KHU VỰC GIAO DIỆN ====================
@@ -105,6 +120,9 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 
 		passMatKhauMoi = UIUtils.createRoundedPasswordFieldWithHint(15, MatKhauMoiNhap, fontNhap);
 		passMatKhauMoi.setBorder(new EmptyBorder(0, 8, 0, 8));
+		if (passMatKhauMoi.getEchoChar() != (char) 0) {
+			defaultEchoChar = passMatKhauMoi.getEchoChar();
+		}
 
 		lblShowHidePass = new JLabel(" 👁 ");
 		lblShowHidePass.setForeground(new Color(120, 95, 75));
@@ -167,6 +185,15 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 	private void themSuKienChoCacNut() {
 		btnXacNhan.addActionListener(this);
 		btnQuayLai.addActionListener(this);
+		if (lblShowHidePass != null) {
+			lblShowHidePass.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					isPasswordVisible = !isPasswordVisible;
+					passMatKhauMoi.setEchoChar(isPasswordVisible ? (char) 0 : defaultEchoChar);
+				}
+			});
+		}
 	}
 
 	public void lamMoiForm() {
@@ -200,6 +227,14 @@ public class QuenMatKhauPanel extends JPanel implements ActionListener {
 				JOptionPane.showMessageDialog(this, "Mật khẩu mới phải có ít nhất 6 ký tự.", "Thông báo", JOptionPane.WARNING_MESSAGE);
 				passMatKhauMoi.requestFocus();
 				return;
+			}
+
+			if (nhanVienTaiKhoanBUS != null) {
+				String loi = nhanVienTaiKhoanBUS.datLaiMatKhau(email, matKhauMoi);
+				if (loi != null) {
+					JOptionPane.showMessageDialog(this, loi, "Đặt lại mật khẩu thất bại", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 			}
 
 			JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công cho email: " + email, "Thành công", JOptionPane.INFORMATION_MESSAGE);
