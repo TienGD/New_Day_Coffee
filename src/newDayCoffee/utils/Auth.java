@@ -52,7 +52,7 @@ public class Auth {
         if (!isDangNhap() || tenManHinh == null) {
             return false;
         }
-        if ("Tổng quan".equals(tenManHinh)) {
+        if ("Tổng quan".equals(tenManHinh)) { 
             return true;
         }
         switch (tenManHinh) {
