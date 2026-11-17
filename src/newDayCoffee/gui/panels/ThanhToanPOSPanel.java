@@ -554,7 +554,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 		for (int i = 0; i < gioHang.size(); i++) {
 			ChiTietHoaDonDTO dong = gioHang.get(i);
 			double donGia = dong.getDoUong() != null ? dong.getDoUong().getDonGia() : dong.getDonGia();
-			double thanhTien = dong.getSoLuong() * donGia;
+			double thanhTien = chiTietHoaDonBUS.tinhThanhTien(dong);
 			modelSanPham.addRow(new Object[]{
 				String.valueOf(i + 1),
 				dong.getTenMon(),
@@ -579,7 +579,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 			return;
 		}
 
-		double chenhLech = khachDua - tongTien;
+		double chenhLech = hoaDonBUS.tinhTienThua(khachDua, tongTien);
 		if (chenhLech < 0) {
 			txtTienThua.setText("Thiếu: " + UIUtils.dinhDangTienKhongDonVi(-chenhLech));
 		} else {
@@ -658,7 +658,7 @@ public class ThanhToanPOSPanel extends JPanel implements ActionListener, FocusLi
 		List<ChiTietHoaDonDTO> dsChiTiet = dsHoaDonBUS.layChiTiet(hoaDon.getMaHD());
 		for (ChiTietHoaDonDTO chiTiet : dsChiTiet) {
 			double donGia = chiTiet.getDoUong() != null ? chiTiet.getDoUong().getDonGia() : chiTiet.getDonGia();
-			double thanhTien = chiTiet.getSoLuong() * donGia;
+			double thanhTien = chiTietHoaDonBUS.tinhThanhTien(chiTiet);
 			noiDung.append(chiTiet.getTenMon())
 					.append("  x").append(chiTiet.getSoLuong())
 					.append("  ").append(UIUtils.dinhDangTien(donGia))

@@ -345,7 +345,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 			return;
 		}
 
-		String maMon = txtMaMon.getText().trim();
+		String maMon = txtMaMon.getText().trim().toLowerCase();
 		String tenMon = txtTenMon.getText().trim();
 		double donGia = docSoTien(txtDonGia.getText());
 		DoUongDTO doUong = new DoUongDTO(maMon, tenMon, donGia, txtMoTa.getText().trim());
@@ -366,7 +366,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 			return;
 		}
 
-		String maMon = txtMaMon.getText().trim();
+		String maMon = txtMaMon.getText().trim().toLowerCase();
 		String tenMon = txtTenMon.getText().trim();
 		double donGia = docSoTien(txtDonGia.getText());
 		String ketQua = dsDoUongBUS.suaDoUong(maMon, tenMon, donGia, txtMoTa.getText());
@@ -385,7 +385,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 			return "Vui lòng nhập mã món.";
 		}
 		if (!maMon.matches(Validator.MA_MON)) {
-			return "Mã món phải có đúng 5 ký tự, dạng cofXX, teaXX, milXX hoặc bakXX (ví dụ cof01).";
+			return "Mã món phải có đúng 5 ký tự, dạng cofXX, teaXX hoặc milXX (ví dụ cof01).";
 		}
 
 		String tenMon = txtTenMon.getText().trim();
@@ -459,6 +459,7 @@ public class QuanLyThucDonPanel extends JPanel implements ActionListener, ListSe
 
 	private void luuDuLieu() {
 		if (dsDoUongBUS.luuVaoCSDL()) {
+			capNhatBang(false);
 			JOptionPane.showMessageDialog(this, "Đã lưu danh sách món.",
 					"Thành công", JOptionPane.INFORMATION_MESSAGE);
 		} else {

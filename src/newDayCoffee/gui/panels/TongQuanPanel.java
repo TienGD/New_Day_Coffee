@@ -9,8 +9,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -172,7 +170,7 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		if (dsMonHienTai.isEmpty()) {
 			lbMonBanChayNhat.setText("Chưa có");
 		} else {
-			List<ChiTietHoaDonDTO> dsGiam = sapXepDanhSach(dsMonHienTai, true);
+			List<ChiTietHoaDonDTO> dsGiam = dsHoaDonBUS.sapXepThongKeMon(dsMonHienTai, true);
 			lbMonBanChayNhat.setText(dsGiam.get(0).getTenMon());
 		}
 
@@ -180,9 +178,9 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 		capNhatBangMonBanChay();
 	}
 
-	/** Nạp lại bảng món bán chạy bằng cách sắp xếp bản sao dsMonHienTai. */
+	/** Nạp lại bảng món bán chạy bằng cách gọi DSHoaDonBUS sắp xếp dsMonHienTai. */
 	private void capNhatBangMonBanChay() {
-		List<ChiTietHoaDonDTO> dsSapXep = sapXepDanhSach(dsMonHienTai, sapXepGiam);
+		List<ChiTietHoaDonDTO> dsSapXep = dsHoaDonBUS.sapXepThongKeMon(dsMonHienTai, sapXepGiam);
 
 		modelMonBanChay.setRowCount(0);
 		for (ChiTietHoaDonDTO mon : dsSapXep) {
@@ -199,34 +197,5 @@ public class TongQuanPanel extends JPanel implements ActionListener {
 			btnSapXepBanChay.setForeground(UIUtils.COLOR_WHITE);
 		}
 		btnSapXepBanChay.repaint();
-	}
-
-	private static List<ChiTietHoaDonDTO> sapXepDanhSach(List<ChiTietHoaDonDTO> nguon, final boolean giamDan) {
-		List<ChiTietHoaDonDTO> banSao = nguon == null ? new ArrayList<>() : new ArrayList<>(nguon);
-		Collections.sort(banSao, new Comparator<ChiTietHoaDonDTO>() {
-			@Override
-			public int compare(ChiTietHoaDonDTO a, ChiTietHoaDonDTO b) {
-				int cmp = giamDan
-						? Integer.compare(b.getSoLuong(), a.getSoLuong())
-						: Integer.compare(a.getSoLuong(), b.getSoLuong());
-				if (cmp != 0) {
-					return cmp;
-				}
-				String maA = a.getMaMon() == null ? "" : a.getMaMon();
-				String maB = b.getMaMon() == null ? "" : b.getMaMon();
-				cmp = maA.compareToIgnoreCase(maB);
-				if (cmp != 0) {
-					return cmp;
-				}
-				cmp = maA.compareTo(maB);
-				if (cmp != 0) {
-					return cmp;
-				}
-				String tenA = a.getTenMon() == null ? "" : a.getTenMon();
-				String tenB = b.getTenMon() == null ? "" : b.getTenMon();
-				return tenA.compareToIgnoreCase(tenB);
-			}
-		});
-		return banSao;
 	}
 }

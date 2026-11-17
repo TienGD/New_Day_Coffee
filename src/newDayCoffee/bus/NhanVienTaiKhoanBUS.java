@@ -1,5 +1,9 @@
 package newDayCoffee.bus;
 
+import java.util.List;
+
+import newDayCoffee.dao.NhanVienDAO;
+import newDayCoffee.dao.TaiKhoanDAO;
 import newDayCoffee.dto.NhanVienDTO;
 import newDayCoffee.dto.TaiKhoanDTO;
 import newDayCoffee.utils.Auth;
@@ -15,10 +19,15 @@ public class NhanVienTaiKhoanBUS {
 
     private final DSNhanVienBUS dsNhanVienBUS;
     private final DSTaiKhoanBUS dsTaiKhoanBUS;
+    private DSHoaDonBUS dsHoaDonBUS;
 
     public NhanVienTaiKhoanBUS(DSNhanVienBUS dsNhanVienBUS, DSTaiKhoanBUS dsTaiKhoanBUS) {
         this.dsNhanVienBUS = dsNhanVienBUS != null ? dsNhanVienBUS : new DSNhanVienBUS();
         this.dsTaiKhoanBUS = dsTaiKhoanBUS != null ? dsTaiKhoanBUS : new DSTaiKhoanBUS();
+    }
+
+    public void setDsHoaDonBUS(DSHoaDonBUS dsHoaDonBUS) {
+        this.dsHoaDonBUS = dsHoaDonBUS;
     }
 
     public DSNhanVienBUS getDsNhanVienBUS() {
@@ -29,8 +38,60 @@ public class NhanVienTaiKhoanBUS {
         return dsTaiKhoanBUS;
     }
 
+    /** Tự động tải dữ liệu nhân viên và tài khoản từ CSDL cho phiên làm việc. */
+    public void khoiTaoDuLieu() {
+        if (this.dsNhanVienBUS == null || this.dsTaiKhoanBUS == null
+                || (this.dsNhanVienBUS.laySoLuongNhanVien() > 0 && this.dsTaiKhoanBUS.laySoLuongTaiKhoan() > 0)) {
+            return;
+        }
+        napDuLieuTuCSDL(this.dsNhanVienBUS, this.dsTaiKhoanBUS);
+    }
+
+    public static boolean napDuLieuTuCSDL(DSNhanVienBUS dsNhanVienBUS, DSTaiKhoanBUS dsTaiKhoanBUS) {
+        try {
+            List<NhanVienDTO> dsNhanVienDB = new NhanVienDAO().getAll();
+            if (dsNhanVienDB == null || dsNhanVienDB.isEmpty()) {
+                return false;
+            }
+            List<TaiKhoanDTO> dsTaiKhoanDB = new TaiKhoanDAO().getAll();
+            if (!coTaiKhoanHopLeTrongCSDL(dsNhanVienDB, dsTaiKhoanDB)) {
+                return false;
+            }
+            if (!dsNhanVienBUS.napDuLieuTuCSDL(dsNhanVienDB)) {
+                return false;
+            }
+            return dsTaiKhoanBUS.napDuLieuTuCSDL(dsTaiKhoanDB, dsNhanVienBUS);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean coTaiKhoanHopLeTrongCSDL(List<NhanVienDTO> dsNhanVienDB, List<TaiKhoanDTO> dsTaiKhoanDB) {
+        if (dsNhanVienDB == null || dsNhanVienDB.isEmpty() || dsTaiKhoanDB == null || dsTaiKhoanDB.isEmpty()) {
+            return false;
+        }
+        for (TaiKhoanDTO tk : dsTaiKhoanDB) {
+            if (tk == null || tk.getMaNV() == null || tk.getMatKhau() == null || tk.getMatKhau().trim().isEmpty()) {
+                continue;
+            }
+            String maNV = tk.getMaNV().getMaNV() == null ? "" : tk.getMaNV().getMaNV().trim();
+            if (maNV.isEmpty()) {
+                continue;
+            }
+            for (NhanVienDTO nv : dsNhanVienDB) {
+                if (nv != null && nv.getMaNV() != null && nv.getMaNV().trim().equalsIgnoreCase(maNV)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** Xác thực đăng nhập và lưu nhân viên vào phiên Auth. */
     public String dangNhap(String maNV, String matKhau) {
+        if (dsNhanVienBUS.laySoLuongNhanVien() == 0 || dsTaiKhoanBUS.laySoLuongTaiKhoan() == 0) {
+            khoiTaoDuLieu();
+        }
         String loi = dsTaiKhoanBUS.xacThucDangNhap(maNV, matKhau);
         if (loi != null) {
             return loi;
@@ -48,14 +109,22 @@ public class NhanVienTaiKhoanBUS {
         Auth.dangXuat();
     }
 
-    /** Đặt lại mật khẩu theo email nhân viên. */
+    /** Đặt lại mật khẩu theo email nhân viên và đồng bộ xuống CSDL. */
     public String datLaiMatKhau(String email, String matKhauMoi) {
+        if (dsNhanVienBUS.laySoLuongNhanVien() == 0 || dsTaiKhoanBUS.laySoLuongTaiKhoan() == 0) {
+            khoiTaoDuLieu();
+        }
         String thuDienTu = chuanHoa(email);
         NhanVienDTO nv = dsNhanVienBUS.timTheoEmail(thuDienTu);
         if (nv == null) {
             return "Không tìm thấy nhân viên với email này.";
         }
-        return dsTaiKhoanBUS.doiMatKhau(nv.getMaNV(), matKhauMoi);
+        String loi = dsTaiKhoanBUS.doiMatKhau(nv.getMaNV(), matKhauMoi);
+        if (loi != null) {
+            return loi;
+        }
+        dsTaiKhoanBUS.luuVaoCSDL();
+        return null;
     }
 
     public NhanVienDTO timNhanVien(String maNV) {
@@ -122,6 +191,9 @@ public class NhanVienTaiKhoanBUS {
         }
         if (dsTaiKhoanBUS.timTheoMa(nv.getMaNV()) != null) {
             return "Không thể xóa nhân viên đang có tài khoản. Vui lòng xóa tài khoản trước.";
+        }
+        if (dsHoaDonBUS != null && dsHoaDonBUS.coHoaDonCuaNhanVien(nv.getMaNV())) {
+            return "Không thể xóa nhân viên đã lập hóa đơn.";
         }
         return dsNhanVienBUS.xoaNhanVien(nv.getMaNV());
     }

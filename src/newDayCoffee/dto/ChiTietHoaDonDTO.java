@@ -26,9 +26,12 @@ public class ChiTietHoaDonDTO {
     }
 
     public ChiTietHoaDonDTO(HoaDonDTO hoaDon, DoUongDTO doUong, int soLuong, double donGia) {
-        this.maHoaDon = hoaDon;
-        this.maDoUong = doUong;
+        this.maHoaDon = hoaDon != null ? hoaDon : new HoaDonDTO();
+        this.maDoUong = doUong != null ? doUong : new DoUongDTO();
         this.soLuong = soLuong;
+        if (donGia > 0) {
+            setDonGia(donGia);
+        }
     }
 
     public HoaDonDTO getHoaDon() {
@@ -48,27 +51,45 @@ public class ChiTietHoaDonDTO {
     }
 
     public String getMaHD() {
+        if (maHoaDon == null || maHoaDon.getMaHD() == null) {
+            return "";
+        }
         return maHoaDon.getMaHD();
     }
 
     public void setMaHD(String maHD) {
+        if (this.maHoaDon == null) {
+            this.maHoaDon = new HoaDonDTO();
+        }
         this.maHoaDon.setMaHD(maHD);
     }
 
     public String getMaMon() {
+        if (maDoUong == null || maDoUong.getMaMon() == null) {
+            return "";
+        }
         return maDoUong.getMaMon();
     }
 
     public void setMaMon(String maMon) {
+        if (this.maDoUong == null) {
+            this.maDoUong = new DoUongDTO();
+        }
         this.maDoUong.setMaMon(maMon);
     }
 
     public String getTenMon() {
+        if (maDoUong == null || maDoUong.getTenMon() == null) {
+            return "";
+        }
         return maDoUong.getTenMon();
     }
 
     public String getMoTa() {
-        return maDoUong.getMoTa();
+        if (maDoUong == null || maDoUong.getMoTa() != null) {
+            return maDoUong == null ? "" : maDoUong.getMoTa();
+        }
+        return "";
     }
 
     public int getSoLuong() {
@@ -84,16 +105,13 @@ public class ChiTietHoaDonDTO {
     }
 
     public void setDonGia(double donGia) {
-        if (maDoUong != null) {
+        if (maDoUong == null) {
+            maDoUong = new DoUongDTO();
             maDoUong.setDonGia(donGia);
+        } else if (Double.compare(maDoUong.getDonGia(), donGia) != 0) {
+            maDoUong = new DoUongDTO(maDoUong.getMaMon(), maDoUong.getTenMon(), donGia, maDoUong.getMoTa());
         }
     }
-
-    public double getThanhTien() {
-        return soLuong * getDonGia();
-    }
-
-
 
     @Override
     public String toString() {
